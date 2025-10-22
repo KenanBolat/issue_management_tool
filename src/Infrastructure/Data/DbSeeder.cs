@@ -26,7 +26,7 @@ namespace Infrastructure.Data
                 CreatedAt = DateTime.UtcNow,
             };
 
-            admin.PasswordHash = hasher.HashPassword(admin, "Admin@123");
+            admin.PasswordHash = hasher.HashPassword(admin, "adminpasswd");
 
             var editor = new User
             {
@@ -35,7 +35,7 @@ namespace Infrastructure.Data
                 Role = UserRole.Editor,
                 CreatedAt = DateTime.UtcNow
             };
-            editor.PasswordHash = hasher.HashPassword(editor, "Editor@123");
+            editor.PasswordHash = hasher.HashPassword(editor, "editorpasswd");
 
 
             var viewer = new User
@@ -45,7 +45,7 @@ namespace Infrastructure.Data
                 Role = UserRole.Viewer,
                 CreatedAt = DateTime.UtcNow
             };
-            viewer.PasswordHash = hasher.HashPassword(viewer, "Viewer@123");
+            viewer.PasswordHash = hasher.HashPassword(viewer, "viewerpasswd");
 
             context.Users.AddRange(admin, editor, viewer);
             await context.SaveChangesAsync();
