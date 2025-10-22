@@ -27,7 +27,7 @@ namespace Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<AuthDTOs.LoginResponse>> Login([FromBody] AuthDTOs.LoginRequest request)
         {
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
@@ -42,12 +42,12 @@ namespace Api.Controllers
 
             var token = _tokenService.GenerateToken(user);
 
-            return Ok(new LoginResponse(token, user.Email, user.DisplayName, user.Role.ToString()));
+            return Ok(new AuthDTOs.LoginResponse(token, user.Email, user.DisplayName, user.Role.ToString()));
         }
 
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<AuthDTOs.UserResponse>> Register([FromBody] AuthDTOs.RegisterRequest request)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest(new { message = "Email already exists" });
@@ -68,12 +68,12 @@ namespace Api.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new UserResponse(user.Id, user.Email, user.DisplayName, user.Role.ToString()));
+            return Ok(new AuthDTOs.UserResponse(user.Id, user.Email, user.DisplayName, user.Role.ToString()));
         }
 
         [HttpGet("me")]
         [Authorize]
-        public async Task<ActionResult<UserResponse>> GetCurrentUser()
+        public async Task<ActionResult<AuthDTOs.UserResponse>> GetCurrentUser()
         {
             var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _context.Users.FindAsync(userId);
@@ -81,7 +81,7 @@ namespace Api.Controllers
             if (user == null)
                 return NotFound();
 
-            return Ok(new UserResponse(user.Id, user.Email, user.DisplayName, user.Role.ToString()));
+            return Ok(new AuthDTOs.UserResponse(user.Id, user.Email, user.DisplayName, user.Role.ToString()));
         }
 
 

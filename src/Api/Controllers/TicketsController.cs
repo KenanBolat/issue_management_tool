@@ -101,7 +101,7 @@ public class TicketsController : ControllerBase
             SystemId = request.SystemId
         };
 
-        var created = await _ticketService.CreateTicketAsync(ticket, GetCurrentUserId());
+        var created = await _ticketService.CreateTicketAync(ticket, GetCurrentUserId());
         return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
     }
 

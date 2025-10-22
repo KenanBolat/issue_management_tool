@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "luFJLXKGh6XSpoS3QQ/5BY/ubLg1xJB0nhEYo7o/K2VP/v0QDvAqG7pUZ7KdDNObbzmMu180qrxan+Th3WhJhw==",
+  "dgSpecHash": "98/NV2TD9aZTXbdah59EBvo9vq4xM/l415NqNRFmePuBHBmOpUIsmArXVa5gCQ22AosZEJDZmrWob9ISML4ySw==",
   "success": true,
   "projectFilePath": "/home/knn/Desktop/issue_management_tool/src/Infrastructure/Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "/home/knn/.nuget/packages/microsoft.aspnetcore.cryptography.keyderivation/8.0.0/microsoft.aspnetcore.cryptography.keyderivation.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.aspnetcore.identity.entityframeworkcore/8.0.0/microsoft.aspnetcore.identity.entityframeworkcore.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.bcl.asyncinterfaces/6.0.0/microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
+    "/home/knn/.nuget/packages/microsoft.bcl.timeprovider/8.0.1/microsoft.bcl.timeprovider.8.0.1.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.codeanalysis.analyzers/3.3.3/microsoft.codeanalysis.analyzers.3.3.3.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.codeanalysis.common/4.5.0/microsoft.codeanalysis.common.4.5.0.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.codeanalysis.csharp/4.5.0/microsoft.codeanalysis.csharp.4.5.0.nupkg.sha512",
@@ -31,10 +32,10 @@
     "/home/knn/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.extensions.options/8.0.0/microsoft.extensions.options.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
-    "/home/knn/.nuget/packages/microsoft.identitymodel.abstractions/7.0.0/microsoft.identitymodel.abstractions.7.0.0.nupkg.sha512",
-    "/home/knn/.nuget/packages/microsoft.identitymodel.jsonwebtokens/7.0.0/microsoft.identitymodel.jsonwebtokens.7.0.0.nupkg.sha512",
-    "/home/knn/.nuget/packages/microsoft.identitymodel.logging/7.0.0/microsoft.identitymodel.logging.7.0.0.nupkg.sha512",
-    "/home/knn/.nuget/packages/microsoft.identitymodel.tokens/7.0.0/microsoft.identitymodel.tokens.7.0.0.nupkg.sha512",
+    "/home/knn/.nuget/packages/microsoft.identitymodel.abstractions/8.1.2/microsoft.identitymodel.abstractions.8.1.2.nupkg.sha512",
+    "/home/knn/.nuget/packages/microsoft.identitymodel.jsonwebtokens/8.1.2/microsoft.identitymodel.jsonwebtokens.8.1.2.nupkg.sha512",
+    "/home/knn/.nuget/packages/microsoft.identitymodel.logging/8.1.2/microsoft.identitymodel.logging.8.1.2.nupkg.sha512",
+    "/home/knn/.nuget/packages/microsoft.identitymodel.tokens/8.1.2/microsoft.identitymodel.tokens.8.1.2.nupkg.sha512",
     "/home/knn/.nuget/packages/mono.texttemplating/2.2.1/mono.texttemplating.2.2.1.nupkg.sha512",
     "/home/knn/.nuget/packages/npgsql/8.0.0/npgsql.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/npgsql.entityframeworkcore.postgresql/8.0.0/npgsql.entityframeworkcore.postgresql.8.0.0.nupkg.sha512",
@@ -46,7 +47,7 @@
     "/home/knn/.nuget/packages/system.composition.hosting/6.0.0/system.composition.hosting.6.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/system.composition.runtime/6.0.0/system.composition.runtime.6.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/system.composition.typedparts/6.0.0/system.composition.typedparts.6.0.0.nupkg.sha512",
-    "/home/knn/.nuget/packages/system.identitymodel.tokens.jwt/7.0.0/system.identitymodel.tokens.jwt.7.0.0.nupkg.sha512",
+    "/home/knn/.nuget/packages/system.identitymodel.tokens.jwt/8.1.2/system.identitymodel.tokens.jwt.8.1.2.nupkg.sha512",
     "/home/knn/.nuget/packages/system.io.pipelines/6.0.3/system.io.pipelines.6.0.3.nupkg.sha512",
     "/home/knn/.nuget/packages/system.reflection.metadata/6.0.1/system.reflection.metadata.6.0.1.nupkg.sha512",
     "/home/knn/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
@@ -55,16 +56,5 @@
     "/home/knn/.nuget/packages/system.text.json/8.0.0/system.text.json.8.0.0.nupkg.sha512",
     "/home/knn/.nuget/packages/system.threading.channels/6.0.0/system.threading.channels.6.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1902",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'System.IdentityModel.Tokens.Jwt' 7.0.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-59j7-ghrg-fj52",
-      "libraryId": "System.IdentityModel.Tokens.Jwt",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  "logs": []
 }
