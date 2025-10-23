@@ -7,6 +7,11 @@ export default function TicketsTable() {
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
+    const [sortField, setSortField] = useState("createdAt");
+    const [sortOrder, setSortOrder] = useState("desc");
+    const [filter, setFilter] = useState("");
+
+
 
     useEffect(() => {
         loadTickets();
@@ -25,6 +30,42 @@ export default function TicketsTable() {
         }
     };
 
+    // Sorting function
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+        } else {
+            setSortField(field);
+            setSortOrder("asc");
+        }
+    };
+
+    const getStatusColor = (status) => {
+        const colors = {
+            OPEN: '#e3f2fd',
+            CONFIRMED: '#fff3e0',
+            PAUSED: '#f3e5f5',
+            CLOSED: '#e8f5e9',
+            CANCELLED: '#ffebee',
+            REOPENED: '#fce4ec',
+        };
+        return colors[status] || '#f5f5f5';
+    };
+
+    const getStatusTextColor = (status) => {
+        const colors = {
+            OPEN: '#1976d2',
+            CONFIRMED: '#f57c00',
+            PAUSED: '#7b1fa2',
+            CLOSED: '#388e3c',
+            CANCELLED: '#d32f2f',
+            REOPENED: '#c2185b',
+        };
+        return colors[status] || '#666';
+    };
+
+
+
     // Simple filtering
     const filteredTickets = tickets.filter(ticket => {
         if (!searchText) return true;
@@ -33,69 +74,118 @@ export default function TicketsTable() {
             ticket.title.toLowerCase().includes(search) ||
             ticket.externalCode.toLowerCase().includes(search)
         );
-    });
+    }).sort((a, b) => {
+            let aVal = a[sortField];
+            let bVal = b[sortField];
 
+            if (sortField === "createdAt") {
+                aVal = new Date(aVal).getTime();
+                bVal = new Date(bVal).getTime();
+            }
+
+            if (sortOrder === "asc") {
+                return aVal > bVal ? 1 : -1;
+            } else {
+                return aVal < bVal ? 1 : -1;
+            }
+        });
+
+    console.log('Filtered tickets:', filteredTickets.length);
+    
     const userRole = localStorage.getItem("userRole");
-
-    if (loading) {
-        return <div style={styles.loading}>Loading tickets...</div>;
-    }
 
     return (
         <div style={styles.container}>
             <div style={styles.header}>
-                <h1 style={styles.title}>TICKETS</h1>
-                <p style={styles.subtitle}>Showing {filteredTickets.length} of {tickets.length} tickets</p>
+                <div>
+                    <h1 style={styles.title}>TICKETS</h1>
+                    <p style={styles.subtitle}>
+                        Showing {filteredTickets.length} of {tickets.length} tickets
+                    </p>
+                </div>
             </div>
 
             <div style={styles.controls}>
-                <input
-                    type="text"
-                    placeholder="Search by title or code..."
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    style={styles.searchInput}
-                />
-                
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    style={styles.select}
-                >
-                    <option value="">All Statuses</option>
-                    <option value="OPEN">Open</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="PAUSED">Paused</option>
-                    <option value="CLOSED">Closed</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    <option value="REOPENED">Reopened</option>
-                </select>
+                <div style={styles.filterGroup}>
+                    <input
+                        type="text"
+                        placeholder="Search tickets..."
+                        value={filter}
+                        onChange={(e) => {
+                            console.log('Search filter changed:', e.target.value);
+                            setFilter(e.target.value);
+                        }}
+                        style={styles.searchInput}
+                    />
+                    
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => {
+                            console.log('Status filter changed:', e.target.value);
+                            setStatusFilter(e.target.value);
+                        }}
+                        style={styles.select}
+                    >
+                        <option value="">All Statuses</option>
+                        <option value="OPEN">Open</option>
+                        <option value="CONFIRMED">Confirmed</option>
+                        <option value="PAUSED">Paused</option>
+                        <option value="CLOSED">Closed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                        <option value="REOPENED">Reopened</option>
+                    </select>
 
-                <button onClick={loadTickets} style={styles.refreshBtn}>
-                    Refresh
-                </button>
+                    <button onClick={() => {
+                        console.log('Refresh clicked');
+                        loadTickets();
+                    }} style={styles.refreshBtn}>
+                        Refresh
+                    </button>
+                </div>
 
                 {(userRole === 'Editor' || userRole === 'Admin') && (
-                    <button style={styles.addBtn}>+ Add New Ticket</button>
+                    <button style={styles.addBtn}>
+                        + Add New Ticket
+                    </button>
                 )}
             </div>
 
-            {filteredTickets.length === 0 ? (
+            {loading ? (
+                <div style={styles.loading}>Loading tickets...</div>
+            ) : filteredTickets.length === 0 ? (
                 <div style={styles.emptyState}>
-                    <p>No tickets found</p>
-                    {searchText && <p style={{color: '#999'}}>Try a different search term</p>}
+                    <p style={{fontSize: '1.2rem', marginBottom: '1rem'}}>No tickets found</p>
+                    {tickets.length > 0 && filter && (
+                        <p style={{fontSize: '0.9rem', color: '#999'}}>
+                            Try clearing the search filter. {tickets.length} total tickets available.
+                        </p>
+                    )}
+                    {tickets.length === 0 && (
+                        <p style={{fontSize: '0.9rem', color: '#999'}}>
+                            No tickets in the system yet.
+                        </p>
+                    )}
                 </div>
             ) : (
                 <div style={styles.tableWrapper}>
                     <table style={styles.table}>
                         <thead>
                             <tr>
-                                <th style={styles.th}>ID</th>
-                                <th style={styles.th}>External Code</th>
-                                <th style={styles.th}>Title</th>
+                                <th style={styles.th} onClick={() => handleSort('id')}>
+                                    Ticket ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={styles.th} onClick={() => handleSort('externalCode')}>
+                                    External Code {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={styles.th} onClick={() => handleSort('title')}>
+                                    Title {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={styles.th} onClick={() => handleSort('createdAt')}>
+                                    Date {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
                                 <th style={styles.th}>Status</th>
                                 <th style={styles.th}>Created By</th>
-                                <th style={styles.th}>Date</th>
+                                <th style={styles.th}>CI Status</th>
                                 <th style={styles.th}>Actions</th>
                             </tr>
                         </thead>
@@ -105,34 +195,47 @@ export default function TicketsTable() {
                                     <td style={styles.td}>#{ticket.id}</td>
                                     <td style={styles.td}>{ticket.externalCode}</td>
                                     <td style={styles.td}>
-                                        {ticket.title}
-                                        {ticket.isBlocking && (
-                                            <span style={styles.blockingBadge}>BLOCKING</span>
-                                        )}
+                                        <div style={styles.titleCell}>
+                                            {ticket.title}
+                                            {ticket.isBlocking && (
+                                                <span style={styles.blockingBadge}>BLOCKING</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td style={styles.td}>
-                                        <span style={styles.statusBadge}>
+                                        {new Date(ticket.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td style={styles.td}>
+                                        <span style={{
+                                            ...styles.statusBadge,
+                                            backgroundColor: getStatusColor(ticket.status),
+                                            color: getStatusTextColor(ticket.status),
+                                        }}>
                                             {ticket.status}
                                         </span>
                                     </td>
                                     <td style={styles.td}>{ticket.createdByName}</td>
                                     <td style={styles.td}>
-                                        {new Date(ticket.createdAt).toLocaleDateString()}
+                                        {ticket.hasCICompleted && (
+                                            <span style={styles.ciBadge}>✓ CI</span>
+                                        )}
                                     </td>
                                     <td style={styles.td}>
                                         <div style={styles.actions}>
-                                            <button style={styles.actionBtn} title="View">
+                                            <button style={styles.actionBtn} title="View Details">
                                                 <Eye size={16} />
                                             </button>
                                             {(userRole === 'Editor' || userRole === 'Admin') && (
-                                                <button style={styles.actionBtn} title="Edit">
-                                                    <Edit size={16} />
-                                                </button>
-                                            )}
-                                            {userRole === 'Admin' && (
-                                                <button style={{...styles.actionBtn, color: '#d32f2f'}} title="Delete">
-                                                    <Trash2 size={16} />
-                                                </button>
+                                                <>
+                                                    <button style={styles.actionBtn} title="Edit">
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    {userRole === 'Admin' && (
+                                                        <button style={{...styles.actionBtn, color: '#d32f2f'}} title="Delete">
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     </td>
@@ -152,13 +255,10 @@ const styles = {
         maxWidth: '1600px',
         margin: '0 auto',
     },
-    loading: {
-        textAlign: 'center',
-        padding: '3rem',
-        fontSize: '1.2rem',
-        color: '#666',
-    },
     header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: '2rem',
     },
     title: {
@@ -169,20 +269,25 @@ const styles = {
     subtitle: {
         color: '#666',
         fontSize: '0.9rem',
-        marginTop: '0.5rem',
+        margin: '0.5rem 0 0 0',
     },
     controls: {
         display: 'flex',
-        gap: '1rem',
+        justifyContent: 'space-between',
         marginBottom: '1.5rem',
-        flexWrap: 'wrap',
+        gap: '1rem',
+    },
+    filterGroup: {
+        display: 'flex',
+        gap: '1rem',
+        flex: 1,
     },
     searchInput: {
         padding: '0.6rem',
         border: '1px solid #ddd',
         borderRadius: '4px',
         flex: 1,
-        minWidth: '250px',
+        maxWidth: '400px',
     },
     select: {
         padding: '0.6rem',
@@ -204,17 +309,25 @@ const styles = {
         border: 'none',
         borderRadius: '4px',
         cursor: 'pointer',
+        fontWeight: '500',
+    },
+    loading: {
+        textAlign: 'center',
+        padding: '3rem',
+        color: '#666',
+        fontSize: '1.2rem',
     },
     emptyState: {
         textAlign: 'center',
         padding: '3rem',
         background: 'white',
         borderRadius: '8px',
+        color: '#666',
     },
     tableWrapper: {
         background: 'white',
         borderRadius: '8px',
-        overflow: 'auto',
+        overflow: 'hidden',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
     },
     table: {
@@ -227,6 +340,8 @@ const styles = {
         background: '#f8f9fa',
         fontWeight: '600',
         borderBottom: '2px solid #dee2e6',
+        cursor: 'pointer',
+        userSelect: 'none',
     },
     tr: {
         borderBottom: '1px solid #dee2e6',
@@ -234,8 +349,12 @@ const styles = {
     td: {
         padding: '1rem',
     },
+    titleCell: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
     blockingBadge: {
-        marginLeft: '0.5rem',
         padding: '0.2rem 0.5rem',
         background: '#ffebee',
         color: '#c62828',
@@ -245,10 +364,16 @@ const styles = {
     },
     statusBadge: {
         padding: '0.3rem 0.8rem',
-        background: '#e3f2fd',
-        color: '#1976d2',
         borderRadius: '12px',
         fontSize: '0.85rem',
+        fontWeight: '500',
+    },
+    ciBadge: {
+        padding: '0.2rem 0.5rem',
+        background: '#fff3e0',
+        color: '#f57c00',
+        borderRadius: '4px',
+        fontSize: '0.8rem',
         fontWeight: '500',
     },
     actions: {
