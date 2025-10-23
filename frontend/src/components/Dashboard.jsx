@@ -68,7 +68,7 @@ export default function Dashboard() {
     }));
 
     const userName = localStorage.getItem("displayName");
-    const userRole = localStorage.getItem("userRole");
+    const userRole = localStorage.getItem("role");
 
 
     if (loading) {
