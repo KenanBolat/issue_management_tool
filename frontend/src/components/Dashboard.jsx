@@ -67,7 +67,7 @@ export default function Dashboard() {
         count: count,
     }));
 
-    const userName = localStorage.getItem("userName");
+    const userName = localStorage.getItem("displayName");
     const userRole = localStorage.getItem("userRole");
 
 

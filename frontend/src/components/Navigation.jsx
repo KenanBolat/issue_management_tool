@@ -2,8 +2,8 @@ import { LayoutDashboard, List, LogOut } from "lucide-react";
 
 export default function Navigation({ currentPage, onNavigate }) {
 
-    const userName = localStorage.getItem("userName") || "UserName";
-    const userRole = localStorage.getItem("userRole") || "UserRole";
+    const userName = localStorage.getItem("displayName") || "DisplayName";
+    const userRole = localStorage.getItem("role") || "UserRole";
 
 
     return (
