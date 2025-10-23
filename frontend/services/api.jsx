@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../src/config';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -19,7 +19,7 @@ export const authAPI = {
 
 };
 
-export const ticketAPI = {
+export const ticketsAPI = {
     getAll: (status= null) => {
         const params = status ? { status } : {};
         return api.get('/tickets', { params });

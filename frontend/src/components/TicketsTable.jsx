@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ticketsAPI } from "../services/api";
+import { ticketsAPI } from "../../services/api.jsx";
 import { Edit, Trash2, Eye } from "lucide-react";
 
 
