@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Login from "./components/Login.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import TicketsTable from "./components/TicketsTable.jsx";
@@ -29,11 +29,11 @@ function App() {
     }
 
     return (
-        <div style={styles.appContainer}>
+        <div >
             <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-            {currentPage === 'dashboard' ? <Dashboard /> : <TicketsTable />}
             
-            <main style={styles.mainContent}>
+            
+            <main>
                 {currentPage === 'dashboard' && <Dashboard />}
                 {currentPage === 'tickets' && <TicketsTable />}
             </main>

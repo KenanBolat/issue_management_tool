@@ -12,7 +12,7 @@ export default function TicketsTable() {
     const [sortOrder, setSortOrder] = useState("desc");
 
     useEffect(() => {
-        fetchTickets();
+        loadTickets();
     }, [statusFilter]);
 
     const loadTickets = async () => {
