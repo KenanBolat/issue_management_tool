@@ -165,28 +165,28 @@ public class TicketsController : ControllerBase
         return Ok(new { id = comment.Id });
     }
 
-    // [HttpPost]
-    // [Authorize(Roles = "Editor, Admin")]
-    // public async Task<ActionResult> DeleteTicket(long id)
-    // {
-    //     var ticket = await _context.Tickets.FindAsync(id);
-    //     if (ticket == null) return NotFound();
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Editor, Admin")]
+    public async Task<ActionResult> DeleteTicket(long id)
+    {
+        var ticket = await _context.Tickets.FindAsync(id);
+        if (ticket == null) return NotFound();
 
-    //     // soft delete could be implemented here instead
-    //     ticket.IsDeleted = true;
-    //     ticket.IsActive = false;
-    //     ticket.UpdatedAt = DateTime.UtcNow;
-    //     ticket.LastUpdatedById = GetCurrentUserId();
+        // soft delete could be implemented here instead
+        ticket.IsDeleted = true;
+        ticket.IsActive = false;
+        ticket.UpdatedAt = DateTime.UtcNow;
+        ticket.LastUpdatedById = GetCurrentUserId();
 
-    //     _context.TicketActions.Add(new TicketAction
-    //     {
-    //         TicketId = id,
-    //         ActionType = ActionType.Edit,
-    //         Notes = "Ticket deleted (soft delete)",
-    //         PerformedById = GetCurrentUserId(),
-    //         PerformedAt = DateTime.UtcNow
-    //     });
-    //     await _context.SaveChangesAsync();
-    //     return NoContent();
-    // }
+        _context.TicketActions.Add(new TicketAction
+        {
+            TicketId = id,
+            ActionType = ActionType.Edit,
+            Notes = "Ticket deleted (soft delete)",
+            PerformedById = GetCurrentUserId(),
+            PerformedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
 }
