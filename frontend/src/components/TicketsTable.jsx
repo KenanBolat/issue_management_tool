@@ -183,8 +183,10 @@ export default function TicketsTable() {
                                 <th style={styles.th} onClick={() => handleSort('createdAt')}>
                                     Date {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
-                                <th style={styles.th}>Status</th>
-                                <th style={styles.th}>Created By</th>
+                                <th style={styles.th} onClick={() => handleSort('status')} >
+                                Status {sortField === 'status' && (sortOrder==='asc' ? '↑' : '↓' )}</th>
+                                <th style={styles.th} onClick={() => handleSort('createdByName')}>
+                                  Created By {sortField === 'createdBy' && (sortOrder==='asc' ? '↑' : '↓')}</th>
                                 <th style={styles.th}>CI Status</th>
                                 <th style={styles.th}>Actions</th>
                             </tr>
