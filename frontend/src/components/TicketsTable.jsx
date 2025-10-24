@@ -30,6 +30,22 @@ export default function TicketsTable() {
         }
     };
 
+
+        const handleDelete = async (ticketId) => {
+            if (!window.confirm('Bu arıza kaydını silmek istediğinize emin misiniz?')) return;
+            try {
+                await ticketsAPI.update(ticketId);
+                alert('Arıza kaydı silindi');
+                loadTickets();
+            } catch (error) {
+                console.error('Error deleting ticket:', error);
+                alert('Arıza kaydı silinirken hata oluştu');
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+
     // Sorting function
     const handleSort = (field) => {
         if (sortField === field) {
@@ -92,7 +108,7 @@ export default function TicketsTable() {
 
     console.log('Filtered tickets:', filteredTickets.length);
     
-    const userRole = localStorage.getItem("userRole");
+    const userRole = localStorage.getItem("role");
 
     return (
         <div style={styles.container}>
@@ -233,7 +249,11 @@ export default function TicketsTable() {
                                                         <Edit size={16} />
                                                     </button>
                                                     {userRole === 'Admin' && (
-                                                        <button style={{...styles.actionBtn, color: '#d32f2f'}} title="Delete">
+                                                        <button 
+                                                        style={{...styles.actionBtn, color: '#d32f2f'}} 
+                                                        title="Delete"
+                                                        onClick={() => handleDelete(ticket.id)}
+                                                        >
                                                             <Trash2 size={16} />
                                                         </button>
                                                     )}
