@@ -34,7 +34,7 @@ export default function TicketsTable() {
         const handleDelete = async (ticketId) => {
             if (!window.confirm('Bu arıza kaydını silmek istediğinize emin misiniz?')) return;
             try {
-                await ticketsAPI.update(ticketId);
+                await ticketsAPI.delete(ticketId);
                 alert('Arıza kaydı silindi');
                 loadTickets();
             } catch (error) {

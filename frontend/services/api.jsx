@@ -28,7 +28,7 @@ export const ticketsAPI = {
     create: (data) => api.post('/tickets', data),
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
-    deleteTicket: (id, data) => api.put(`/tickets/${id}`, data),
+    delete: (id, data) => api.put(`/tickets/${id}`, data),
 
 };
 
