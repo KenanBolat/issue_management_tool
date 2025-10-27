@@ -3,7 +3,7 @@ import { ticketsAPI } from "../../services/api";
 import { Edit, Trash2, Eye } from "lucide-react";
 
 
-export default function TicketsTable({onViewTicket}) {
+export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket}) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
@@ -245,7 +245,7 @@ export default function TicketsTable({onViewTicket}) {
                                             <button style={styles.actionBtn} title="View Details" onClick={() => onViewTicket(ticket.id)}> <Eye size={16} /> </button>
                                             {(userRole === 'Editor' || userRole === 'Admin') && (
                                                 <>
-                                                    <button style={styles.actionBtn} title="Edit"><Edit size={16} /> </button>
+                                                    <button style={styles.actionBtn} title="Edit" onClick={() => onEditTicket(ticket.id)}><Edit size={16} /> </button>
                                                     {userRole === 'Admin' && (
                                                         <button
                                                             style={{ ...styles.actionBtn, color: '#d32f2f' }}
