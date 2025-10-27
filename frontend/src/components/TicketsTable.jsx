@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { ticketsAPI } from "../../services/api";
 import { Edit, Trash2, Eye } from "lucide-react";
 
-export default function TicketsTable() {
+
+export default function TicketsTable({onViewTicket}) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
@@ -31,20 +32,21 @@ export default function TicketsTable() {
     };
 
 
-        const handleDelete = async (ticketId) => {
-            if (!window.confirm('Bu arıza kaydını silmek istediğinize emin misiniz?')) return;
-            try {
-                await ticketsAPI.delete(ticketId);
-                alert('Arıza kaydı silindi');
-                loadTickets();
-            } catch (error) {
-                console.error('Error deleting ticket:', error);
-                alert('Arıza kaydı silinirken hata oluştu');
-            } finally {
-                setLoading(false);
-            }
-        };
-    
+    const handleDelete = async (ticketId) => {
+        if (!window.confirm('Bu arıza kaydını silmek istediğinize emin misiniz?')) return;
+        try {
+            await ticketsAPI.delete(ticketId);
+            alert('Arıza kaydı silindi');
+            loadTickets();
+        } catch (error) {
+            console.error('Error deleting ticket:', error);
+            alert('Arıza kaydı silinirken hata oluştu');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
 
     // Sorting function
     const handleSort = (field) => {
@@ -91,23 +93,23 @@ export default function TicketsTable() {
             ticket.externalCode.toLowerCase().includes(search)
         );
     }).sort((a, b) => {
-            let aVal = a[sortField];
-            let bVal = b[sortField];
+        let aVal = a[sortField];
+        let bVal = b[sortField];
 
-            if (sortField === "createdAt") {
-                aVal = new Date(aVal).getTime();
-                bVal = new Date(bVal).getTime();
-            }
+        if (sortField === "createdAt") {
+            aVal = new Date(aVal).getTime();
+            bVal = new Date(bVal).getTime();
+        }
 
-            if (sortOrder === "asc") {
-                return aVal > bVal ? 1 : -1;
-            } else {
-                return aVal < bVal ? 1 : -1;
-            }
-        });
+        if (sortOrder === "asc") {
+            return aVal > bVal ? 1 : -1;
+        } else {
+            return aVal < bVal ? 1 : -1;
+        }
+    });
 
     console.log('Filtered tickets:', filteredTickets.length);
-    
+
     const userRole = localStorage.getItem("role");
 
     return (
@@ -133,7 +135,7 @@ export default function TicketsTable() {
                         }}
                         style={styles.searchInput}
                     />
-                    
+
                     <select
                         value={statusFilter}
                         onChange={(e) => {
@@ -170,14 +172,14 @@ export default function TicketsTable() {
                 <div style={styles.loading}>Loading tickets...</div>
             ) : filteredTickets.length === 0 ? (
                 <div style={styles.emptyState}>
-                    <p style={{fontSize: '1.2rem', marginBottom: '1rem'}}>No tickets found</p>
+                    <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>No tickets found</p>
                     {tickets.length > 0 && filter && (
-                        <p style={{fontSize: '0.9rem', color: '#999'}}>
+                        <p style={{ fontSize: '0.9rem', color: '#999' }}>
                             Try clearing the search filter. {tickets.length} total tickets available.
                         </p>
                     )}
                     {tickets.length === 0 && (
-                        <p style={{fontSize: '0.9rem', color: '#999'}}>
+                        <p style={{ fontSize: '0.9rem', color: '#999' }}>
                             No tickets in the system yet.
                         </p>
                     )}
@@ -200,9 +202,9 @@ export default function TicketsTable() {
                                     Date {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('status')} >
-                                Status {sortField === 'status' && (sortOrder==='asc' ? '↑' : '↓' )}</th>
+                                    Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                                 <th style={styles.th} onClick={() => handleSort('createdByName')}>
-                                  Created By {sortField === 'createdBy' && (sortOrder==='asc' ? '↑' : '↓')}</th>
+                                    Created By {sortField === 'createdBy' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                                 <th style={styles.th}>CI Status</th>
                                 <th style={styles.th}>Actions</th>
                             </tr>
@@ -240,19 +242,15 @@ export default function TicketsTable() {
                                     </td>
                                     <td style={styles.td}>
                                         <div style={styles.actions}>
-                                            <button style={styles.actionBtn} title="View Details">
-                                                <Eye size={16} />
-                                            </button>
+                                            <button style={styles.actionBtn} title="View Details" onClick={() => onViewTicket(ticket.id)}> <Eye size={16} /> </button>
                                             {(userRole === 'Editor' || userRole === 'Admin') && (
                                                 <>
-                                                    <button style={styles.actionBtn} title="Edit">
-                                                        <Edit size={16} />
-                                                    </button>
+                                                    <button style={styles.actionBtn} title="Edit"><Edit size={16} /> </button>
                                                     {userRole === 'Admin' && (
-                                                        <button 
-                                                        style={{...styles.actionBtn, color: '#d32f2f'}} 
-                                                        title="Delete"
-                                                        onClick={() => handleDelete(ticket.id)}
+                                                        <button
+                                                            style={{ ...styles.actionBtn, color: '#d32f2f' }}
+                                                            title="Delete"
+                                                            onClick={() => handleDelete(ticket.id)}
                                                         >
                                                             <Trash2 size={16} />
                                                         </button>

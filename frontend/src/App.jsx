@@ -3,11 +3,14 @@ import Login from "./components/Login.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import TicketsTable from "./components/TicketsTable.jsx";
 import Navigation from "./components/Navigation.jsx";
+import TicketDetail from "./components/TicketDetail.jsx";
 
 function App() {
   
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentPage, setCurrentPage] = useState('dashboard');
+    const [selectedTicketId, setSelectedTicketId] = useState(null);
+
 
     useEffect(() => {
         const token = localStorage.getItem("token"); 
@@ -24,6 +27,12 @@ function App() {
         setCurrentPage(page);
     };
 
+    const handleViewTicket = (ticketId) => {
+        console.log("Viewing ticket:", ticketId);
+        setSelectedTicketId(ticketId);
+        setCurrentPage('ticket-detail');
+    }
+
     if (!isAuthenticated) {
         return <Login onLogin={handleLogin} />;
     }
@@ -35,7 +44,8 @@ function App() {
             
             <main>
                 {currentPage === 'dashboard' && <Dashboard />}
-                {currentPage === 'tickets' && <TicketsTable />}
+                {currentPage === 'tickets' && (<TicketsTable onViewTicket={handleViewTicket} />)}
+                {currentPage === 'ticket-detail' && (<TicketDetail ticketId={selectedTicketId} />)}
             </main>
         </div>
     );
