@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Application.Services;
 using Infrastructure.Auth;
 using Infrastructure.Data;
+using Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +104,10 @@ try
         Console.WriteLine("Seeding database...");
         await DbSeeder.SeedAsync(context);
         Console.WriteLine("Database seeded successfully!");
+
+        Console.WriteLine("Seeding Militray Ranks!");
+        await MilitaryRankSeeder.SeedMilitaryRanks(context);
+        Console.WriteLine("Military ranks seeded successfully!");
     }
 }
 catch (Exception ex)

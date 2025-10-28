@@ -86,6 +86,14 @@ namespace Api.Controllers
                 return NotFound();
             }
 
+            var permissions = user.UserPermissions
+            .Select(p => new UserPermissionItem(
+                p.PermissionType.ToString(),
+                p.CanView,
+                p.CanCreate,
+                p.CanEdit,
+                p.CanDelete)).ToList();
+
 
             var detail = new UserDetail(
                 user.Id,
@@ -94,18 +102,14 @@ namespace Api.Controllers
                 user.Role.ToString(),
                 user.Affiliation.ToString(),
                 user.Department,
-                user.MilitaryRank != null ? user.MilitaryRank.DisplayName : null,
+                user.MilitaryRankId,
+                user.RankCode,
                 user.PhoneNumber,
-                user.IsActive,
                 user.PreferredLanguage,
-                user.UserPermissions.Select(p => new UserPermissionItem(
-                    p.PermissionType.ToString(),
-                    p.CanView,
-                    p.CanCreate,
-                    p.CanEdit,
-                    p.CanDelete)).ToList(),
+                user.IsActive,
                 user.CreatedAt,
-                user.UpdatedAt
+                user.UpdatedAt,         
+                permissions
                 );
             return Ok(detail);
         }
@@ -205,7 +209,7 @@ namespace Api.Controllers
 
             if (request.MilitaryRankId.HasValue)
             {
-                var rank = await _context.MilitaryRank.FindAsync(request.MilitaryRankId.Value);
+                var rank = await _context.MilitaryRanks.FindAsync(request.MilitaryRankId.Value);
                 if (rank != null)
                 {
                     user.MilitaryRankId = request.MilitaryRankId;
@@ -303,7 +307,7 @@ namespace Api.Controllers
             }
             else
             {
-                _logger.LogInformation("Admin {currentUserId} user changing password for UserId: {UserId}", currentUserId, user.Id,);
+                _logger.LogInformation("Admin {currentUserId} user changing password for UserId: {UserId}", currentUserId, user.Id);
             }
 
             //Hash new password using same method as AuthController   
@@ -348,7 +352,7 @@ namespace Api.Controllers
         //POST: api/users/{id}/permissions (Grant permissions to user - Admin only)
         [HttpPost("{id}/permissions")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> GrantPermissions(long id, [FromBody] GrantPermissionsRequest request)
+        public async Task<ActionResult> GrantPermissions(long id, [FromBody] GrantPermissionRequest request)
         {
             _logger.LogInformation("Admin {CurrentUserId} granting {PermissionType} permission to user {UserId}",
                GetCurrentUserId(), request.PermissionType, id);
@@ -424,7 +428,7 @@ namespace Api.Controllers
                 return NotFound();
             }
 
-            _context.UserPermissions.Remove(permission);
+            _context.UserPermissions.Remove(userPermission);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Revoked {PermissionType} permission from user {UserId}", permission, id);
             return NoContent();
@@ -435,7 +439,7 @@ namespace Api.Controllers
         public async Task<ActionResult<List<MilitaryRankItem>>> GetMilitaryRanks()
         {
             _logger.LogInformation("Fetching military ranks");
-            var ranks = await _context.MilitaryRank
+            var ranks = await _context.MilitaryRanks
                 .Where(r => r.IsActive)
                 .OrderBy(r => r.SortOrder)
                 .Select(r => new MilitaryRankItem(r.Id, r.Code, r.DisplayName))
@@ -475,7 +479,7 @@ public record UserDetail(
         bool IsActive,
         DateTime CreatedAt,
         DateTime UpdatedAt,
-        List<UserPermissionItem> Permissions);
+        List<UserPermissionItem> Permission);
 
 public record UserPermissionItem(
     string PermissionType,
@@ -515,4 +519,3 @@ public record GrantPermissionRequest(
     bool CanCreate,
     bool CanEdit,
     bool CanDelete);
-}
