@@ -31,6 +31,12 @@ export default function Navigation({ currentPage, onNavigate }) {
                 >
                     <List size={18} />
                     Tickets </button>
+
+                {userRole === 'Admin' && (
+                    <button onClick={() => onNavigate('users')}>
+                        Users
+                    </button>
+                )}
             </div>
             <div style={styles.userSection}>
                 <div style={styles.userInfo}>

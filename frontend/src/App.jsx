@@ -96,7 +96,7 @@ function App() {
                 {currentPage === 'ticket-detail' && (<TicketDetail ticketId={selectedTicketId} />)}
 
                 {currentPage === 'users' && (
-                    <UsersList 
+                    <UserList 
                         onViewUser={handleViewUser}
                         onEditUser={handleEditUser}
                         onCreateUser={handleCreateUser}
