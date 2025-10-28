@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {usersAPI} from '../../services/api';
+import {userApi} from '../../services/api';
 import {X, Save, Eye, EyeOff} from 'lucide-react';
 
 
@@ -36,7 +36,7 @@ export default function UserForm({userId, onClose, onSave}) {
 
     const loadMilitaryRanks = async () => {
         try {
-            const response = await usersAPI.getRanks();
+            const response = await userApi.getRanks();
             setMilitaryRanks(response.data);
         } catch (error) {
             console.error('Failed to load military ranks', error);
@@ -46,7 +46,7 @@ export default function UserForm({userId, onClose, onSave}) {
     const loadUserData = async () => {
         setLoading(true);
         try {
-            const response = await usersAPI.getById(userId);
+            const response = await userApi.getById(userId);
             const user = response.data;
             setFormData({
                 email: user.email,
@@ -86,10 +86,10 @@ export default function UserForm({userId, onClose, onSave}) {
         try {
             setSaving(true);
             if (isNewUser) {
-                await usersAPI.create(formData);
+                await userApi.create(formData);
                 alert('User created successfully.');
             } else {
-                await usersAPI.update(userId, formData);
+                await userApi.update(userId, formData);
                 alert('User updated successfully.');
             }
 

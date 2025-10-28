@@ -36,7 +36,7 @@ export const dashboardAPI = {
     getStats: () => api.get('/dashboard'),
 };
 
-export const usersAPI = {
+export const userApi = {
     getAll: async (includeInactive = false) => {
         try {
             const url = includeInactive 

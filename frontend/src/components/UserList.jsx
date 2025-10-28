@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { userApi } from '../../services/api';
+import { userApi } from '../../services/api.jsx';
 import { Edit, Trash2, Eye, Shield } from 'lucide-react';
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions }) {

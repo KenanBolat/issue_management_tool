@@ -4,6 +4,8 @@ import Dashboard from "./components/Dashboard.jsx";
 import TicketsTable from "./components/TicketsTable.jsx";
 import Navigation from "./components/Navigation.jsx";
 import TicketDetail from "./components/TicketDetail.jsx";
+import UserList from "./components/UserList.jsx";
+import UserForm from "./components/UserForm.jsx";
 
 function App() {
 
@@ -45,6 +47,33 @@ function App() {
         setCurrentPage('ticket-detail');
     }   
 
+    const handleViewUser = (userId) => {
+        console.log("Viewing user:", userId);
+        setSelectedUserId(userId);
+        setCurrentPage('user-detail');
+    };
+
+    const handleEditUser = (userId) => {
+        console.log("Editing user:", userId);
+        setCurrentUserId(userId);
+        setCurrentPage('user-form');
+    }
+
+    const handleCreateUser = () => {
+        setSelectedUserId('new');
+        setCurrentPage('user-form');
+    };
+
+    const handleManagePermissions = (userId) => {
+        setSelectedUserId(userId);
+        setCurrentPage('user-permissions');
+    };
+
+     const handleCloseUserForm = () => {
+        setSelectedUserId(null);
+        setCurrentPage('users');
+    };
+
 
 
     if (!isAuthenticated) {
@@ -65,6 +94,26 @@ function App() {
                         onCreateTicket={handleCreateTicket}
                     />)}
                 {currentPage === 'ticket-detail' && (<TicketDetail ticketId={selectedTicketId} />)}
+
+                {currentPage === 'users' && (
+                    <UsersList 
+                        onViewUser={handleViewUser}
+                        onEditUser={handleEditUser}
+                        onCreateUser={handleCreateUser}
+                        onManagePermissions={handleManagePermissions}
+                    />
+                )}
+
+                 {currentPage === 'user-form' && (
+                    <UserForm 
+                        userId={selectedUserId}
+                        onClose={handleCloseUserForm}
+                        onSave={() => {
+                            handleCloseUserForm();
+                            // Optionally refresh user list
+                        }}
+                    />
+                )}
 
             </main>
         </div>
