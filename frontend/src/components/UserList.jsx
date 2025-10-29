@@ -11,7 +11,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const [showInactive, setShowInactive] = useState(false);
 
     const userRole = localStorage.getItem('role');
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === 'Admin';
 
     useEffect(() => {
         loadUsers();
@@ -88,7 +88,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         return (
             <div style={styles.container}>
                 <div style={styles.noAccess}>
-                    <h2>Access Denied</h2>
+                    <h2>Access Denied 1</h2>
                     <p>Only administrators can view the users list.</p>
                 </div>
             </div>

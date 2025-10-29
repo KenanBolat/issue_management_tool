@@ -33,7 +33,10 @@ export default function Navigation({ currentPage, onNavigate }) {
                     Tickets </button>
 
                 {userRole === 'Admin' && (
-                    <button onClick={() => onNavigate('users')}>
+                    <button 
+                    onClick={() => onNavigate('users')}
+                    style={{...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem: {})}}
+                    >
                         Users
                     </button>
                 )}

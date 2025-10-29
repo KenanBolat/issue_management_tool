@@ -12,6 +12,8 @@ function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [currentPage, setCurrentPage] = useState('dashboard');
     const [selectedTicketId, setSelectedTicketId] = useState(null);
+    const [selectedUserId, setSelectedUserId] = useState('new');
+    const [currentUserId, setCurrentUserId] = useState(null);
 
 
     useEffect(() => {
@@ -55,6 +57,7 @@ function App() {
 
     const handleEditUser = (userId) => {
         console.log("Editing user:", userId);
+        setSelectedUserId(userId);
         setCurrentUserId(userId);
         setCurrentPage('user-form');
     }
@@ -66,6 +69,7 @@ function App() {
 
     const handleManagePermissions = (userId) => {
         setSelectedUserId(userId);
+        setCurrentUserId(userId);
         setCurrentPage('user-permissions');
     };
 
