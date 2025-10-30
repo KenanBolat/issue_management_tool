@@ -193,20 +193,20 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                                     Ticket ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('externalCode')}>
-                                    External Code {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    TTCOMS-Kodu {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('title')}>
-                                    Title {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Başlık {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('createdAt')}>
-                                    Date {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Tarih {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('status')} >
-                                    Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                                    Durum {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                                 <th style={styles.th} onClick={() => handleSort('createdByName')}>
-                                    Created By {sortField === 'createdBy' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-                                <th style={styles.th}>CI Status</th>
-                                <th style={styles.th}>Actions</th>
+                                    Oluşturan {sortField === 'createdBy' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                                <th style={styles.th}>CI</th>
+                                <th style={styles.th}>Düzenle</th>
                             </tr>
                         </thead>
                         <tbody>

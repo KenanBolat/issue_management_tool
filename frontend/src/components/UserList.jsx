@@ -13,6 +13,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
 
+    debugger;
+
     useEffect(() => {
         loadUsers();
     }, [showInactive]);
@@ -194,7 +196,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             backgroundColor: getRoleBadgeColor(user.role),
                                         }}>
                                             {user.role}
-                                            {user.id}
                                         </span>
                                     </td>
                                     <td style={styles.td}>

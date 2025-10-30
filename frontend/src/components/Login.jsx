@@ -15,7 +15,7 @@ export default function Login({ onLogin }) {
         try {
             const response = await authAPI.login(email, password);
             const { token, displayName, role } = response.data;
-
+            debugger; 
             localStorage.setItem("token", token);
             localStorage.setItem("displayName", displayName);
             localStorage.setItem("role", role);
