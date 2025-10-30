@@ -57,8 +57,8 @@ function App() {
 
     const handleEditUser = (userId) => {
         console.log("Editing user:", userId);
-        setSelectedUserId(userId);
         setCurrentUserId(userId);
+        setSelectedUserId(userId);
         setCurrentPage('user-form');
     }
 
@@ -69,7 +69,6 @@ function App() {
 
     const handleManagePermissions = (userId) => {
         setSelectedUserId(userId);
-        setCurrentUserId(userId);
         setCurrentPage('user-permissions');
     };
 
@@ -110,7 +109,7 @@ function App() {
 
                  {currentPage === 'user-form' && (
                     <UserForm 
-                        // userId={selectedUserId}
+                        userId={selectedUserId}
                         onClose={handleCloseUserForm}
                         onSave={() => {
                             handleCloseUserForm();

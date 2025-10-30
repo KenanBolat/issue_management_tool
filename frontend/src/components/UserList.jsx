@@ -122,10 +122,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                         onChange={(e) => setRoleFilter(e.target.value)}
                         style={styles.select}
                     >
-                        <option value="">All Roles</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Editor">Editor</option>
-                        <option value="Viewer">Viewer</option>
+                        <option value="">Erişim İzinleri</option>
+                        <option value="Admin">Yönetici</option>
+                        <option value="Editor">Editör</option>
+                        <option value="Viewer">Görüntüleyici</option>
                     </select>
 
                     <select
@@ -133,14 +133,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                         onChange={(e) => setAffiliationFilter(e.target.value)}
                         style={styles.select}
                     >
-                        <option value="">All Affiliations</option>
-                        <option value="Airforce">Airforce</option>
-                        <option value="Navy">Navy</option>
-                        <option value="Army">Army</option>
-                        <option value="Marines">Marines</option>
-                        <option value="CoastGuard">Coast Guard</option>
-                        <option value="Internal">Internal</option>
-                        <option value="External">External</option>
+                        <option value="">Kurumlar</option>
+                        <option value="Airforce">Hava Kuvvetleri</option>
+                        <option value="Internal">TUSAS</option>
+                        <option value="External">Yüklenici</option>
                     </select>
 
                     <label style={styles.checkboxLabel}>
@@ -174,15 +170,15 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                     <table style={styles.table}>
                         <thead>
                             <tr>
-                                <th style={styles.th}>Name</th>
-                                <th style={styles.th}>Email</th>
-                                <th style={styles.th}>Role</th>
-                                <th style={styles.th}>Affiliation</th>
-                                <th style={styles.th}>Rank</th>
-                                <th style={styles.th}>Department</th>
-                                <th style={styles.th}>Phone</th>
-                                <th style={styles.th}>Status</th>
-                                <th style={styles.th}>Actions</th>
+                                <th style={styles.th}>İsim</th>
+                                <th style={styles.th}>E-posta</th>
+                                <th style={styles.th}>Rol</th>
+                                <th style={styles.th}>Kurum</th>
+                                <th style={styles.th}>Rütbe</th>
+                                <th style={styles.th}>Birim</th>
+                                <th style={styles.th}>Telefon</th>
+                                <th style={styles.th}>Durum</th>
+                                <th style={styles.th}>Ayarlar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -198,6 +194,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             backgroundColor: getRoleBadgeColor(user.role),
                                         }}>
                                             {user.role}
+                                            {user.id}
                                         </span>
                                     </td>
                                     <td style={styles.td}>

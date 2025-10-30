@@ -68,7 +68,7 @@ public class AuthController : ControllerBase
         _logger.LogInformation("Login successful!");
         var token = _tokenService.GenerateToken(user);
 
-        return Ok(new LoginResponse(token, user.Email, user.DisplayName, user.Role.ToString()));
+        return Ok(new LoginResponse(token, user.Email, user.DisplayName, user.Role.ToString(), user.Id));
     }
 
     [HttpPost("register")]

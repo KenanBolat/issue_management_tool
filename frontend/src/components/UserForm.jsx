@@ -24,20 +24,14 @@ export default function UserForm({userId, onClose, onSave}) {
     
     const currentUserRole = localStorage.getItem('role'); // Assuming role is stored in localStorage
 
-   
+    console.log(localStorage.getItem('role'))
     const isAdmin = currentUserRole === 'Admin';
     const isNewUser = !userId || userId === 'new';
     const isEditingSelf = userId && userId === localStorage.getItem('userId');
-    console.log("1================")
-    console.log(userId)
-    console.log("2================")
-
 
     useEffect(() => {
         loadMilitaryRanks();
         if (!isNewUser) {
-            
-
             loadUserData();
         }
     }, [userId]);
@@ -123,7 +117,7 @@ export default function UserForm({userId, onClose, onSave}) {
         return (
             <div style={styles.container}>
                 <div style={styles.noAccess}>
-                    <h2>Access Denied 2</h2>
+                    <h2>Access Denied</h2>
                     <p>You can only edit your own profile.</p>
                     <button onClick={onClose} style={styles.button}>Close</button>
                 </div>
