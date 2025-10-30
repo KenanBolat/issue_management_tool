@@ -77,6 +77,11 @@ function App() {
         setCurrentPage('users');
     };
 
+    const handleDeleteUser = (userID) => {
+        console.log("handleDeleteUser"); 
+        console.log(userID); 
+    }
+
 
 
     if (!isAuthenticated) {
@@ -103,6 +108,7 @@ function App() {
                         onViewUser={handleViewUser}
                         onEditUser={handleEditUser}
                         onCreateUser={handleCreateUser}
+                        onDeleteUser={handleDeleteUser}
                         onManagePermissions={handleManagePermissions}
                     />
                 )}

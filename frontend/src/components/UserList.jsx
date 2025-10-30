@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { userApi } from '../../services/api.jsx';
 import { Edit, Trash2, Eye, Shield } from 'lucide-react';
 
-export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions }) {
+export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
@@ -221,13 +221,13 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                     </td>
                                     <td style={styles.td}>
                                         <div style={styles.actions}>
-                                            <button
+                                            {/* <button
                                                 style={styles.actionBtn}
                                                 title="View Details"
                                                 onClick={() => onViewUser(user.id)}
                                             >
                                                 <Eye size={16} />
-                                            </button>
+                                            </button> */}
                                             <button
                                                 style={styles.actionBtn}
                                                 title="Edit User"
@@ -235,17 +235,17 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             >
                                                 <Edit size={16} />
                                             </button>
-                                            <button
+                                            {/* <button
                                                 style={{ ...styles.actionBtn, color: '#7b1fa2' }}
                                                 title="Manage Permissions"
                                                 onClick={() => onManagePermissions(user.id)}
                                             >
                                                 <Shield size={16} />
-                                            </button>
+                                            </button> */}
                                             <button
                                                 style={{ ...styles.actionBtn, color: '#d32f2f' }}
                                                 title="Delete User"
-                                                onClick={() => handleDelete(user.id)}
+                                                onClick={() => handleDeleteUser(user.id)}
                                             >
                                                 <Trash2 size={16} />
                                             </button>
