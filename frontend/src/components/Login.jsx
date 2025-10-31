@@ -30,7 +30,7 @@ export default function Login({ onLogin }) {
  return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>🛰️ Satellite Ticket Tracker</h1>
+        <h1 style={styles.title}>🛰️ SatSuMa </h1>
         <form onSubmit={handleSubmit} style={styles.form}>
           {error && <div style={styles.error}>{error}</div>}
           

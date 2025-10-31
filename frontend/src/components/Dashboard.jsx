@@ -77,6 +77,8 @@ export default function Dashboard() {
 
     return (
         <div style={styles.container}>
+            
+            
             {/* Header */}
             <div style={styles.header}>
                 <div>
@@ -84,6 +86,18 @@ export default function Dashboard() {
                     <p style={styles.subtitle}>Welcome back, {userName}!</p>
                 </div>
             </div>
+            {/* Quick Actions */}
+            <div style={styles.statsGrid}>
+            {(userRole === 'Editor' || userRole === 'Admin') && (
+                <div style={styles.quickActions}>
+                    <button style={styles.actionButton}>+ Create New Ticket</button>
+                    <button style={{ ...styles.actionButton, ...styles.secondaryButton }}>
+                        View All Tickets
+                    </button>
+                </div>
+            )}
+            </div>
+            
 
             {/* Stats Cards */}
             <div style={styles.statsGrid}>
@@ -236,15 +250,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Quick Actions */}
-            {(userRole === 'Editor' || userRole === 'Admin') && (
-                <div style={styles.quickActions}>
-                    <button style={styles.actionButton}>+ Create New Ticket</button>
-                    <button style={{ ...styles.actionButton, ...styles.secondaryButton }}>
-                        View All Tickets
-                    </button>
-                </div>
-            )}
+
         </div>
     );
 }
@@ -444,7 +450,7 @@ const styles = {
     quickActions: {
         display: 'flex',
         gap: '1rem',
-        justifyContent: 'center',
+        justifyContent: 'right',
     },
     actionButton: {
         padding: '0.8rem 2rem',

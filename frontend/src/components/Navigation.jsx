@@ -10,7 +10,8 @@ export default function Navigation({ currentPage, onNavigate }) {
         <nav style={styles.nav}>
             <div style={styles.brand}>
                 <span style={styles.brandIcon}>🛰️</span>
-                <span style={styles.brandText}>Satellite Ticket Tracker</span>
+                <span style={styles.brandText}>Satellite Ticket Tracker | </span>
+                <span style={styles.brandIcon}>SatSuMa</span>
             </div>
             <div style={styles.menu}>
                 <button

@@ -178,11 +178,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                 <div style={styles.leftPanel}>
                     {/* Ticket Basic Info Section */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Ticket Information</h2>
+                        <h2 style={styles.sectionTitle}>Sorun(Ticket) Bilgisi</h2>
                         
                         <div style={styles.formRow}>
                             <label style={styles.label}>
-                                Title <span style={styles.required}>*</span>
+                                Başlık <span style={styles.required}>*</span>
                             </label>
                             <input
                                 type="text"
@@ -195,12 +195,12 @@ export default function TicketDetail({ ticketId, onClose }) {
                         </div>
 
                         <div style={styles.formRow}>
-                            <label style={styles.label}>Description</label>
+                            <label style={styles.label}>Detay</label>
                             <textarea
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
                                 style={{...styles.input, ...styles.textarea}}
-                                placeholder="Enter detailed description"
+                                placeholder="Detaylı açıklamayı giriniz..."
                                 rows={4}
                                 disabled={isReadOnly}
                             />
@@ -218,7 +218,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     />
                                     <span style={styles.checkboxText}>
                                         <AlertCircle size={16} color="#d32f2f" />
-                                        This is a BLOCKING issue
+                                        Sorun işin ilerlemesini engelliyor!
                                     </span>
                                 </label>
                                 
@@ -232,7 +232,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     />
                                     <span style={styles.checkboxText}>
                                         <FileText size={16} color="#1976d2" />
-                                        Technical Report Required
+                                        Teknik rapor gerekli! 
                                     </span>
                                 </label>
                             </div>
@@ -356,7 +356,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                     {/* Quality Control Section */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>FAKALİYET KONTROLÜ</h2>
+                        <h2 style={styles.sectionTitle}>FAALİYET KONTROLÜ</h2>
                         
                         <div style={styles.inlineGroup}>
                             <div style={{flex: 1}}>
