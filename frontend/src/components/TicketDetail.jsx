@@ -6,7 +6,7 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    
+
     // Form state
     const [formData, setFormData] = useState({
         externalCode: '',
@@ -24,13 +24,13 @@ export default function TicketDetail({ ticketId, onClose }) {
         itemId: '',
         itemSerialNo: '',
     });
-    
+
     // Comments and actions
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState([]);
     const [actions, setActions] = useState([]);
     const [activeTab, setActiveTab] = useState('details');
-    
+
     const userRole = localStorage.getItem("role");
     const isReadOnly = userRole === 'Viewer';
     const canEdit = userRole === 'Editor' || userRole === 'Admin';
@@ -49,7 +49,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             setLoading(true);
             const response = await ticketsAPI.getById(ticketId);
             const ticketData = response.data;
-            
+
             setTicket(ticketData);
             setFormData({
                 externalCode: ticketData.externalCode || '',
@@ -67,7 +67,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 itemId: ticketData.itemId || '',
                 itemSerialNo: ticketData.itemSerialNo || '',
             });
-            
+
             setComments(ticketData.comments || []);
             setActions(ticketData.actions || []);
         } catch (error) {
@@ -158,9 +158,9 @@ export default function TicketDetail({ ticketId, onClose }) {
                 </div>
                 <div style={styles.headerRight}>
                     {canEdit && (
-                        <button 
-                            onClick={handleSave} 
-                            style={{...styles.button, ...styles.saveButton}}
+                        <button
+                            onClick={handleSave}
+                            style={{ ...styles.button, ...styles.saveButton }}
                             disabled={saving}
                         >
                             <Save size={16} />
@@ -179,7 +179,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {/* Ticket Basic Info Section */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Sorun(Ticket) Bilgisi</h2>
-                        
+
                         <div style={styles.formRow}>
                             <label style={styles.label}>
                                 Başlık <span style={styles.required}>*</span>
@@ -199,7 +199,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             <textarea
                                 value={formData.description}
                                 onChange={(e) => handleInputChange('description', e.target.value)}
-                                style={{...styles.input, ...styles.textarea}}
+                                style={{ ...styles.input, ...styles.textarea }}
                                 placeholder="Detaylı açıklamayı giriniz..."
                                 rows={4}
                                 disabled={isReadOnly}
@@ -221,20 +221,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         Sorun işin ilerlemesini engelliyor!
                                     </span>
                                 </label>
-                                
-                                <label style={styles.checkboxLabel}>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.technicalReportRequired}
-                                        onChange={(e) => handleInputChange('technicalReportRequired', e.target.checked)}
-                                        disabled={isReadOnly}
-                                        style={styles.checkbox}
-                                    />
-                                    <span style={styles.checkboxText}>
-                                        <FileText size={16} color="#1976d2" />
-                                        Teknik rapor gerekli! 
-                                    </span>
-                                </label>
+
                             </div>
                         </div>
                     </div>
@@ -299,6 +286,47 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         <option value="">Select Component</option>
                                     </select>
                                 </div>
+
+                                <div style={styles.formRow}>
+
+                                    <label style={styles.label}>Parça No</label>
+
+                                    <input
+                                        type="text"
+                                        value={formData.itemDescription}
+                                        onChange={(e) => handleInputChange('itemDescription', e.target.value)}
+                                        style={styles.input}
+                                        placeholder="Item description"
+                                        disabled={isReadOnly}
+                                    />
+                                </div>
+
+                                <div style={styles.formRow}>
+                                    <div style={styles.inlineGroup}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={styles.label}>Parça No</label>
+                                            <input
+                                                type="text"
+                                                value={formData.itemId}
+                                                onChange={(e) => handleInputChange('itemId', e.target.value)}
+                                                style={styles.input}
+                                                placeholder="Parça No"
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={styles.label}>Seri No</label>
+                                            <input
+                                                type="text"
+                                                value={formData.itemSerialNo}
+                                                onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
+                                                style={styles.input}
+                                                placeholder="Seri No"
+                                                disabled={isReadOnly}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -306,48 +334,13 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {/* Item Details Section */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Item Details (FORMA BASILMAZ)</h2>
-                        
-                        <div style={styles.formRow}>
-                            <label style={styles.label}>Operasyonel Aksı Ediyor?</label>
-                            <input
-                                type="text"
-                                value={formData.itemDescription}
-                                onChange={(e) => handleInputChange('itemDescription', e.target.value)}
-                                style={styles.input}
-                                placeholder="Item description"
-                                disabled={isReadOnly}
-                            />
-                        </div>
 
-                        <div style={styles.formRow}>
-                            <div style={styles.inlineGroup}>
-                                <div style={{flex: 1}}>
-                                    <label style={styles.label}>Parça No</label>
-                                    <input
-                                        type="text"
-                                        value={formData.itemId}
-                                        onChange={(e) => handleInputChange('itemId', e.target.value)}
-                                        style={styles.input}
-                                        disabled={isReadOnly}
-                                    />
-                                </div>
-                                <div style={{flex: 1}}>
-                                    <label style={styles.label}>Seri No</label>
-                                    <input
-                                        type="text"
-                                        value={formData.itemSerialNo}
-                                        onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
-                                        style={styles.input}
-                                        disabled={isReadOnly}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div style={styles.formRow}>
                             <label style={styles.label}>Parça Tanımı</label>
                             <textarea
-                                style={{...styles.input, ...styles.textarea}}
+                                style={{ ...styles.input, ...styles.textarea }}
                                 rows={3}
                                 disabled={isReadOnly}
                             />
@@ -357,17 +350,17 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {/* Quality Control Section */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>FAALİYET KONTROLÜ</h2>
-                        
+
                         <div style={styles.inlineGroup}>
-                            <div style={{flex: 1}}>
+                            <div style={{ flex: 1 }}>
                                 <label style={styles.label}>PERSONEL Rütbe & Adı Soyadı</label>
                                 <input type="text" style={styles.input} disabled={isReadOnly} />
                             </div>
-                            <div style={{flex: 1}}>
+                            <div style={{ flex: 1 }}>
                                 <label style={styles.label}>İLK. KOM. Rütbe & Adı Soyadı</label>
                                 <input type="text" style={styles.input} disabled={isReadOnly} />
                             </div>
-                            <div style={{flex: 1}}>
+                            <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Tarih / Saat</label>
                                 <input type="text" style={styles.input} disabled={isReadOnly} />
                             </div>
@@ -376,12 +369,26 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.formRow}>
                             <label style={styles.label}>Sonuç (FAAL / GAYRİ FAAL)</label>
                             <textarea
-                                style={{...styles.input, ...styles.textarea}}
+                                style={{ ...styles.input, ...styles.textarea }}
                                 rows={2}
                                 placeholder="(Gözü faal ise gerçekçesi ve faaliyet için lisezler yazılacaktır)"
                                 disabled={isReadOnly}
                             />
                         </div>
+
+                        <label style={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={formData.technicalReportRequired}
+                                onChange={(e) => handleInputChange('technicalReportRequired', e.target.checked)}
+                                disabled={isReadOnly}
+                                style={styles.checkbox}
+                            />
+                            <span style={styles.checkboxText}>
+                                <FileText size={16} color="#1976d2" />
+                                Teknik rapor gerekli!
+                            </span>
+                        </label>
                     </div>
                 </div>
 
@@ -390,7 +397,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {/* Status Control Panel */}
                     <div style={styles.statusPanel}>
                         <h3 style={styles.panelTitle}>Status Control</h3>
-                        
+
                         <div style={styles.statusBadgeContainer}>
                             <span style={{
                                 ...styles.statusBadgeLarge,
@@ -403,30 +410,30 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         {ticket && canEdit && (
                             <div style={styles.statusActions}>
-                                <button 
+                                <button
                                     onClick={() => handleStatusChange('CONFIRMED')}
-                                    style={{...styles.statusButton, ...styles.confirmButton}}
+                                    style={{ ...styles.statusButton, ...styles.confirmButton }}
                                     disabled={formData.status === 'CONFIRMED'}
                                 >
                                     Confirm
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleStatusChange('PAUSED')}
-                                    style={{...styles.statusButton, ...styles.pauseButton}}
+                                    style={{ ...styles.statusButton, ...styles.pauseButton }}
                                     disabled={formData.status === 'PAUSED'}
                                 >
                                     Pause
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleStatusChange('CLOSED')}
-                                    style={{...styles.statusButton, ...styles.closeStatusButton}}
+                                    style={{ ...styles.statusButton, ...styles.closeStatusButton }}
                                     disabled={formData.status === 'CLOSED'}
                                 >
                                     Close
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleStatusChange('REOPENED')}
-                                    style={{...styles.statusButton, ...styles.reopenButton}}
+                                    style={{ ...styles.statusButton, ...styles.reopenButton }}
                                     disabled={formData.status === 'REOPENED'}
                                 >
                                     Reopen
@@ -489,12 +496,12 @@ export default function TicketDetail({ ticketId, onClose }) {
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
                                                 placeholder="Add a comment..."
-                                                style={{...styles.input, ...styles.textarea}}
+                                                style={{ ...styles.input, ...styles.textarea }}
                                                 rows={3}
                                             />
                                             <button
                                                 onClick={handleAddComment}
-                                                style={{...styles.button, ...styles.addCommentButton}}
+                                                style={{ ...styles.button, ...styles.addCommentButton }}
                                             >
                                                 <Send size={16} />
                                                 Add Comment
