@@ -239,15 +239,8 @@ export default function UserForm({userId, onClose, onSave}) {
                                 disabled={!isAdmin && !isNewUser}
                             >
                                 <option value="Airforce">Airforce (Hava Kuvvetleri)</option>
-                                <option value="Navy">Navy (Deniz Kuvvetleri)</option>
-                                <option value="Army">Army (Kara Kuvvetleri)</option>
-                                <option value="Marines">Marines (Deniz Piyade)</option>
-                                <option value="CoastGuard">Coast Guard (Sahil Güvenlik)</option>
-                                <option value="Internal">Internal</option>
-                                <option value="External">External</option>
-                                <option value="Contractor">Contractor</option>
-                                <option value="Subcontractor">Subcontractor</option>
-                                <option value="Partner">Partner</option>
+                                <option value="Contractor">Yüklenici (TUSAS)</option>
+                                <option value="Subcontractor">Alt Yüklenici </option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
