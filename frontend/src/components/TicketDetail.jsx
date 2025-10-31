@@ -232,7 +232,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             Configuration Item (CI) Breakdown
                         </h2>
                         <p style={styles.sectionSubtitle}>
-                            Dana Sistem → Alt Sistem → CI → Komponent üçünde seçiniz / değiştiriniz
+                            Seçim Sırası → Alt Sistem → CI → Komponent üçünde seçiniz / değiştiriniz
                         </p>
 
                         <div style={styles.hierarchyContainer}>
@@ -264,7 +264,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                             <div style={styles.hierarchyRow}>
                                 <div style={styles.hierarchyItem}>
-                                    <label style={styles.label}>CI (Configuration Item)</label>
+                                    <label style={styles.label}>CI (Konfigurasyon Birimi)</label>
                                     <select
                                         value={formData.ciId || ''}
                                         onChange={(e) => handleInputChange('ciId', e.target.value ? parseInt(e.target.value) : null)}
@@ -289,7 +289,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                                 <div style={styles.formRow}>
 
-                                    <label style={styles.label}>Parça No</label>
+                                    <label style={styles.label}>Item Description</label>
 
                                     <input
                                         type="text"
@@ -325,9 +325,19 @@ export default function TicketDetail({ ticketId, onClose }) {
                                                 disabled={isReadOnly}
                                             />
                                         </div>
+                                        
                                     </div>
+                                    
                                 </div>
+                                
                             </div>
+                            <div style={styles.formRow}>
+                                            <label style={styles.label}>Parça Tanımı</label>
+                                            <textarea  
+                                                style={{ ...styles.input, ...styles.textarea }}
+                                                rows={3}    
+                                                disabled={isReadOnly}   />
+                        </div>
                         </div>
                     </div>
 
@@ -337,14 +347,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
 
-                        <div style={styles.formRow}>
-                            <label style={styles.label}>Parça Tanımı</label>
-                            <textarea
-                                style={{ ...styles.input, ...styles.textarea }}
-                                rows={3}
-                                disabled={isReadOnly}
-                            />
-                        </div>
+
                     </div>
 
                     {/* Quality Control Section */}
