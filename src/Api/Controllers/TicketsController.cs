@@ -63,6 +63,9 @@ public class TicketsController : ControllerBase
             ticket.IsBlocking,
             ticket.Status.ToString(),
             ticket.CreatedAt,
+            ticket.CreatedBy.DisplayName,
+            ticket.UpdatedAt,
+            ticket.SubsystemId,
             ticket.Actions.Select(a => new TicketActionItem(
                 a.Id,
                 a.ActionType.ToString(),

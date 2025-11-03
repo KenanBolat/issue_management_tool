@@ -1,14 +1,17 @@
+using System.Reflection.PortableExecutable;
+
 namespace Api.DTOs;
-    public record CreateTicketRequest(
-    string Title,
-    string Description,
-    bool IsBlocking,
-    string Status,
-    bool TechnicalReportRequired,
-    long? CIId,
-    long? ComponentId,
-    long? SubsystemId,
-    long? SystemId);
+
+public record CreateTicketRequest(
+string Title,
+string Description,
+bool IsBlocking,
+string Status,
+bool TechnicalReportRequired,
+long? CIId,
+long? ComponentId,
+long? SubsystemId,
+long? SystemId);
 
 public record ChangeStatusRequest(string ToStatus, string? Notes, string? ConfirmationStatus);
 public record AddCommentRequest(string Body);
@@ -31,6 +34,9 @@ public record TicketDetail(
     bool IsBlocking,
     string Status,
     DateTime CreatedAt,
+    string CreatedByName,
+    DateTime UpdatedAt,
+    long? SubsystemId, 
     List<TicketActionItem> Actions,
     List<CommentItem> Comments);
 
