@@ -458,25 +458,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             />
                         </div>
 
-                        <div style={styles.inlineGroup}>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>PERSONEL Rütbe & Adı Soyadı</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>İLK. KOM. Rütbe & Adı Soyadı</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
-                            </div>
-                        </div>
-
+                        
                         <label style={styles.checkboxLabel}>
                             <input
                                 type="checkbox"

@@ -1,11 +1,3 @@
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.csproj.AssemblyReference.cache
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.GeneratedMSBuildEditorConfig.editorconfig
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.AssemblyInfoInputs.cache
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.AssemblyInfo.cs
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.csproj.CoreCompileInputs.cache
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.MvcApplicationPartsAssemblyInfo.cs
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.MvcApplicationPartsAssemblyInfo.cache
-/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.sourcelink.json
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/appsettings.Development.json
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/appsettings.json
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Api
@@ -106,6 +98,14 @@
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Domain.pdb
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Infrastructure.pdb
 /home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Application.pdb
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.csproj.AssemblyReference.cache
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.GeneratedMSBuildEditorConfig.editorconfig
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.AssemblyInfoInputs.cache
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.AssemblyInfo.cs
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.csproj.CoreCompileInputs.cache
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.MvcApplicationPartsAssemblyInfo.cs
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.MvcApplicationPartsAssemblyInfo.cache
+/home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.sourcelink.json
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/staticwebassets.build.json
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/staticwebassets.development.json
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/staticwebassets/msbuild.Api.Microsoft.AspNetCore.StaticWebAssets.props
