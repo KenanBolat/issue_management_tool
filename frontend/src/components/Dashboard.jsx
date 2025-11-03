@@ -82,17 +82,17 @@ export default function Dashboard() {
             {/* Header */}
             <div style={styles.header}>
                 <div>
-                    <h1 style={styles.title}>Dashboard</h1>
-                    <p style={styles.subtitle}>Welcome back, {userName}!</p>
+                    <h1 style={styles.title}>Gösterge Paneli</h1>
+                    <p style={styles.subtitle}>{userName}</p>
                 </div>
             </div>
             {/* Quick Actions */}
             <div style={styles.statsGrid}>
             {(userRole === 'Editor' || userRole === 'Admin') && (
                 <div style={styles.quickActions}>
-                    <button style={styles.actionButton}>+ Create New Ticket</button>
+                    <button style={styles.actionButton}>+ Yeni Sorun Ekle</button>
                     <button style={{ ...styles.actionButton, ...styles.secondaryButton }}>
-                        View All Tickets
+                        Tüm sorunları göster
                     </button>
                 </div>
             )}
@@ -107,7 +107,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <div style={styles.statValue}>{stats.OPEN || 0}</div>
-                        <div style={styles.statLabel}>Open Tickets</div>
+                        <div style={styles.statLabel}>Açık Sorunlar</div>
                     </div>
                 </div>
 
@@ -117,7 +117,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <div style={styles.statValue}>{stats.CONFIRMED || 0}</div>
-                        <div style={styles.statLabel}>Confirmed</div>
+                        <div style={styles.statLabel}>Onaylanmış</div>
                     </div>
                 </div>
 
@@ -127,7 +127,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                         <div style={styles.statValue}>{stats.CLOSED || 0}</div>
-                        <div style={styles.statLabel}>Closed</div>
+                        <div style={styles.statLabel}>Kapalı</div>
                     </div>
                 </div>
 
@@ -139,7 +139,7 @@ export default function Dashboard() {
                         <div style={styles.statValue}>
                             {Object.values(stats).reduce((a, b) => a + b, 0)}
                         </div>
-                        <div style={styles.statLabel}>Total Tickets</div>
+                        <div style={styles.statLabel}>Toplam Sorun</div>
                     </div>
                 </div>
             </div>
@@ -147,7 +147,7 @@ export default function Dashboard() {
             {/* Charts Row */}
             <div style={styles.chartsRow}>
                 <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Tickets by Status</h3>
+                    <h3 style={styles.cardTitle}>Durumuna göre sorunlar</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -160,7 +160,7 @@ export default function Dashboard() {
                 </div>
 
                 <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Ticket Trends</h3>
+                    <h3 style={styles.cardTitle}>Sorun Eğilimleri</h3>
                     <ResponsiveContainer width="100%" height={250}>
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -178,12 +178,12 @@ export default function Dashboard() {
                 {/* Ongoing Tickets */}
                 <div style={styles.card}>
                     <div style={styles.cardHeader}>
-                        <h3 style={styles.cardTitle}>Ongoing Issues</h3>
+                        <h3 style={styles.cardTitle}>Devam Eden Sorunlar</h3>
                         <span style={styles.badge}>{ongoingTickets.length} active</span>
                     </div>
                     <div style={styles.taskList}>
                         {ongoingTickets.length === 0 ? (
-                            <div style={styles.emptyState}>No ongoing tickets</div>
+                            <div style={styles.emptyState}>Devem eden bir sorun yok</div>
                         ) : (
                             ongoingTickets.map((ticket) => (
                                 <div key={ticket.id} style={styles.taskItem}>
@@ -216,12 +216,12 @@ export default function Dashboard() {
                 {/* Recent Tickets */}
                 <div style={styles.card}>
                     <div style={styles.cardHeader}>
-                        <h3 style={styles.cardTitle}>Recent Tickets</h3>
+                        <h3 style={styles.cardTitle}>Son Açılan Sorunlar</h3>
                         <button
                             onClick={() => window.location.href = '#/tickets'}
                             style={styles.viewAllBtn}
                         >
-                            View All
+                                Hepsini Gör
                         </button>
                     </div>
                     <div style={styles.taskList}>

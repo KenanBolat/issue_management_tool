@@ -9,6 +9,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     // Form state
     const [formData, setFormData] = useState({
+        akf:'',
         externalCode: '',
         title: '',
         description: '',
@@ -23,6 +24,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         itemDescription: '',
         itemId: '',
         itemSerialNo: '',
+        updatedAt: '',
     });
 
     // Comments and actions
@@ -62,14 +64,17 @@ export default function TicketDetail({ ticketId, onClose }) {
                 ciId: ticketData.ciId,
                 componentId: ticketData.componentId,
                 subsystemId: ticketData.subsystemId,
+                createdByName: ticketData.createdBy,
                 systemId: ticketData.systemId,
                 itemDescription: ticketData.itemDescription || '',
                 itemId: ticketData.itemId || '',
                 itemSerialNo: ticketData.itemSerialNo || '',
+                updatedAt: ticketData.updatedAt || '',
             });
 
             setComments(ticketData.comments || []);
             setActions(ticketData.actions || []);
+            debugger;
         } catch (error) {
             console.error("Error loading ticket:", error);
             alert("Error loading ticket details");
@@ -245,7 +250,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         style={styles.select}
                                         disabled={isReadOnly}
                                     >
-                                        <option value="">Select System</option>
+                                        <option value="">Sistem Seç</option>
                                     </select>
                                 </div>
 
@@ -257,7 +262,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         style={styles.select}
                                         disabled={isReadOnly}
                                     >
-                                        <option value="">Select Subsystem</option>
+                                        <option value="">Altsistem Seç</option>
                                     </select>
                                 </div>
                             </div>
@@ -271,7 +276,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         style={styles.select}
                                         disabled={isReadOnly}
                                     >
-                                        <option value="">Select CI</option>
+                                        <option value="">CI Seç</option>
                                     </select>
                                 </div>
 
@@ -283,20 +288,20 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         style={styles.select}
                                         disabled={isReadOnly}
                                     >
-                                        <option value="">Select Component</option>
+                                        <option value="">Komponent Seç</option>
                                     </select>
                                 </div>
 
                                 <div style={styles.formRow}>
 
-                                    <label style={styles.label}>Item Description</label>
+                                    <label style={styles.label}>Parça Tanımı</label>
 
                                     <input
                                         type="text"
                                         value={formData.itemDescription}
                                         onChange={(e) => handleInputChange('itemDescription', e.target.value)}
                                         style={styles.input}
-                                        placeholder="Item description"
+                                        placeholder="Parça Tanımı"
                                         disabled={isReadOnly}
                                     />
                                 </div>
@@ -325,34 +330,108 @@ export default function TicketDetail({ ticketId, onClose }) {
                                                 disabled={isReadOnly}
                                             />
                                         </div>
-                                        
+
                                     </div>
-                                    
+
                                 </div>
-                                
+
                             </div>
-                            <div style={styles.formRow}>
-                                            <label style={styles.label}>Parça Tanımı</label>
-                                            <textarea  
-                                                style={{ ...styles.input, ...styles.textarea }}
-                                                rows={3}    
-                                                disabled={isReadOnly}   />
-                        </div>
+                            
                         </div>
                     </div>
 
-                    {/* Item Details Section */}
+
+
+                    {/* Bildirim Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Item Details (FORMA BASILMAZ)</h2>
+                        <h2 style={styles.sectionTitle}>Bildirim Detayları</h2>
 
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Arıza No (Otomatik)</label>
+                                <input type="text" style={styles.input} value={formData.akf} disabled />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Tespit Edildiği Tarih (GG-AA-YYYY SS:DD)</label>
+                                <input 
+                                type="text"
+                                value={formData} 
+                                style={styles.input} 
+                                disabled={isReadOnly} 
+                                placeholder="GG-AA-YYYY SS:DD"
+                                 />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}> Yükleniciye Bildirildiği Tarih (GG-AA-YYYY SS:DD)</label>
+                                <input 
+                                type="text" 
+                                style={styles.input} 
+                                disabled={isReadOnly} 
+                                placeholder="GG-AA-YYYY SS:DD" />
+                            </div>
 
+                        </div>
+                        <br></br>
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Bildirim Şekli</label>
+                                <select type="text" style={styles.select} disabled={isReadOnly} placeholder="Seri No" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>TTCOMS TT Kodu (Varsa)</label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="TT00001" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Tespit Eden Personel</label>
+                                <select type="text" style={styles.select} disabled={isReadOnly} placeholder="Seri No" />
+                            </div>
+                        </div>
 
 
                     </div>
 
-                    {/* Quality Control Section */}
+                    {/* Mudahele Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>FAALİYET KONTROLÜ</h2>
+                        <h2 style={styles.sectionTitle}>Arıza Müdahele Detayları</h2>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Müdahele Eden Personel(ler)</label>
+                                <select type="text" style={styles.select} disabled={isReadOnly} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Müdahele Tarihi (GG-AA-YYYY SS:DD)</label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Giderilidiği Tarih (GG-AA-YYYY SS:DD)</label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Arızayı Gideren Personel(ler)</label>
+                                <select type="text" style={styles.select} disabled={isReadOnly} />
+                            </div>
+
+                        </div>
+
+                        <div style={styles.formRow}>
+                            <label style={styles.label}>Arızaya İlişkin Yapılan İşlemler</label>
+                            <textarea
+                                style={{ ...styles.input, ...styles.textarea }}
+                                rows={5}
+                                placeholder="Yapılan işlemlerin özeti"
+                                disabled={isReadOnly}
+                            />
+                        </div>
+
+
+                    </div>
+
+
+
+
+                    <div style={styles.formSection}>
+                        <h2 style={styles.sectionTitle}>Faaliyet Kontrolü</h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
@@ -364,8 +443,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 <input type="text" style={styles.input} disabled={isReadOnly} />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Tarih / Saat</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} />
+                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
                             </div>
                         </div>
 
@@ -373,10 +452,29 @@ export default function TicketDetail({ ticketId, onClose }) {
                             <label style={styles.label}>Sonuç (FAAL / GAYRİ FAAL)</label>
                             <textarea
                                 style={{ ...styles.input, ...styles.textarea }}
-                                rows={2}
-                                placeholder="(Gözü faal ise gerçekçesi ve faaliyet için lisezler yazılacaktır)"
+                                rows={4}
+                                placeholder="(Gayri faal ise gerçekçesi ve faaliyet için öneriler yazılacaktır.)"
                                 disabled={isReadOnly}
                             />
+                        </div>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>PERSONEL Rütbe & Adı Soyadı</label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>İLK. KOM. Rütbe & Adı Soyadı</label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
+                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                            </div>
                         </div>
 
                         <label style={styles.checkboxLabel}>
@@ -395,11 +493,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                     </div>
                 </div>
 
-                {/* Right Panel - Status, Comments, History */}
+                {/* Control Panel */}
                 <div style={styles.rightPanel}>
                     {/* Status Control Panel */}
                     <div style={styles.statusPanel}>
-                        <h3 style={styles.panelTitle}>Status Control</h3>
+                        <h3 style={styles.panelTitle}>Sorun Durumu</h3>
 
                         <div style={styles.statusBadgeContainer}>
                             <span style={{
@@ -418,28 +516,28 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     style={{ ...styles.statusButton, ...styles.confirmButton }}
                                     disabled={formData.status === 'CONFIRMED'}
                                 >
-                                    Confirm
+                                    Onayla
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('PAUSED')}
                                     style={{ ...styles.statusButton, ...styles.pauseButton }}
                                     disabled={formData.status === 'PAUSED'}
                                 >
-                                    Pause
+                                    Durdur
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('CLOSED')}
                                     style={{ ...styles.statusButton, ...styles.closeStatusButton }}
                                     disabled={formData.status === 'CLOSED'}
                                 >
-                                    Close
+                                    Kapat
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('REOPENED')}
                                     style={{ ...styles.statusButton, ...styles.reopenButton }}
                                     disabled={formData.status === 'REOPENED'}
                                 >
-                                    Reopen
+                                    Yeniden Aç
                                 </button>
                             </div>
                         )}
@@ -447,16 +545,17 @@ export default function TicketDetail({ ticketId, onClose }) {
                         {ticket && (
                             <div style={styles.metadata}>
                                 <div style={styles.metadataItem}>
-                                    <span style={styles.metadataLabel}>Created:</span>
-                                    <span>{new Date(ticket.createdAt).toLocaleString()}</span>
-                                </div>
-                                <div style={styles.metadataItem}>
-                                    <span style={styles.metadataLabel}>Created By:</span>
+                                    <span style={styles.metadataLabel}>Oluşturan:</span>
                                     <span>{ticket.createdByName}</span>
+                                </div>
+
+                                <div style={styles.metadataItem}>
+                                    <span style={styles.metadataLabel}>Oluşturma Tarihi :</span>
+                                    <span>{new Date(ticket.createdAt).toLocaleString()}</span>
                                 </div>
                                 {ticket.updatedAt && (
                                     <div style={styles.metadataItem}>
-                                        <span style={styles.metadataLabel}>Updated:</span>
+                                        <span style={styles.metadataLabel}>Son Güncelleme Tarihi:</span>
                                         <span>{new Date(ticket.updatedAt).toLocaleString()}</span>
                                     </div>
                                 )}
@@ -476,7 +575,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     }}
                                 >
                                     <MessageSquare size={16} />
-                                    Comments ({comments.length})
+                                    Yapılan İşlemler ({comments.length})
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('history')}
@@ -486,7 +585,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     }}
                                 >
                                     <History size={16} />
-                                    History ({actions.length})
+                                    Tarihçe ({actions.length})
                                 </button>
                             </div>
 
@@ -498,7 +597,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                             <textarea
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
-                                                placeholder="Add a comment..."
+                                                placeholder="Yeni bir işlem adımı ekleyiniz..."
                                                 style={{ ...styles.input, ...styles.textarea }}
                                                 rows={3}
                                             />
@@ -507,7 +606,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                                 style={{ ...styles.button, ...styles.addCommentButton }}
                                             >
                                                 <Send size={16} />
-                                                Add Comment
+                                                İşlem Ekle
                                             </button>
                                         </div>
                                     )}
@@ -571,6 +670,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             )}
                         </>
                     )}
+
                 </div>
             </div>
         </div>

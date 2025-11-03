@@ -116,9 +116,9 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
         <div style={styles.container}>
             <div style={styles.header}>
                 <div>
-                    <h1 style={styles.title}>TICKETS</h1>
+                    <h1 style={styles.title}>SORUNLAR</h1>
                     <p style={styles.subtitle}>
-                        Showing {filteredTickets.length} of {tickets.length} tickets
+                         {filteredTickets.length} / {tickets.length} sorun gösterilmektedir
                     </p>
                 </div>
             </div>
@@ -127,7 +127,7 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                 <div style={styles.filterGroup}>
                     <input
                         type="text"
-                        placeholder="Search tickets..."
+                        placeholder="Sorunları ara..."
                         value={filter}
                         onChange={(e) => {
                             console.log('Search filter changed:', e.target.value);
@@ -144,26 +144,26 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                         }}
                         style={styles.select}
                     >
-                        <option value="">All Statuses</option>
-                        <option value="OPEN">Open</option>
-                        <option value="CONFIRMED">Confirmed</option>
-                        <option value="PAUSED">Paused</option>
-                        <option value="CLOSED">Closed</option>
-                        <option value="CANCELLED">Cancelled</option>
-                        <option value="REOPENED">Reopened</option>
+                        <option value="">Durumlar</option>
+                        <option value="OPEN">Açık</option>
+                        <option value="CONFIRMED">Onaylanmış</option>
+                        <option value="PAUSED">Durdurulmuş</option>
+                        <option value="CLOSED">Kapalı</option>
+                        <option value="CANCELLED">İptal Edilmiş</option>
+                        <option value="REOPENED">Tekrar Açılmış</option>
                     </select>
 
                     <button onClick={() => {
                         console.log('Refresh clicked');
                         loadTickets();
                     }} style={styles.refreshBtn}>
-                        Refresh
+                        Tazele
                     </button>
                 </div>
 
                 {(userRole === 'Editor' || userRole === 'Admin') && (
                     <button style={styles.addBtn}>
-                        + Add New Ticket
+                        + Yeni Sorun Ekle
                     </button>
                 )}
             </div>
@@ -190,7 +190,7 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                         <thead>
                             <tr>
                                 <th style={styles.th} onClick={() => handleSort('id')}>
-                                    Ticket ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    Sorun Kodu {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('externalCode')}>
                                     TTCOMS-Kodu {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}

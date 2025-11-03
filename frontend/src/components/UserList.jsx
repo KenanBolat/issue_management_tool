@@ -102,9 +102,9 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         <div style={styles.container}>
             <div style={styles.header}>
                 <div>
-                    <h1 style={styles.title}>USER MANAGEMENT</h1>
+                    <h1 style={styles.title}>Kullanıcı Kontrol Paneli</h1>
                     <p style={styles.subtitle}>
-                        Showing {filteredUsers.length} of {users.length} users
+                       {filteredUsers.length} / {users.length}  kullanıcı gösterilmektedir.
                     </p>
                 </div>
             </div>
@@ -113,7 +113,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                 <div style={styles.filterGroup}>
                     <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder="Kullanıcı Ara..."
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                         style={styles.searchInput}
@@ -148,7 +148,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                             onChange={(e) => setShowInactive(e.target.checked)}
                             style={styles.checkbox}
                         />
-                        Show Inactive
+                        Aktif Olmayan Kullanıcılar
                     </label>
 
                     <button onClick={loadUsers} style={styles.refreshBtn}>
@@ -157,7 +157,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                 </div>
 
                 <button onClick={onCreateUser} style={styles.addBtn}>
-                    + Add New User
+                    + Yeni Kullanıcı Ekle
                 </button>
             </div>
 

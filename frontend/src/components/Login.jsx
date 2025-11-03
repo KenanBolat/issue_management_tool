@@ -36,7 +36,7 @@ export default function Login({ onLogin }) {
           
           <input
             type="email"
-            placeholder="Email"
+            placeholder="E-posta"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -45,7 +45,7 @@ export default function Login({ onLogin }) {
           
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Şifre"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -53,7 +53,7 @@ export default function Login({ onLogin }) {
           />
           
           <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Giriş yapılıyor...' : 'Gönder'}
           </button>
         </form>
         

@@ -22,7 +22,7 @@ export default function Navigation({ currentPage, onNavigate }) {
                     }}
                 >
                     <LayoutDashboard size={18} />
-                    Dashboard </button>
+                    Gösterge Paneli </button>
                 <button
                     onClick={() => onNavigate('tickets')}
                     style={{
@@ -31,14 +31,14 @@ export default function Navigation({ currentPage, onNavigate }) {
                     }}
                 >
                     <List size={18} />
-                    Tickets </button>
+                    Sorunlar </button>
 
                 {userRole === 'Admin' && (
                     <button 
                     onClick={() => onNavigate('users')}
                     style={{...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem: {})}}
                     >
-                        Users
+                        Kontrol Paneli
                     </button>
                 )}
             </div>
