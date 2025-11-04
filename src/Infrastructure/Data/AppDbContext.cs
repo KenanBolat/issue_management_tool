@@ -77,9 +77,9 @@ namespace Infrastructure.Data
 
                         entity.HasQueryFilter(e => !e.IsDeleted);
 
-                        entity.HasOne(t => t.DetectionDetectedByUser)
+                        entity.HasOne(t => t.DetectDetectedByUser)
                         .WithMany()
-                        .HasForeignKey(t => t.DetectionDetectedByUserId)
+                        .HasForeignKey(t => t.DetectDetectedByUserId)
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_ticket_detection_detected_by_user"); 
 
@@ -162,7 +162,7 @@ namespace Infrastructure.Data
                         e.HasKey(x => new { x.TicketId, x.UserId });
 
                         e.HasOne(x => x.Ticket)
-                        .WithMany(t => t.ResponsePersonnel)
+                        .WithMany(t => t.ResponseByUser)
                         .HasForeignKey(x => x.TicketId)
                         .OnDelete(DeleteBehavior.Cascade);
 

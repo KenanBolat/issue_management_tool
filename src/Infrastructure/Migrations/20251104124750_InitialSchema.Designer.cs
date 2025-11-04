@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251022042820_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251104124750_InitialSchema")]
+    partial class InitialSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,8 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "activity_check_result", new[] { "pending", "approved", "rejected", "needs_revision" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "notification_method", new[] { "email", "telephone", "briefing", "verbal" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Domain.Entities.Attachment", b =>
@@ -141,6 +143,42 @@ namespace Infrastructure.Migrations
                     b.ToTable("ConfigurationItems");
                 });
 
+            modelBuilder.Entity("Domain.Entities.MilitaryRank", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("MilitaryRanks");
+                });
+
             modelBuilder.Entity("Domain.Entities.Subsystem", b =>
                 {
                     b.Property<long>("Id")
@@ -208,6 +246,22 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("DetectContractorNotifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detect_contractor_notified_at");
+
+                    b.Property<DateTime?>("DetectDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detect_date");
+
+                    b.Property<long?>("DetectDetectedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("detect_by_user_id");
+
+                    b.Property<int[]>("DetectNotificationMethods")
+                        .HasColumnType("integer[]")
+                        .HasColumnName("detect_notification_methods");
+
                     b.Property<string>("ExternalCode")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -240,6 +294,14 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("ResolutionTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ResponseDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("response_date");
+
+                    b.Property<DateTime?>("ResponseResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("response_resolved_at");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -262,6 +324,12 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserId1")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CIId");
@@ -269,6 +337,8 @@ namespace Infrastructure.Migrations
                     b.HasIndex("ComponentId");
 
                     b.HasIndex("CreatedById");
+
+                    b.HasIndex("DetectDetectedByUserId");
 
                     b.HasIndex("ExternalCode")
                         .IsUnique();
@@ -279,7 +349,28 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SystemId");
 
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
+
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Ticket+TicketResponsePersonnel", b =>
+                {
+                    b.Property<long>("TicketId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("ticket_id");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("TicketId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ticket_response_personnel");
                 });
 
             modelBuilder.Entity("Domain.Entities.TicketAction", b =>
@@ -315,11 +406,16 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PerformedById");
 
                     b.HasIndex("TicketId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("TicketActions");
                 });
@@ -362,8 +458,17 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<int?>("Affiliation")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("CreatedById")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Department")
+                        .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -378,9 +483,27 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<long?>("LastUpdatedById")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("MilitaryRankId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("RankCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("Role")
                         .HasColumnType("integer");
@@ -390,10 +513,57 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("LastUpdatedById");
+
+                    b.HasIndex("MilitaryRankId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserPermission", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("CanCreate")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanView")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("GrantedById")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PermissionType")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GrantedById");
+
+                    b.HasIndex("UserId", "PermissionType");
+
+                    b.ToTable("UserPermissions");
                 });
 
             modelBuilder.Entity("Domain.Entities.Attachment", b =>
@@ -460,6 +630,12 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.User", "DetectDetectedByUser")
+                        .WithMany()
+                        .HasForeignKey("DetectDetectedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_ticket_detection_detected_by_user");
+
                     b.HasOne("Domain.Entities.User", "LastUpdatedBy")
                         .WithMany()
                         .HasForeignKey("LastUpdatedById")
@@ -473,17 +649,46 @@ namespace Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("SystemId");
 
+                    b.HasOne("Domain.Entities.User", null)
+                        .WithMany("CreatedTickets")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("Domain.Entities.User", null)
+                        .WithMany("UpdatedTickets")
+                        .HasForeignKey("UserId1");
+
                     b.Navigation("CI");
 
                     b.Navigation("Component");
 
                     b.Navigation("CreatedBy");
 
+                    b.Navigation("DetectDetectedByUser");
+
                     b.Navigation("LastUpdatedBy");
 
                     b.Navigation("Subsystem");
 
                     b.Navigation("System");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Ticket+TicketResponsePersonnel", b =>
+                {
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("ResponseByUser")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.TicketAction", b =>
@@ -500,6 +705,10 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.User", null)
+                        .WithMany("TicketActions")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("PerformedBy");
 
                     b.Navigation("Ticket");
@@ -508,7 +717,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketComment", b =>
                 {
                     b.HasOne("Domain.Entities.User", "CreatedBy")
-                        .WithMany()
+                        .WithMany("TicketComments")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -524,6 +733,49 @@ namespace Infrastructure.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.User", "LastUpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("LastUpdatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.MilitaryRank", "MilitaryRank")
+                        .WithMany()
+                        .HasForeignKey("MilitaryRankId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("LastUpdatedBy");
+
+                    b.Navigation("MilitaryRank");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserPermission", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "GrantedBy")
+                        .WithMany()
+                        .HasForeignKey("GrantedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("UserPermissions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GrantedBy");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
                     b.Navigation("Actions");
@@ -533,6 +785,21 @@ namespace Infrastructure.Migrations
                     b.Navigation("CIJobs");
 
                     b.Navigation("Comments");
+
+                    b.Navigation("ResponseByUser");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Navigation("CreatedTickets");
+
+                    b.Navigation("TicketActions");
+
+                    b.Navigation("TicketComments");
+
+                    b.Navigation("UpdatedTickets");
+
+                    b.Navigation("UserPermissions");
                 });
 #pragma warning restore 612, 618
         }

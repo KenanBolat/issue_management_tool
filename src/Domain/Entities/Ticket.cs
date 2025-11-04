@@ -50,37 +50,41 @@ namespace Domain.Entities
         public ICollection<CIJob> CIJobs { get; set; } = new List<CIJob>();
 
         //Tespit-Detection 
-        [Column("detection_data")]
-        public DateTime? DetectionData { get; set; }
-        public DateTime? DetectionContractorNotifiedAt { get; set; }
-        public NotificationMethod[]? DetectionNotificationMethods { get; set; }
-        public long? DetectionDetectedByUserId { get; set; }
-        public User? DetectionDetectedByUser { get; set; }
-        
+        [Column("detect_date")]
+        public DateTime? DetectDate { get; set; }
+        [Column("detect_contractor_notified_at")]
+        public DateTime? DetectContractorNotifiedAt { get; set; }
+        [Column("detect_notification_methods")]
+        public NotificationMethod[]? DetectNotificationMethods { get; set; }
+        [Column("detect_by_user_id")]
+        public long? DetectDetectedByUserId { get; set; }
+        [Column("detect_by_user")]
+        public User? DetectDetectedByUser { get; set; }
+
+
 
         //Mudahele-Response
-        
         [Column("response_date")]
-        public DateTime? ResponseDate {get; set; }
-
+        public DateTime? ResponseDate { get; set; }
         [Column("response_resolved_at")]
         public DateTime? ResponseResolvedAt { get; set; }
-        public ICollection<TicketResponsePersonnel> ResponsePersonnel { get; set; } = new List<TicketResponsePersonnel>(); 
+        [Column("response_by_user")]
+        public ICollection<TicketResponsePersonnel> ResponseByUser { get; set; } = new List<TicketResponsePersonnel>();
 
         // ---------------------------
         // Join entities for multiselect users in "Müdahale"
         // ---------------------------
         [Table("ticket_response_personnel")]
-    public class TicketResponsePersonnel
-    {
-        [Column("ticket_id")]
-        public long TicketId { get; set; }
-        public Ticket Ticket { get; set; } = null!;
+        public class TicketResponsePersonnel
+        {
+            [Column("ticket_id")]
+            public long TicketId { get; set; }
+            public Ticket Ticket { get; set; } = null!;
 
-        [Column("user_id")]
-        public long UserId { get; set; }
-        public User User { get; set; } = null!;
-    }
+            [Column("user_id")]
+            public long UserId { get; set; }
+            public User User { get; set; } = null!;
+        }
 
     }
 }

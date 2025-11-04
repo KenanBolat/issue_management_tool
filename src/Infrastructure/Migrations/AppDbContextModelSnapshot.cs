@@ -243,18 +243,21 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("DetectionContractorNotifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DetectionData")
+                    b.Property<DateTime?>("DetectContractorNotifiedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("detection_data");
+                        .HasColumnName("detect_contractor_notified_at");
 
-                    b.Property<long?>("DetectionDetectedByUserId")
-                        .HasColumnType("bigint");
+                    b.Property<DateTime?>("DetectDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detect_date");
 
-                    b.Property<int[]>("DetectionNotificationMethods")
-                        .HasColumnType("integer[]");
+                    b.Property<long?>("DetectDetectedByUserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("detect_by_user_id");
+
+                    b.Property<int[]>("DetectNotificationMethods")
+                        .HasColumnType("integer[]")
+                        .HasColumnName("detect_notification_methods");
 
                     b.Property<string>("ExternalCode")
                         .IsRequired()
@@ -332,7 +335,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("DetectionDetectedByUserId");
+                    b.HasIndex("DetectDetectedByUserId");
 
                     b.HasIndex("ExternalCode")
                         .IsUnique();
@@ -624,9 +627,9 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.User", "DetectionDetectedByUser")
+                    b.HasOne("Domain.Entities.User", "DetectDetectedByUser")
                         .WithMany()
-                        .HasForeignKey("DetectionDetectedByUserId")
+                        .HasForeignKey("DetectDetectedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_ticket_detection_detected_by_user");
 
@@ -657,7 +660,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedBy");
 
-                    b.Navigation("DetectionDetectedByUser");
+                    b.Navigation("DetectDetectedByUser");
 
                     b.Navigation("LastUpdatedBy");
 
@@ -669,7 +672,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Ticket+TicketResponsePersonnel", b =>
                 {
                     b.HasOne("Domain.Entities.Ticket", "Ticket")
-                        .WithMany("ResponsePersonnel")
+                        .WithMany("ResponseByUser")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -780,7 +783,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("Comments");
 
-                    b.Navigation("ResponsePersonnel");
+                    b.Navigation("ResponseByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
