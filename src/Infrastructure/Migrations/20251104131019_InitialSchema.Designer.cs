@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251104124750_InitialSchema")]
+    [Migration("20251104131019_InitialSchema")]
     partial class InitialSchema
     {
         /// <inheritdoc />
@@ -222,29 +222,36 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long?>("CIId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("ci_id");
 
                     b.Property<long?>("ComponentId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("component_id");
 
                     b.Property<string>("ConfirmationStatus")
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("confirmation_status");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<long>("CreatedById")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("created_by_id");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<DateTime?>("DetectContractorNotifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -265,34 +272,44 @@ namespace Infrastructure.Migrations
                     b.Property<string>("ExternalCode")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("external_code");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsBlocking")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocking");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("ItemDescription")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("item_description");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("item_id");
 
                     b.Property<string>("ItemSerialNo")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("item_serial_no");
 
                     b.Property<long?>("LastUpdatedById")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("last_updated_by_id");
 
-                    b.Property<DateTime?>("ReactionTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime?>("ReactionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reaction_date");
 
-                    b.Property<DateTime?>("ResolutionTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTime?>("ResolutionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resoluion_date");
 
                     b.Property<DateTime?>("ResponseDate")
                         .HasColumnType("timestamp with time zone")
@@ -305,24 +322,30 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
 
                     b.Property<long?>("SubsystemId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("subsystem_id");
 
                     b.Property<long?>("SystemId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("system_id");
 
                     b.Property<bool>("TechnicalReportRequired")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("technical_report_required");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("title");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");

@@ -89,7 +89,7 @@ namespace Application.Services
 
             if (toStatus == TicketStatus.CLOSED)
             {
-                ticket.ResolutionTime = DateTime.UtcNow;
+                ticket.ResolutionDate = DateTime.UtcNow;
                 await SummarizeTicketAsync(ticketId);
             }
 
