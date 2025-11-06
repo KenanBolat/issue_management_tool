@@ -1,178 +1,218 @@
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
 using Domain.Enums;
-using static Domain.Entities.Ticket;
 
 namespace Infrastructure.Data
 {
-      public class AppDbContext : DbContext
-      {
-            public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-            public DbSet<User> Users { get; set; }
-            public DbSet<TicketAction> TicketActions { get; set; }
-            public DbSet<TicketComment> TicketComments { get; set; }
-            public DbSet<Attachment> Attachments { get; set; }
-            public DbSet<ConfigurationItem> ConfigurationItems { get; set; }
-            public DbSet<Component> Components { get; set; }
-            public DbSet<Subsystem> Subsystems { get; set; }
-            public DbSet<SystemEntity> Systems { get; set; }
-            public DbSet<Ticket> Tickets { get; set; }
-            public DbSet<CIJob> CIJobs { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<TicketAction> TicketActions { get; set; }
+        public DbSet<TicketComment> TicketComments { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
+        public DbSet<ConfigurationItem> ConfigurationItems { get; set; }
+        public DbSet<Component> Components { get; set; }
+        public DbSet<Subsystem> Subsystems { get; set; }
+        public DbSet<SystemEntity> Systems { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<CIJob> CIJobs { get; set; }
+        public DbSet<TicketResponsePersonnel> TicketResponsePersonnel { get; set; }
+        public DbSet<MilitaryRank> MilitaryRanks { get; set; }
+        public DbSet<UserPermission> UserPermissions { get; set; }
 
-            public DbSet<MilitaryRank> MilitaryRanks { get; set; }
-            public DbSet<UserPermission> UserPermissions { get; set; }
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>(entity =>
             {
-                  base.OnModelCreating(modelBuilder);
+                entity.HasKey(u => u.Id);
+                entity.HasIndex(u => u.Email).IsUnique();
+                entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+                entity.Property(u => u.DisplayName).IsRequired().HasMaxLength(100);
+                entity.Property(u => u.Role).IsRequired();
 
-                  modelBuilder.Entity<User>(entity =>
-                  {
-                        entity.HasKey(u => u.Id);
-                        entity.HasIndex(u => u.Email).IsUnique();
-                        entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
-                        entity.Property(u => u.DisplayName).IsRequired().HasMaxLength(100);
-                        entity.Property(u => u.Role).IsRequired();
+                entity.HasOne(e => e.MilitaryRank)
+                    .WithMany()
+                    .HasForeignKey(e => e.MilitaryRankId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                        entity.HasOne(e => e.MilitaryRank)
-                        .WithMany()
-                        .HasForeignKey(e => e.MilitaryRankId)
-                        .OnDelete(DeleteBehavior.SetNull);
+                entity.HasOne(e => e.CreatedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.LastUpdatedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.LastUpdatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.Property(e => e.PreferredLanguage).HasMaxLength(10);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+                entity.Property(e => e.RankCode).HasMaxLength(100);
 
-                        entity.HasOne(e => e.CreatedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.CreatedById)
-                        .OnDelete(DeleteBehavior.Restrict);
-                        entity.HasOne(e => e.LastUpdatedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.LastUpdatedById)
-                        .OnDelete(DeleteBehavior.Restrict);
-                        entity.Property(e => e.PreferredLanguage).HasMaxLength(10);
-                        entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-                        entity.Property(e => e.RankCode).HasMaxLength(100);
+                // CRITICAL: Map the User collections to Ticket explicitly
+                entity.HasMany(u => u.CreatedTickets)
+                    .WithOne(t => t.CreatedBy)
+                    .HasForeignKey(t => t.CreatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                  });
+                entity.HasMany(u => u.UpdatedTickets)
+                    .WithOne(t => t.LastUpdatedBy)
+                    .HasForeignKey(t => t.LastUpdatedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-                  modelBuilder.HasPostgresEnum<NotificationMethod>();
-                  modelBuilder.HasPostgresEnum<ActivityCheckResult>();
+            modelBuilder.HasPostgresEnum<NotificationMethod>();
+            modelBuilder.HasPostgresEnum<ActivityCheckResult>();
 
-                  modelBuilder.Entity<Ticket>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
-                        entity.HasIndex(e => e.ExternalCode).IsUnique();
-                        entity.Property(e => e.ExternalCode).HasMaxLength(255).IsRequired();
-                        entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
-                        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
-                        entity.Property(e => e.ConfirmationStatus).HasConversion<string>().HasMaxLength(50);
+            modelBuilder.Entity<Ticket>(entity =>
+            {
+                entity.ToTable("ticket");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ExternalCode).IsUnique();
+                entity.Property(e => e.ExternalCode).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.ConfirmationStatus).HasConversion<string>().HasMaxLength(50);
 
-                        entity.HasOne(e => e.CreatedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.CreatedById)
-                        .OnDelete(DeleteBehavior.Restrict);
+                // User relationships - mapped from User side, but can be reinforced here
+                entity.HasOne(e => e.CreatedBy)
+                    .WithMany(u => u.CreatedTickets)
+                    .HasForeignKey(e => e.CreatedById)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                        entity.HasOne(e => e.LastUpdatedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.LastUpdatedById)
-                        .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.LastUpdatedBy)
+                    .WithMany(u => u.UpdatedTickets)
+                    .HasForeignKey(e => e.LastUpdatedById)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
-                        entity.HasQueryFilter(e => !e.IsDeleted);
+                entity.HasOne(t => t.DetectedByUser)
+                    .WithMany()
+                    .HasForeignKey(t => t.DetectedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull)
+                    .HasConstraintName("fk_ticket_detection_detected_by_user")
+                    .IsRequired(false);
 
-                        entity.HasOne(t => t.DetectDetectedByUser)
-                        .WithMany()
-                        .HasForeignKey(t => t.DetectDetectedByUserId)
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("fk_ticket_detection_detected_by_user"); 
+                // Configure other navigation properties
+                entity.HasOne(t => t.CI)
+                    .WithMany()
+                    .HasForeignKey(t => t.CIId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
+                entity.HasOne(t => t.Component)
+                    .WithMany()
+                    .HasForeignKey(t => t.ComponentId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
-                  });
+                entity.HasOne(t => t.Subsystem)
+                    .WithMany()
+                    .HasForeignKey(t => t.SubsystemId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
-                  modelBuilder.Entity<TicketAction>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
-                        entity.Property(e => e.ActionType).HasConversion<string>().HasMaxLength(50);
-                        entity.Property(e => e.FromStatus).HasConversion<string>().HasMaxLength(50);
-                        entity.Property(e => e.ToStatus).HasConversion<string>().HasMaxLength(50);
+                entity.HasOne(t => t.System)
+                    .WithMany()
+                    .HasForeignKey(t => t.SystemId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
 
+                // Many-to-many relationship
+                entity.HasMany(t => t.ResponseByUser)
+                    .WithOne(trp => trp.Ticket)
+                    .HasForeignKey(trp => trp.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                        entity.HasOne(e => e.Ticket)
-                        .WithMany(t => t.Actions)
-                        .HasForeignKey(e => e.TicketId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity.HasQueryFilter(e => !e.IsDeleted);
+            });
 
-                        entity.HasOne(e => e.PerformedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.PerformedById)
-                        .OnDelete(DeleteBehavior.Restrict);
-                  });
+            modelBuilder.Entity<TicketResponsePersonnel>(entity =>
+            {
+                entity.ToTable("ticket_response_personnel");
+                entity.HasKey(x => new { x.TicketId, x.UserId });
 
-                  modelBuilder.Entity<TicketComment>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
+                entity.HasOne(x => x.Ticket)
+                    .WithMany(t => t.ResponseByUser)
+                    .HasForeignKey(x => x.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                        entity.HasOne(e => e.Ticket)
-                        .WithMany(t => t.Comments)
-                        .HasForeignKey(e => e.TicketId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
+            modelBuilder.Entity<TicketAction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ActionType).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.FromStatus).HasConversion<string>().HasMaxLength(50);
+                entity.Property(e => e.ToStatus).HasConversion<string>().HasMaxLength(50);
 
-                  });
+                entity.HasOne(e => e.Ticket)
+                    .WithMany(t => t.Actions)
+                    .HasForeignKey(e => e.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                  modelBuilder.Entity<CIJob>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
-                        entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
+                entity.HasOne(e => e.PerformedBy)
+                    .WithMany(u => u.TicketActions)
+                    .HasForeignKey(e => e.PerformedById)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-                        entity.HasOne(e => e.Ticket)
-                        .WithMany(t => t.CIJobs)
-                        .HasForeignKey(e => e.TicketId)
-                        .OnDelete(DeleteBehavior.Cascade);
-                  });
+            modelBuilder.Entity<TicketComment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
 
-                  modelBuilder.Entity<UserPermission>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
-                        entity.Property(e => e.PermissionType).IsRequired();
+                entity.HasOne(e => e.Ticket)
+                    .WithMany(t => t.Comments)
+                    .HasForeignKey(e => e.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
+            modelBuilder.Entity<CIJob>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
 
-                        entity.HasOne(e => e.User)
-                        .WithMany(u => u.UserPermissions)
-                        .HasForeignKey(e => e.UserId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(e => e.Ticket)
+                    .WithMany(t => t.CIJobs)
+                    .HasForeignKey(e => e.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
 
-                        entity.HasOne(e => e.GrantedBy)
-                        .WithMany()
-                        .HasForeignKey(e => e.GrantedById)
-                        .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<UserPermission>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PermissionType).IsRequired();
 
-                        entity.HasIndex(e => new { e.UserId, e.PermissionType });
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.UserPermissions)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                  });
+                entity.HasOne(e => e.GrantedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.GrantedById)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                  modelBuilder.Entity<MilitaryRank>(entity =>
-                  {
-                        entity.HasKey(e => e.Id);
-                        entity.Property(e => e.Code).IsRequired().HasMaxLength(100);
-                        entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
-                        entity.Property(e => e.Description).HasMaxLength(500);
-                        entity.HasIndex(e => e.Code).IsUnique();
-                  });
-                  modelBuilder.Entity<TicketResponsePersonnel>(e =>
-                  {
+                entity.HasIndex(e => new { e.UserId, e.PermissionType });
+            });
 
-                        e.HasKey(x => new { x.TicketId, x.UserId });
-
-                        e.HasOne(x => x.Ticket)
-                        .WithMany(t => t.ResponseByUser)
-                        .HasForeignKey(x => x.TicketId)
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                        e.HasOne(x => x.User)
-                        .WithMany()
-                        .HasForeignKey(x => x.UserId)
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                  });
-            }
-
-      }
+            modelBuilder.Entity<MilitaryRank>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.HasIndex(e => e.Code).IsUnique();
+            });
+        }
+    }
 }

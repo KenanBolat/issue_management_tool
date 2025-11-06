@@ -250,21 +250,21 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<DateTime?>("DetectContractorNotifiedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("detect_contractor_notified_at");
-
-                    b.Property<DateTime?>("DetectDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("detect_date");
-
-                    b.Property<long?>("DetectDetectedByUserId")
+                    b.Property<long?>("DetectedByUserId")
                         .HasColumnType("bigint")
-                        .HasColumnName("detect_by_user_id");
+                        .HasColumnName("detected_by_user_id");
 
-                    b.Property<int[]>("DetectNotificationMethods")
+                    b.Property<DateTime?>("DetectedContractorNotifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detected_contractor_notified_at");
+
+                    b.Property<DateTime?>("DetectedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detected_date");
+
+                    b.Property<int[]>("DetectedNotificationMethods")
                         .HasColumnType("integer[]")
-                        .HasColumnName("detect_notification_methods");
+                        .HasColumnName("detected_notification_methods");
 
                     b.Property<string>("ExternalCode")
                         .IsRequired()
@@ -306,7 +306,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime?>("ResolutionDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("resoluion_date");
+                        .HasColumnName("resolution_date");
 
                     b.Property<DateTime?>("ResponseDate")
                         .HasColumnType("timestamp with time zone")
@@ -344,12 +344,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<long?>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("UserId1")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CIId");
@@ -358,7 +352,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("DetectDetectedByUserId");
+                    b.HasIndex("DetectedByUserId");
 
                     b.HasIndex("ExternalCode")
                         .IsUnique();
@@ -369,28 +363,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("SystemId");
 
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Ticket+TicketResponsePersonnel", b =>
-                {
-                    b.Property<long>("TicketId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("ticket_id");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("TicketId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ticket_response_personnel");
+                    b.ToTable("ticket", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.TicketAction", b =>
@@ -426,16 +399,11 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<long?>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
                     b.HasIndex("PerformedById");
 
                     b.HasIndex("TicketId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("TicketActions");
                 });
@@ -470,66 +438,97 @@ namespace Infrastructure.Migrations
                     b.ToTable("TicketComments");
                 });
 
+            modelBuilder.Entity("Domain.Entities.TicketResponsePersonnel", b =>
+                {
+                    b.Property<long>("TicketId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("TicketId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ticket_response_personnel", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<int?>("Affiliation")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("affiliation");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<long?>("CreatedById")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("created_by_id");
 
                     b.Property<string>("Department")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("department");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("email");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<long?>("LastUpdatedById")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("last_updated_by_id");
 
                     b.Property<int?>("MilitaryRankId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("military_rank_id");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("phone_number");
 
                     b.Property<string>("PreferredLanguage")
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("preferred_language");
 
                     b.Property<string>("RankCode")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("rank_code");
 
                     b.Property<int>("Role")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("role");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -638,44 +637,40 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.ConfigurationItem", "CI")
                         .WithMany()
-                        .HasForeignKey("CIId");
+                        .HasForeignKey("CIId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Component", "Component")
                         .WithMany()
-                        .HasForeignKey("ComponentId");
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.User", "CreatedBy")
-                        .WithMany()
+                        .WithMany("CreatedTickets")
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.User", "DetectDetectedByUser")
+                    b.HasOne("Domain.Entities.User", "DetectedByUser")
                         .WithMany()
-                        .HasForeignKey("DetectDetectedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("DetectedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_ticket_detection_detected_by_user");
 
                     b.HasOne("Domain.Entities.User", "LastUpdatedBy")
-                        .WithMany()
+                        .WithMany("UpdatedTickets")
                         .HasForeignKey("LastUpdatedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Subsystem", "Subsystem")
                         .WithMany()
-                        .HasForeignKey("SubsystemId");
+                        .HasForeignKey("SubsystemId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.SystemEntity", "System")
                         .WithMany()
-                        .HasForeignKey("SystemId");
-
-                    b.HasOne("Domain.Entities.User", null)
-                        .WithMany("CreatedTickets")
-                        .HasForeignKey("UserId");
-
-                    b.HasOne("Domain.Entities.User", null)
-                        .WithMany("UpdatedTickets")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("SystemId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CI");
 
@@ -683,7 +678,7 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("CreatedBy");
 
-                    b.Navigation("DetectDetectedByUser");
+                    b.Navigation("DetectedByUser");
 
                     b.Navigation("LastUpdatedBy");
 
@@ -692,29 +687,10 @@ namespace Infrastructure.Migrations
                     b.Navigation("System");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Ticket+TicketResponsePersonnel", b =>
-                {
-                    b.HasOne("Domain.Entities.Ticket", "Ticket")
-                        .WithMany("ResponseByUser")
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Domain.Entities.TicketAction", b =>
                 {
                     b.HasOne("Domain.Entities.User", "PerformedBy")
-                        .WithMany()
+                        .WithMany("TicketActions")
                         .HasForeignKey("PerformedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -724,10 +700,6 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.User", null)
-                        .WithMany("TicketActions")
-                        .HasForeignKey("UserId");
 
                     b.Navigation("PerformedBy");
 
@@ -751,6 +723,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("CreatedBy");
 
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketResponsePersonnel", b =>
+                {
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("ResponseByUser")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
