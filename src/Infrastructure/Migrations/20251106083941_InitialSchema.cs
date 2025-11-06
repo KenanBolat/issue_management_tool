@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class ResponsePersonnelJoinFix : Migration
+    public partial class InitialSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -61,7 +61,7 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "user",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
@@ -84,23 +84,23 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.id);
+                    table.PrimaryKey("PK_user", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Users_MilitaryRanks_military_rank_id",
+                        name: "FK_user_MilitaryRanks_military_rank_id",
                         column: x => x.military_rank_id,
                         principalTable: "MilitaryRanks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "FK_Users_Users_created_by_id",
+                        name: "FK_user_user_created_by_id",
                         column: x => x.created_by_id,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Users_Users_last_updated_by_id",
+                        name: "FK_user_user_last_updated_by_id",
                         column: x => x.last_updated_by_id,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -143,15 +143,15 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_UserPermissions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserPermissions_Users_GrantedById",
+                        name: "FK_UserPermissions_user_GrantedById",
                         column: x => x.GrantedById,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_UserPermissions_Users_UserId",
+                        name: "FK_UserPermissions_user_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -238,21 +238,21 @@ namespace Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ticket_Users_created_by_id",
+                        name: "FK_ticket_user_created_by_id",
                         column: x => x.created_by_id,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ticket_Users_last_updated_by_id",
+                        name: "FK_ticket_user_last_updated_by_id",
                         column: x => x.last_updated_by_id,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_ticket_detection_detected_by_user",
                         column: x => x.detected_by_user_id,
-                        principalTable: "Users",
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                 });
@@ -275,15 +275,15 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Attachments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Attachments_Users_UploadedById",
-                        column: x => x.UploadedById,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_Attachments_ticket_TicketId",
                         column: x => x.TicketId,
                         principalTable: "ticket",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Attachments_user_UploadedById",
+                        column: x => x.UploadedById,
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -315,22 +315,22 @@ namespace Infrastructure.Migrations
                 name: "ticket_response_personnel",
                 columns: table => new
                 {
-                    TicketId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                    ticket_id = table.Column<long>(type: "bigint", nullable: false),
+                    user_id = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ticket_response_personnel", x => new { x.TicketId, x.UserId });
+                    table.PrimaryKey("PK_ticket_response_personnel", x => new { x.ticket_id, x.user_id });
                     table.ForeignKey(
-                        name: "FK_ticket_response_personnel_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        name: "FK_ticket_response_personnel_ticket_ticket_id",
+                        column: x => x.ticket_id,
+                        principalTable: "ticket",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ticket_response_personnel_ticket_TicketId",
-                        column: x => x.TicketId,
-                        principalTable: "ticket",
+                        name: "FK_ticket_response_personnel_user_user_id",
+                        column: x => x.user_id,
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -353,17 +353,17 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_TicketActions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TicketActions_Users_PerformedById",
-                        column: x => x.PerformedById,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_TicketActions_ticket_TicketId",
                         column: x => x.TicketId,
                         principalTable: "ticket",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TicketActions_user_PerformedById",
+                        column: x => x.PerformedById,
+                        principalTable: "user",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -381,15 +381,15 @@ namespace Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_TicketComments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TicketComments_Users_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_TicketComments_ticket_TicketId",
                         column: x => x.TicketId,
                         principalTable: "ticket",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TicketComments_user_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "user",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -467,9 +467,9 @@ namespace Infrastructure.Migrations
                 column: "system_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ticket_response_personnel_UserId",
+                name: "IX_ticket_response_personnel_user_id",
                 table: "ticket_response_personnel",
-                column: "UserId");
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TicketActions_PerformedById",
@@ -492,6 +492,27 @@ namespace Infrastructure.Migrations
                 column: "TicketId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_user_created_by_id",
+                table: "user",
+                column: "created_by_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_email",
+                table: "user",
+                column: "email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_last_updated_by_id",
+                table: "user",
+                column: "last_updated_by_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_user_military_rank_id",
+                table: "user",
+                column: "military_rank_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserPermissions_GrantedById",
                 table: "UserPermissions",
                 column: "GrantedById");
@@ -500,27 +521,6 @@ namespace Infrastructure.Migrations
                 name: "IX_UserPermissions_UserId_PermissionType",
                 table: "UserPermissions",
                 columns: new[] { "UserId", "PermissionType" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_created_by_id",
-                table: "Users",
-                column: "created_by_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_email",
-                table: "Users",
-                column: "email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_last_updated_by_id",
-                table: "Users",
-                column: "last_updated_by_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_military_rank_id",
-                table: "Users",
-                column: "military_rank_id");
         }
 
         /// <inheritdoc />
@@ -554,7 +554,7 @@ namespace Infrastructure.Migrations
                 name: "ConfigurationItems");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "user");
 
             migrationBuilder.DropTable(
                 name: "Subsystems");

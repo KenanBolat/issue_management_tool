@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251106081447_ResponsePersonnelJoinFix")]
-    partial class ResponsePersonnelJoinFix
+    [Migration("20251106083941_InitialSchema")]
+    partial class InitialSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -444,10 +444,12 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketResponsePersonnel", b =>
                 {
                     b.Property<long>("TicketId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("ticket_id");
 
                     b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
 
                     b.HasKey("TicketId", "UserId");
 
@@ -544,7 +546,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("MilitaryRankId");
 
-                    b.ToTable("Users");
+                    b.ToTable("user");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserPermission", b =>

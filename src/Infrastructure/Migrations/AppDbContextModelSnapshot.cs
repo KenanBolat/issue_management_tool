@@ -441,10 +441,12 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketResponsePersonnel", b =>
                 {
                     b.Property<long>("TicketId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("ticket_id");
 
                     b.Property<long>("UserId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
 
                     b.HasKey("TicketId", "UserId");
 
@@ -541,7 +543,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("MilitaryRankId");
 
-                    b.ToTable("Users");
+                    b.ToTable("user");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserPermission", b =>

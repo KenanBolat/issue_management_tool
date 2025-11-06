@@ -4,6 +4,7 @@ using Domain.Enums;
 namespace Domain.Entities
 
 {
+    [Table("user")]
     public class User
     {
         [Column("id")]
