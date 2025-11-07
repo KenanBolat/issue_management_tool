@@ -7,9 +7,16 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    //Available options for dropdowns 
+    const [availablePersonnel, setAvailablePersonnel] = useState([]);
+    const [availableSystems,setavailableSystems ] = useState([]);
+    const [availableSubSystems, setAvailableSubSystems] = useState([]);
+    const [availableCIs, setAvailableCIs] = useState([]);
+    const [availableComponents, setAvailableComponents] = useState([]);
+
+
     // Form state
     const [formData, setFormData] = useState({
-        akf:'',
         externalCode: '',
         title: '',
         description: '',
@@ -25,6 +32,14 @@ export default function TicketDetail({ ticketId, onClose }) {
         itemId: '',
         itemSerialNo: '',
         updatedAt: '',
+        //Detection Fields
+        detectDate: '', 
+        detectContractorNotifiedAt: '', 
+        detecNotificationMethods: null, 
+        //Response fields
+        responseDate: '', 
+        responseResolvedAt: '', 
+        responsePersonnelIds: [] 
     });
 
     // Comments and actions
@@ -39,12 +54,29 @@ export default function TicketDetail({ ticketId, onClose }) {
     const isNewTicket = !ticketId || ticketId === 'new';
 
     useEffect(() => {
+        loadAvailableData();
         if (!isNewTicket) {
             loadTicketDetails();
         } else {
             setLoading(false);
         }
     }, [ticketId]);
+
+
+    const loadAvailableData = async () => {
+        try{
+            //Load personnel for dropdowns 
+            const personnelResponse = await ticketsAPI.getAvailablePersonnel();
+            setAvailablePersonnel(personnelResponse.data);
+            //const availablePersonnel
+            //Todo Add other ones as well
+            
+        } catch(error) {
+            console.error("Error loading the available personnel to select from a dropdown!!!");
+        }
+
+
+    }; 
 
     const loadTicketDetails = async () => {
         try {
@@ -64,12 +96,23 @@ export default function TicketDetail({ ticketId, onClose }) {
                 ciId: ticketData.ciId,
                 componentId: ticketData.componentId,
                 subsystemId: ticketData.subsystemId,
-                createdByName: ticketData.createdBy,
                 systemId: ticketData.systemId,
                 itemDescription: ticketData.itemDescription || '',
                 itemId: ticketData.itemId || '',
                 itemSerialNo: ticketData.itemSerialNo || '',
                 updatedAt: ticketData.updatedAt || '',
+                // Detection Fields
+                detectDate: ticketData.detectDate ? formatDateTimeLocal(ticketData.detectDate) : "", 
+                detectContractorNotifiedAt: ticketData.detectContractorNotifiedAt ? formatDateTimeLocal(ticketData.detectContractorNotifiedAt) : "", 
+                detectNotificationMethods: ticketData.detectNotificationMethods || [],
+                detectDetectedByUserId: ticketData.detectDetectedByUserId, 
+                // Response Fields 
+
+                responseDate: ticketData.responseDate ? formatDateTimeLocal(ticketData.responseDate) : "",
+                responseResolvedAt: ticketData.responseResolvedAt ? formatDateTimeLocal(ticketData.responseResolvedAt): "",
+                responsePersonnelIds: ticketData.responsePersonnel?.map(p=>p.userId) || [], 
+                createdByName: ticketData.createdBy,
+
             });
 
             setComments(ticketData.comments || []);
@@ -87,6 +130,28 @@ export default function TicketDetail({ ticketId, onClose }) {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleMultiSelectChange = (field, selectedOptions) =>  {
+        const values = Array.from(selectedOptions)
+            .filter(option => option.selected)
+            .map(option => parseInt(option.value));
+        handleInputChange(field, values);
+    }; 
+
+    const handleNotificationMethodsChange = (e) => {
+        debugger;
+
+        const options = e.target.options; 
+        const selected = [];
+        for (let i=0; i < options.length; i++) {
+            if (options[i].selected) {
+                selected.push(options[i].value); 
+            }
+        }
+        handleInputChange('detectNotificationMethods', selected);
+    };
+
+
+
     const handleSave = async () => {
         if (!formData.title.trim()) {
             alert("Title is required");
@@ -95,12 +160,24 @@ export default function TicketDetail({ ticketId, onClose }) {
 
         try {
             setSaving(true);
+            
+            // Prepare data for API 
+
+            const apiData = {
+                ...formData, 
+                // Convert datetime-local to ISO format 
+                detectData: formData.detectDate ? new Date(formData.detectDate).toISOString() : null, 
+                detectContractorNotifiedAt: formData.detectContractorNotifiedAt ? new Date(formData.detectContractorNotifiedAt).toISOString() : null, 
+                responseDate: formData.responseDate ? new Date(formData.responseDate).toISOString() : null,
+                responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null, 
+            }
+
             if (isNewTicket) {
-                const response = await ticketsAPI.create(formData);
+                const response = await ticketsAPI.create(apiData);
                 alert("Ticket created successfully");
                 if (onClose) onClose();
             } else {
-                await ticketsAPI.update(ticketId, formData);
+                await ticketsAPI.update(ticketId, apiData);
                 alert("Ticket updated successfully");
                 loadTicketDetails();
             }
@@ -146,11 +223,26 @@ export default function TicketDetail({ ticketId, onClose }) {
         }
     };
 
+
+    //Helper function to format date for datetime-local input 
+
+    const formatDateTimeLocal = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() +1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2,'0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2,'0');
+        return `${year} - ${month} - ${day}T${hours}:${minutes}`; 
+
+    };
+
     if (loading) {
         return <div style={styles.loading}>Loading ticket details...</div>;
     }
 
-    return (
+   return (
         <div style={styles.container}>
             <div style={styles.header}>
                 <div style={styles.headerLeft}>
@@ -226,7 +318,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         Sorun işin ilerlemesini engelliyor!
                                     </span>
                                 </label>
-
                             </div>
                         </div>
                     </div>
@@ -251,6 +342,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         disabled={isReadOnly}
                                     >
                                         <option value="">Sistem Seç</option>
+                                        {availableSystems.map(system => (
+                                            <option key={system.id} value={system.id}>
+                                                {system.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
@@ -263,6 +359,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         disabled={isReadOnly}
                                     >
                                         <option value="">Altsistem Seç</option>
+                                        {/* {availableSubsystems.map(subsystem => (
+                                            <option key={subsystem.id} value={subsystem.id}>
+                                                {subsystem.name}
+                                            </option>
+                                        ))} */}
                                     </select>
                                 </div>
                             </div>
@@ -277,6 +378,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         disabled={isReadOnly}
                                     >
                                         <option value="">CI Seç</option>
+                                        {availableCIs.map(ci => (
+                                            <option key={ci.id} value={ci.id}>
+                                                {ci.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
@@ -289,129 +395,194 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         disabled={isReadOnly}
                                     >
                                         <option value="">Komponent Seç</option>
+                                        {availableComponents.map(component => (
+                                            <option key={component.id} value={component.id}>
+                                                {component.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
+                            </div>
 
-                                <div style={styles.formRow}>
+                            <div style={styles.formRow}>
+                                <label style={styles.label}>Parça Tanımı</label>
+                                <input
+                                    type="text"
+                                    value={formData.itemDescription}
+                                    onChange={(e) => handleInputChange('itemDescription', e.target.value)}
+                                    style={styles.input}
+                                    placeholder="Parça Tanımı"
+                                    disabled={isReadOnly}
+                                />
+                            </div>
 
-                                    <label style={styles.label}>Parça Tanımı</label>
-
+                            <div style={styles.inlineGroup}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={styles.label}>Parça No</label>
                                     <input
                                         type="text"
-                                        value={formData.itemDescription}
-                                        onChange={(e) => handleInputChange('itemDescription', e.target.value)}
+                                        value={formData.itemId}
+                                        onChange={(e) => handleInputChange('itemId', e.target.value)}
                                         style={styles.input}
-                                        placeholder="Parça Tanımı"
+                                        placeholder="Parça No"
                                         disabled={isReadOnly}
                                     />
                                 </div>
-
-                                <div style={styles.formRow}>
-                                    <div style={styles.inlineGroup}>
-                                        <div style={{ flex: 1 }}>
-                                            <label style={styles.label}>Parça No</label>
-                                            <input
-                                                type="text"
-                                                value={formData.itemId}
-                                                onChange={(e) => handleInputChange('itemId', e.target.value)}
-                                                style={styles.input}
-                                                placeholder="Parça No"
-                                                disabled={isReadOnly}
-                                            />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <label style={styles.label}>Seri No</label>
-                                            <input
-                                                type="text"
-                                                value={formData.itemSerialNo}
-                                                onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
-                                                style={styles.input}
-                                                placeholder="Seri No"
-                                                disabled={isReadOnly}
-                                            />
-                                        </div>
-
-                                    </div>
-
+                                <div style={{ flex: 1 }}>
+                                    <label style={styles.label}>Seri No</label>
+                                    <input
+                                        type="text"
+                                        value={formData.itemSerialNo}
+                                        onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
+                                        style={styles.input}
+                                        placeholder="Seri No"
+                                        disabled={isReadOnly}
+                                    />
                                 </div>
-
                             </div>
-                            
                         </div>
                     </div>
 
-
-
                     {/* Bildirim Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Bildirim Detayları</h2>
+                        <h2 style={styles.sectionTitle}>Tespit/Bildirim Detayları</h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Arıza No (Otomatik)</label>
-                                <input type="text" style={styles.input} value={formData.akf} disabled />
+                                <input 
+                                    type="text" 
+                                    style={styles.input} 
+                                    value={formData.externalCode} 
+                                    disabled 
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Tespit Edildiği Tarih (GG-AA-YYYY SS:DD)</label>
-                                <input 
-                                type="text"
-                                value={formData} 
-                                style={styles.input} 
-                                disabled={isReadOnly} 
-                                placeholder="GG-AA-YYYY SS:DD"
-                                 />
+                                <label style={styles.label}>Tespit Edildiği Tarih</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.detectDate}
+                                    onChange={(e) => handleInputChange('detectDate', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}> Yükleniciye Bildirildiği Tarih (GG-AA-YYYY SS:DD)</label>
-                                <input 
-                                type="text" 
-                                style={styles.input} 
-                                disabled={isReadOnly} 
-                                placeholder="GG-AA-YYYY SS:DD" />
+                                <label style={styles.label}>Yükleniciye Bildirildiği Tarih</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.detectContractorNotifiedAt}
+                                    onChange={(e) => handleInputChange('detectContractorNotifiedAt', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
                             </div>
-
                         </div>
-                        <br></br>
+                        <br />
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Bildirim Şekli</label>
-                                <select type="text" style={styles.select} disabled={isReadOnly} placeholder="Seri No" />
+                                <label style={styles.label}>Bildirim Şekli (Çoklu Seçim)</label>
+                                <select
+                                    multiple
+                                    value={formData.detectNotificationMethods}
+                                    onChange={handleNotificationMethodsChange}
+                                    style={{ ...styles.select, minHeight: '80px' }}
+                                    disabled={isReadOnly}
+                                >
+                                    <option value="Email">Email</option>
+                                    <option value="Phone">Telefon</option>
+                                    <option value="InPerson">Yüz Yüze</option>
+                                    <option value="SMS">SMS</option>
+                                    <option value="System">Sistem</option>
+                                </select>
+                                <small style={styles.helpText}>Ctrl/Cmd tuşu ile birden fazla seçim</small>
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>TTCOMS TT Kodu (Varsa)</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="TT00001" />
+                                <input 
+                                    type="text" 
+                                    style={styles.input} 
+                                    disabled={isReadOnly} 
+                                    placeholder="TT00001" 
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Tespit Eden Personel</label>
-                                <select type="text" style={styles.select} disabled={isReadOnly} placeholder="Seri No" />
+                                <select
+                                    value={formData.detectDetectedByUserId || ''}
+                                    onChange={(e) => handleInputChange('detectDetectedByUserId', e.target.value ? parseInt(e.target.value) : null)}
+                                    style={styles.select}
+                                    disabled={isReadOnly}
+                                >
+                                    <option value="">Personel Seç</option>
+                                    {availablePersonnel.map(person => (
+                                        <option key={person.id} value={person.id}>
+                                            {person.displayName} {person.department && `(${person.department})`}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-
-
                     </div>
 
-                    {/* Mudahele Detayları */}
+                    {/* Müdahale Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Arıza Müdahele Detayları</h2>
+                        <h2 style={styles.sectionTitle}>Arıza Müdahale Detayları</h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Müdahele Eden Personel(ler)</label>
-                                <select type="text" style={styles.select} disabled={isReadOnly} />
+                                <label style={styles.label}>Müdahale Eden Personel(ler)</label>
+                                <select
+                                    multiple
+                                    value={formData.responsePersonnelIds.map(String)}
+                                    onChange={(e) => handleMultiSelectChange('responsePersonnelIds', e.target.selectedOptions)}
+                                    style={{ ...styles.select, minHeight: '120px' }}
+                                    disabled={isReadOnly}
+                                >
+                                    {availablePersonnel.map(person => (
+                                        <option key={person.id} value={person.id}>
+                                            {person.displayName} {person.department && `(${person.department})`}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small style={styles.helpText}>Ctrl/Cmd tuşu ile birden fazla seçim</small>
+                                {/* Display selected personnel */}
+                                {formData.responsePersonnelIds.length > 0 && (
+                                    <div style={styles.selectedItems}>
+                                        <strong>Seçilenler:</strong>
+                                        <ul style={styles.selectedList}>
+                                            {formData.responsePersonnelIds.map(id => {
+                                                const person = availablePersonnel.find(p => p.id === id);
+                                                return person ? (
+                                                    <li key={id} style={styles.selectedItem}>
+                                                        {person.displayName}
+                                                    </li>
+                                                ) : null;
+                                            })}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Müdahele Tarihi (GG-AA-YYYY SS:DD)</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                                <label style={styles.label}>Müdahale Tarihi</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.responseDate}
+                                    onChange={(e) => handleInputChange('responseDate', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Giderilidiği Tarih (GG-AA-YYYY SS:DD)</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                                <label style={styles.label}>Giderildiği Tarih</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.responseResolvedAt}
+                                    onChange={(e) => handleInputChange('responseResolvedAt', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Arızayı Gideren Personel(ler)</label>
-                                <select type="text" style={styles.select} disabled={isReadOnly} />
-                            </div>
-
                         </div>
 
                         <div style={styles.formRow}>
@@ -423,13 +594,9 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 disabled={isReadOnly}
                             />
                         </div>
-
-
                     </div>
 
-
-
-
+                    {/* Faaliyet Kontrolü */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Faaliyet Kontrolü</h2>
 
@@ -443,8 +610,12 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 <input type="text" style={styles.input} disabled={isReadOnly} />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Faaliyet Kontrol Tarihi (GG-AA-YYYY SS:DD) </label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} placeholder="GG-AA-YYYY SS:DD" />
+                                <label style={styles.label}>Faaliyet Kontrol Tarihi</label>
+                                <input
+                                    type="datetime-local"
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
                             </div>
                         </div>
 
@@ -458,7 +629,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                             />
                         </div>
 
-                        
                         <label style={styles.checkboxLabel}>
                             <input
                                 type="checkbox"
@@ -475,7 +645,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     </div>
                 </div>
 
-                {/* Control Panel */}
+                {/* Right Panel - Control Panel */}
                 <div style={styles.rightPanel}>
                     {/* Status Control Panel */}
                     <div style={styles.statusPanel}>
@@ -530,15 +700,20 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     <span style={styles.metadataLabel}>Oluşturan:</span>
                                     <span>{ticket.createdByName}</span>
                                 </div>
-
                                 <div style={styles.metadataItem}>
-                                    <span style={styles.metadataLabel}>Oluşturma Tarihi :</span>
+                                    <span style={styles.metadataLabel}>Oluşturma Tarihi:</span>
                                     <span>{new Date(ticket.createdAt).toLocaleString()}</span>
                                 </div>
                                 {ticket.updatedAt && (
                                     <div style={styles.metadataItem}>
-                                        <span style={styles.metadataLabel}>Son Güncelleme Tarihi:</span>
+                                        <span style={styles.metadataLabel}>Son Güncelleme:</span>
                                         <span>{new Date(ticket.updatedAt).toLocaleString()}</span>
+                                    </div>
+                                )}
+                                {ticket.lastUpdatedByName && (
+                                    <div style={styles.metadataItem}>
+                                        <span style={styles.metadataLabel}>Son Güncelleyen:</span>
+                                        <span>{ticket.lastUpdatedByName}</span>
                                     </div>
                                 )}
                             </div>
@@ -595,7 +770,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                                     <div style={styles.commentsContainer}>
                                         {comments.length === 0 ? (
-                                            <p style={styles.emptyMessage}>No comments yet</p>
+                                            <p style={styles.emptyMessage}>Henüz işlem kaydı yok</p>
                                         ) : (
                                             comments.map((comment) => (
                                                 <div key={comment.id} style={styles.commentItem}>
@@ -618,7 +793,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 <div style={styles.tabContent}>
                                     <div style={styles.historyContainer}>
                                         {actions.length === 0 ? (
-                                            <p style={styles.emptyMessage}>No history yet</p>
+                                            <p style={styles.emptyMessage}>Henüz tarihçe kaydı yok</p>
                                         ) : (
                                             actions.map((action) => (
                                                 <div key={action.id} style={styles.historyItem}>
@@ -652,7 +827,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                             )}
                         </>
                     )}
-
                 </div>
             </div>
         </div>
@@ -692,6 +866,37 @@ const styles = {
         backgroundColor: '#f5f5f5',
         minHeight: '100vh',
     },
+
+    //For the multiple selection 
+
+    // Add these new styles for multi-select
+    helpText: {
+        display: 'block',
+        marginTop: '0.25rem',
+        fontSize: '0.75rem',
+        color: '#666',
+        fontStyle: 'italic',
+    },
+    selectedItems: {
+        marginTop: '0.75rem',
+        padding: '0.5rem',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '4px',
+        border: '1px solid #e0e0e0',
+    },
+    selectedList: {
+        margin: '0.5rem 0 0 0',
+        padding: '0 0 0 1.5rem',
+        listStyle: 'disc',
+    },
+    selectedItem: {
+        fontSize: '0.85rem',
+        color: '#333',
+        padding: '0.2rem 0',
+    },
+
+    // End for the multiple selection
+
     header: {
         display: 'flex',
         justifyContent: 'space-between',

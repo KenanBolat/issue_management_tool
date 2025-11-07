@@ -2,52 +2,136 @@ using System.Reflection.PortableExecutable;
 
 namespace Api.DTOs;
 
+// Create a new ticket 
 public record CreateTicketRequest(
-string Title,
-string Description,
-bool IsBlocking,
-string Status,
-bool TechnicalReportRequired,
-long? CIId,
-long? ComponentId,
-long? SubsystemId,
-long? SystemId);
+        string Title,
+        string Description,
+        bool IsBlocking,
+        string Status,
+        bool TechnicalReportRequired,
+        long? CIId,
+        long? ComponentId,
+        long? SubsystemId,
+        long? SystemId,
+        // Detection fields
+        DateTime? DetectedDate,
+        DateTime? DetectedContractorNotifiedAt,
+        string[]? DetectedNotificationMethods,
+        long? DetectedByUserId,
+        // Response fields
+        DateTime? ResponseDate,
+        DateTime? ResponseResolvedAt,
+        List<long>? ResponsePersonnelIds);
 
-public record ChangeStatusRequest(string ToStatus, string? Notes, string? ConfirmationStatus);
-public record AddCommentRequest(string Body);
+// Change Status of the ticket 
+public record ChangeStatusRequest(
+    string ToStatus, 
+    string? Notes, 
+    string? ConfirmationStatus);
 
+// Add comment and/or progress     
+public record AddCommentRequest(
+    string Body);
+
+// List the available tickets in the system
 public record TicketListItem(
-    long Id,
-    string ExternalCode,
-    string Title,
-    string Status,
-    bool IsBlocking,
-    DateTime CreatedAt,
-    string CreatedByName,
-    bool HasCICompleted);
+        long Id,
+        string ExternalCode,
+        string Title,
+        string Status,
+        bool IsBlocking,
+        DateTime CreatedAt,
+        string CreatedByName,
+        bool HasSuccessfulCIJob,
+        bool IsActive,
+        bool IsDeleted,
+        DateTime? DetectDate,
+        DateTime? ResponseDate,
+        string? DetectedByUserName);
 
+// Get the associated ticket detail
 public record TicketDetail(
-    long Id,
-    string ExternalCode,
-    string Title,
-    string Description,
-    bool IsBlocking,
-    string Status,
-    DateTime CreatedAt,
-    string CreatedByName,
-    DateTime UpdatedAt,
-    long? SubsystemId, 
-    List<TicketActionItem> Actions,
-    List<CommentItem> Comments);
+        long Id,
+        string ExternalCode,
+        string Title,
+        string Description,
+        bool IsBlocking,
+        string Status,
+        string? ConfirmationStatus,
+        bool TechnicalReportRequired,
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
+        string CreatedByName,
+        long CreatedById,
+        string? LastUpdatedByName,
+        long? LastUpdatedById,
+        bool IsActive,
+        bool IsDeleted,
+        long? CIId,
+        long? ComponentId,
+        long? SubsystemId,
+        long? SystemId,
+        string? CIName,
+        string? ComponentName,
+        string? SubsystemName,
+        string? SystemName,
+        // Detection fields
+        DateTime? DetectedDate,
+        DateTime? DetectedContractorNotifiedAt,
+        string[]? DetectedNotificationMethods,
+        long? DetectedByUserId,
+        string? DetectedByUserName,
+        // Response fields
+        DateTime? ResponseDate,
+        DateTime? ResponseResolvedAt,
+        List<ResponsePersonnelItem> ResponsePersonnel,
+        // Related data
+        List<TicketActionItem> Actions,
+        List<CommentItem> Comments);
 
+// Response personnel item
+public record ResponsePersonnelItem(
+        long UserId,
+        string DisplayName);
+
+// Update the action taken on the selected ticket 
 public record TicketActionItem(
-    long Id,
-    string ActionType,
-    string? FromStatus,
-    string? ToStatus,
-    string? Notes,
-    string PerformedByName,
-    DateTime PerformedAt);
+        long Id,
+        string ActionType,
+        string? FromStatus,
+        string? ToStatus,
+        string? Notes,
+        string PerformedByName,
+        DateTime PerformedAt);
 
-public record CommentItem(long Id, string Body, string CreatedByName, DateTime CreatedAt);
-public record DashboardResponse(Dictionary<string, int> StatusCounts, List<TicketListItem> OngoingTickets);
+// Progress/Comment item
+public record CommentItem(
+        long Id,
+        string Body,
+        string CreatedByName, 
+        DateTime CreatedAt);
+
+// Get Dashboard result 
+public record DashboardResponse(
+        Dictionary<string, int> StatusCounts, 
+        List<TicketListItem> OngoingTickets);
+
+// Update ticket request
+public record UpdateTicketRequest(
+        string? Title,
+        string? Description,
+        bool? IsBlocking,
+        bool? TechnicalReportRequired,
+        long? CIId,
+        long? ComponentId,
+        long? SubsystemId,
+        long? SystemId,
+        // Detection fields
+        DateTime? DetectedDate,
+        DateTime? DetectedContractorNotifiedAt,
+        string[]? DetectedNotificationMethods,
+        long? DetectedByUserId,
+        // Response fields
+        DateTime? ResponseDate,
+        DateTime? ResponseResolvedAt,
+        List<long>? ResponsePersonnelIds);

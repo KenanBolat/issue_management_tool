@@ -20,15 +20,20 @@ export const authAPI = {
 };
 
 export const ticketsAPI = {
-    getAll: (status= null) => {
+    
+    getAll: (status = null) => {
         const params = status ? { status } : {};
         return api.get('/tickets', { params });
     },
     getById: (id) => api.get(`/tickets/${id}`),
+    
     create: (data) => api.post('/tickets', data),
+    update: (data) => api.put(`/tickets/${id}`, data),
+    delete: (id, data) => api.put(`/tickets/${id}`, data),
+ 
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
-    delete: (id, data) => api.put(`/tickets/${id}`, data),
+    getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
 
 };
 
@@ -39,9 +44,9 @@ export const dashboardAPI = {
 export const userApi = {
     getAll: async (includeInactive = false) => {
         try {
-            const url = includeInactive 
-            ? `${API_BASE_URL}/users?includeInactive=true`
-            : `${API_BASE_URL}/users`;
+            const url = includeInactive
+                ? `${API_BASE_URL}/users?includeInactive=true`
+                : `${API_BASE_URL}/users`;
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -50,13 +55,13 @@ export const userApi = {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             return { data };
         } catch (error) {
             console.error('Error fetching users:', error);
             return { error: error.message };
-       }
+        }
     },
 
     getById: async (id) => {
@@ -65,11 +70,11 @@ export const userApi = {
                 method: 'GET',
                 headers: createHeaders(),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             return { data };
         } catch (error) {
@@ -85,11 +90,11 @@ export const userApi = {
                 method: 'GET',
                 headers: createHeaders(),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             return { data };
         } catch (error) {
@@ -106,12 +111,12 @@ export const userApi = {
                 headers: createHeaders(),
                 body: JSON.stringify(userData),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             return { data };
         } catch (error) {
@@ -128,12 +133,12 @@ export const userApi = {
                 headers: createHeaders(),
                 body: JSON.stringify(userData),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-            
+
             return { success: true };
         } catch (error) {
             console.error(`Error updating user ${id}:`, error);
@@ -149,12 +154,12 @@ export const userApi = {
                 headers: createHeaders(),
                 body: JSON.stringify({ currentPassword, newPassword }),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-            
+
             return { success: true };
         } catch (error) {
             console.error('Error changing password:', error);
@@ -170,11 +175,11 @@ export const userApi = {
                 method: 'DELETE',
                 headers: createHeaders(),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return { success: true };
         } catch (error) {
             console.error(`Error deleting user ${id}:`, error);
@@ -189,11 +194,11 @@ export const userApi = {
                 headers: createHeaders(),
                 body: JSON.stringify(permissionData),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return { success: true };
         } catch (error) {
             console.error('Error granting permission:', error);
@@ -208,11 +213,11 @@ export const userApi = {
                 method: 'DELETE',
                 headers: createHeaders(),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             return { success: true };
         } catch (error) {
             console.error('Error revoking permission:', error);
@@ -227,11 +232,11 @@ export const userApi = {
                 method: 'GET',
                 headers: createHeaders(),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             return { data };
         } catch (error) {
@@ -240,7 +245,7 @@ export const userApi = {
         }
     },
 };
-                
+
 function createHeaders() {
     const headers = {
         'Content-Type': 'application/json',
@@ -250,6 +255,6 @@ function createHeaders() {
         headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
-}   
+}
 
 export default api; 

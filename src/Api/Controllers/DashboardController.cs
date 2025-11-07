@@ -43,7 +43,12 @@ public class DashboardController : ControllerBase
                 t.IsBlocking,
                 t.CreatedAt,
                 t.CreatedBy.DisplayName,
-                t.CIJobs.Any(j => j.Status == CIJobStatus.Succeeded)))
+                t.CIJobs.Any(j => j.Status == CIJobStatus.Succeeded),
+                t.IsActive, 
+                t.IsDeleted,
+                t.DetectedDate, 
+                t.ResponseDate,
+                t.DetectedByUser.DisplayName))
             .ToListAsync();
 
         return Ok(new DashboardResponse(statusCounts, ongoingTickets));
