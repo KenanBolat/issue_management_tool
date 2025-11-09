@@ -32,9 +32,8 @@ export const ticketsAPI = {
     delete: (id, data) => api.put(`/tickets/${id}`, data),
  
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
-    addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
+    addComment: (id, body) => api.post(`/tickets/${id}/comments`, body), 
     getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
-
 };
 
 export const dashboardAPI = {
@@ -45,8 +44,8 @@ export const userApi = {
     getAll: async (includeInactive = false) => {
         try {
             const url = includeInactive
-                ? `${API_BASE_URL}/users?includeInactive=true`
-                : `${API_BASE_URL}/users`;
+                ? `${API_BASE_URL}/Users?includeInactive=true`
+                : `${API_BASE_URL}/Users`;
 
             const response = await fetch(url, {
                 method: 'GET',

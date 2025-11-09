@@ -97,22 +97,38 @@ namespace Domain.Entities
         [Column("response_resolved_at")]
         public DateTime? ResponseResolvedAt { get; set; }
 
+
+        // Activity Control fields - NEW
+        [Column("activity_control_personnel_id")]
+        public long? ActivityControlPersonnelId { get; set; }
+        
+        [Column("activity_control_commander_id")]
+        public long? ActivityControlCommanderId { get; set; }
+        
+        [Column("activity_control_date")]
+        public DateTime? ActivityControlDate { get; set; }
+        
+        [Column("activity_control_result")]
+        public string? ActivityControlResult { get; set; }
+
+         
+        // Activity Control Navigation Properties - NEW
+        public User? ActivityControlPersonnel { get; set; }
+        public User? ActivityControlCommander { get; set; }
+
+
         // ============================================
         // Navigation Properties - NO [Column] attributes!
         // ============================================
-        [Column("created_by")]
         public User CreatedBy { get; set; } = null!;
-        [Column("last_updated_by")]
         public User? LastUpdatedBy { get; set; }
-        [Column("detected_by")]
         public User? DetectedByUser { get; set; }
 
 
-        [Column("configuration_item")]
+        
+
         public ConfigurationItem? CI { get; set; }
-        [Column("component")]
         public Component? Component { get; set; }
-        [Column("subsystem")]
         public Subsystem? Subsystem { get; set; }
         [Column("system_entity")]
         public SystemEntity? System { get; set; }

@@ -85,9 +85,17 @@ public record TicketDetail(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<ResponsePersonnelItem> ResponsePersonnel,
+
+        // Activity control fields
+        long? ActivityControlPersonnelId,
+        long? ActivityControlCommanderId,
+        DateTime? ActivityControlDate,
+        string? ActivityControlResult,
+
         // Related data
         List<TicketActionItem> Actions,
-        List<CommentItem> Comments);
+        List<CommentItem> Comments
+        );
 
 // Response personnel item
 public record ResponsePersonnelItem(

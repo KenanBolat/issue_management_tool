@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { ticketsAPI } from "../../services/api";
+import Select from 'react-select';
+import PersonnelSelect from "./PersonnelSelect";
+import { ticketsAPI, userApi } from "../../services/api";
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle } from "lucide-react";
 
 export default function TicketDetail({ ticketId, onClose }) {
@@ -35,11 +37,17 @@ export default function TicketDetail({ ticketId, onClose }) {
         //Detection Fields
         detectDate: '', 
         detectContractorNotifiedAt: '', 
-        detecNotificationMethods: null, 
+        detectNotificationMethods: [], 
+        detectDetectedByUserId: null, 
         //Response fields
         responseDate: '', 
         responseResolvedAt: '', 
-        responsePersonnelIds: [] 
+        responsePersonnelIds: [],
+         activityControlPersonnelId: null,  // For PERSONEL Rütbe & Adı Soyadı
+        activityControlCommanderId: null,  // For İLK. KOM. Rütbe & Adı Soyadı
+        activityControlDate: '',
+        activityControlResult: '',
+
     });
 
     // Comments and actions
@@ -53,6 +61,16 @@ export default function TicketDetail({ ticketId, onClose }) {
     const canEdit = userRole === 'Editor' || userRole === 'Admin';
     const isNewTicket = !ticketId || ticketId === 'new';
 
+
+    const notificationMethodOptions = [
+        { value: 'Email', label: 'Email' },
+        { value: 'Phone', label: 'Telefon' },
+        { value: 'InPerson', label: 'Yüz Yüze' },
+        { value: 'SMS', label: 'SMS' },
+        { value: 'System', label: 'Sistem' }
+    ];
+
+
     useEffect(() => {
         loadAvailableData();
         if (!isNewTicket) {
@@ -65,11 +83,13 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const loadAvailableData = async () => {
         try{
+            debugger;
+            
             //Load personnel for dropdowns 
             const personnelResponse = await ticketsAPI.getAvailablePersonnel();
             setAvailablePersonnel(personnelResponse.data);
-            //const availablePersonnel
-            //Todo Add other ones as well
+            
+            //TODO Add other ones as well
             
         } catch(error) {
             console.error("Error loading the available personnel to select from a dropdown!!!");
@@ -83,7 +103,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             setLoading(true);
             const response = await ticketsAPI.getById(ticketId);
             const ticketData = response.data;
-
+            debugger;
             setTicket(ticketData);
             setFormData({
                 externalCode: ticketData.externalCode || '',
@@ -113,11 +133,16 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responsePersonnelIds: ticketData.responsePersonnel?.map(p=>p.userId) || [], 
                 createdByName: ticketData.createdBy,
 
+                // Activity Control fields (load from backend if available)
+                activityControlPersonnelId: ticketData.activityControlPersonnelId || null,
+                activityControlCommanderId: ticketData.activityControlCommanderId || null,
+                activityControlDate: ticketData.activityControlDate ? formatDateTimeLocal(ticketData.activityControlDate) : '',
+                activityControlResult: ticketData.activityControlResult || '',
+
             });
 
             setComments(ticketData.comments || []);
             setActions(ticketData.actions || []);
-            debugger;
         } catch (error) {
             console.error("Error loading ticket:", error);
             alert("Error loading ticket details");
@@ -130,16 +155,21 @@ export default function TicketDetail({ ticketId, onClose }) {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleMultiSelectChange = (field, selectedOptions) =>  {
-        const values = Array.from(selectedOptions)
-            .filter(option => option.selected)
-            .map(option => parseInt(option.value));
+    // Handler for react-select multi-select
+    const handleMultiSelectChange = (field, selectedOptions) => {
+        debugger;
+        const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
         handleInputChange(field, values);
-    }; 
+    };
+
+    // Handler for single select
+    const handleSingleSelectChange = (field, selectedOption) => {
+        const value = selectedOption ? selectedOption.value : null;
+        handleInputChange(field, value);
+    };
 
     const handleNotificationMethodsChange = (e) => {
-        debugger;
-
+        debugger; 
         const options = e.target.options; 
         const selected = [];
         for (let i=0; i < options.length; i++) {
@@ -236,6 +266,41 @@ export default function TicketDetail({ ticketId, onClose }) {
         const minutes = String(date.getMinutes()).padStart(2,'0');
         return `${year} - ${month} - ${day}T${hours}:${minutes}`; 
 
+    };
+    
+
+    // Get selected notification methods
+    const selectedNotificationMethods = notificationMethodOptions.filter(option =>
+        formData.detectNotificationMethods.includes(option.value)
+    );
+
+    const customSelectStyles = {
+        control: (base, state) => ({
+            ...base,
+            minHeight: '42px',
+            borderColor: state.isFocused ? '#667eea' : '#ddd',
+            boxShadow: state.isFocused ? '0 0 0 1px #667eea' : 'none',
+            '&:hover': {
+                borderColor: '#667eea'
+            }
+        }),
+        multiValue: (base) => ({
+            ...base,
+            backgroundColor: '#e3f2fd',
+        }),
+        multiValueLabel: (base) => ({
+            ...base,
+            color: '#1976d2',
+            fontWeight: '500',
+        }),
+        multiValueRemove: (base) => ({
+            ...base,
+            color: '#1976d2',
+            ':hover': {
+                backgroundColor: '#1976d2',
+                color: 'white',
+            },
+        }),
     };
 
     if (loading) {
@@ -479,23 +544,20 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
                         </div>
                         <br />
+                        <br />
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Bildirim Şekli (Çoklu Seçim)</label>
-                                <select
-                                    multiple
-                                    value={formData.detectNotificationMethods}
-                                    onChange={handleNotificationMethodsChange}
-                                    style={{ ...styles.select, minHeight: '80px' }}
-                                    disabled={isReadOnly}
-                                >
-                                    <option value="Email">Email</option>
-                                    <option value="Phone">Telefon</option>
-                                    <option value="InPerson">Yüz Yüze</option>
-                                    <option value="SMS">SMS</option>
-                                    <option value="System">Sistem</option>
-                                </select>
-                                <small style={styles.helpText}>Ctrl/Cmd tuşu ile birden fazla seçim</small>
+                                <Select
+                                    isMulti
+                                    value={selectedNotificationMethods}
+                                    onChange={(selected) => handleMultiSelectChange('detectNotificationMethods', selected)}
+                                    options={notificationMethodOptions}
+                                    styles={customSelectStyles}
+                                    placeholder="Bildirim şekli seçiniz..."
+                                    isDisabled={isReadOnly}
+                                    noOptionsMessage={() => "Seçenek bulunamadı"}
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>TTCOMS TT Kodu (Varsa)</label>
@@ -508,19 +570,15 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Tespit Eden Personel</label>
-                                <select
-                                    value={formData.detectDetectedByUserId || ''}
-                                    onChange={(e) => handleInputChange('detectDetectedByUserId', e.target.value ? parseInt(e.target.value) : null)}
-                                    style={styles.select}
-                                    disabled={isReadOnly}
-                                >
-                                    <option value="">Personel Seç</option>
-                                    {availablePersonnel.map(person => (
-                                        <option key={person.id} value={person.id}>
-                                            {person.displayName} {person.department && `(${person.department})`}
-                                        </option>
-                                    ))}
-                                </select>
+                                <PersonnelSelect
+                                    isMulti={false}
+                                    value={formData.detectDetectedByUserId}
+                                    onChange={(id) => handleInputChange('detectDetectedByUserId', id)}
+                                    isDisabled={isReadOnly}
+                                    placeholder="Personel seçiniz..."
+                                    showRank={true}
+                                    showDepartment={true}
+                                />
                             </div>
                         </div>
                     </div>
@@ -532,22 +590,19 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Müdahale Eden Personel(ler)</label>
-                                <select
-                                    multiple
-                                    value={formData.responsePersonnelIds.map(String)}
-                                    onChange={(e) => handleMultiSelectChange('responsePersonnelIds', e.target.selectedOptions)}
-                                    style={{ ...styles.select, minHeight: '120px' }}
-                                    disabled={isReadOnly}
-                                >
-                                    {availablePersonnel.map(person => (
-                                        <option key={person.id} value={person.id}>
-                                            {person.displayName} {person.department && `(${person.department})`}
-                                        </option>
-                                    ))}
-                                </select>
-                                <small style={styles.helpText}>Ctrl/Cmd tuşu ile birden fazla seçim</small>
+                                <PersonnelSelect
+                                    isMulti={true}
+                                    value={formData.responsePersonnelIds}
+                                    onChange={(ids) => handleInputChange('responsePersonnelIds', ids)}
+                                    isDisabled={isReadOnly}
+                                    placeholder="Personel seçiniz..."
+                                    showRank={true}
+                                    showDepartment={true}
+                                />
+                                
+                                
                                 {/* Display selected personnel */}
-                                {formData.responsePersonnelIds.length > 0 && (
+                                {/* {formData.responsePersonnelIds.length > 0 && (
                                     <div style={styles.selectedItems}>
                                         <strong>Seçilenler:</strong>
                                         <ul style={styles.selectedList}>
@@ -561,7 +616,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                             })}
                                         </ul>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Müdahale Tarihi</label>
@@ -602,12 +657,31 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>PERSONEL Rütbe & Adı Soyadı</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} />
+                                <label style={styles.label}>Personel Rütbe & Adı Soyadı</label>
+                                
+                                {/* FIXED: Changed from isMulti={true} to isMulti={false} and bound to activityControlPersonnelId */}
+                                <PersonnelSelect
+                                isMulti={false}
+                                value={formData.activityControlPersonnelId}
+                                onChange={(id) => handleInputChange('activityControlPersonnelId', id)}
+                                isDisabled={isReadOnly}
+                                placeholder="Personel seçiniz..."
+                                showRank={true}
+                                showDepartment={false}
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}>İLK. KOM. Rütbe & Adı Soyadı</label>
-                                <input type="text" style={styles.input} disabled={isReadOnly} />
+                                <label style={styles.label}>Böl. Kom. Rütbe & Adı Soyadı</label>
+                                {/* FIXED: Added PersonnelSelect instead of plain input */}
+                                <PersonnelSelect
+                                isMulti={true}
+                                value={formData.activityControlCommanderId}
+                                onChange={(id) => handleInputChange('activityControlCommanderId', id)}
+                                isDisabled={isReadOnly}
+                                placeholder="Komutan seçiniz..."
+                                showRank={true}
+                                showDepartment={false}
+                                />
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Faaliyet Kontrol Tarihi</label>

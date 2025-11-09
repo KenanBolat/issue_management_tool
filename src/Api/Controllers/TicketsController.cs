@@ -52,7 +52,7 @@ public class TicketsController : ControllerBase
                 t.IsDeleted,
                 t.DetectedDate,
                 t.ResponseDate,
-                t.DetectedByUser != null ? t.DetectedByUser.DisplayName: null))
+                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null))
             .ToListAsync();
 
         return Ok(items);
@@ -61,8 +61,25 @@ public class TicketsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TicketDetail>> GetTicket(long id)
     {
-        var ticket = await _ticketService.GetTicketByIdAsync(id);
-        if (ticket == null) return NotFound();
+       var ticket = await _context.Tickets
+                .Include(t => t.CreatedBy)
+                .Include(t => t.LastUpdatedBy)
+                .Include(t => t.DetectedByUser)
+                    .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser
+                .Include(t => t.CI)
+                .Include(t => t.Component)
+                .Include(t => t.Subsystem)
+                .Include(t => t.System)
+                .Include(t => t.ResponseByUser)
+                    .ThenInclude(rp => rp.User)
+                        .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for ResponsePersonnel
+                .Include(t => t.Actions)
+                    .ThenInclude(a => a.PerformedBy)
+                .Include(t => t.Comments)
+                    .ThenInclude(c => c.CreatedBy)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (ticket == null) return NotFound();
 
         var detail = new TicketDetail(
             ticket.Id,
@@ -103,6 +120,11 @@ public class TicketsController : ControllerBase
                     rp.User.DisplayName
                 )).ToList(),
                 // Related data
+                ticket.ActivityControlPersonnelId,
+                ticket.ActivityControlCommanderId,
+                ticket.ActivityControlDate,
+                ticket.ActivityControlResult,
+
                 ticket.Actions
                     .OrderByDescending(a => a.PerformedAt)
                     .Select(a => new TicketActionItem(
@@ -124,7 +146,7 @@ public class TicketsController : ControllerBase
                     )).ToList()
             );
 
-            return Ok(detail);
+        return Ok(detail);
     }
 
     [HttpPost]
@@ -135,41 +157,41 @@ public class TicketsController : ControllerBase
             return BadRequest(new { message = "Invalid status" });
 
         //Parse notification method if provided 
-        NotificationMethod[]? notificationMethods = null; 
+        NotificationMethod[]? notificationMethods = null;
 
-         if (request.DetectedNotificationMethods != null && request.DetectedNotificationMethods.Length > 0)
+        if (request.DetectedNotificationMethods != null && request.DetectedNotificationMethods.Length > 0)
+        {
+            var methods = new List<NotificationMethod>();
+            foreach (var method in request.DetectedNotificationMethods)
             {
-                var methods = new List<NotificationMethod>();
-                foreach (var method in request.DetectedNotificationMethods)
-                {
-                    if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
-                        methods.Add(nm);
-                }
-                notificationMethods = methods.ToArray();
+                if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
+                    methods.Add(nm);
             }
+            notificationMethods = methods.ToArray();
+        }
 
         var ticket = new Ticket
         {
-                ExternalCode = $"ISSUE-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-                Title = request.Title,
-                Description = request.Description,
-                IsBlocking = request.IsBlocking,
-                Status = status,
-                TechnicalReportRequired = request.TechnicalReportRequired,
-                CIId = request.CIId,
-                ComponentId = request.ComponentId,
-                SubsystemId = request.SubsystemId,
-                SystemId = request.SystemId,
-                // Detection fields
-                DetectedDate = request.DetectedDate,
-                DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt,
-                DetectedNotificationMethods = notificationMethods,
-                DetectedByUserId = request.DetectedByUserId,
-                // Response fields
-                ResponseDate = request.ResponseDate,
-                ResponseResolvedAt = request.ResponseResolvedAt,
-                IsActive = true,
-                IsDeleted = false
+            ExternalCode = $"ISSUE-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+            Title = request.Title,
+            Description = request.Description,
+            IsBlocking = request.IsBlocking,
+            Status = status,
+            TechnicalReportRequired = request.TechnicalReportRequired,
+            CIId = request.CIId,
+            ComponentId = request.ComponentId,
+            SubsystemId = request.SubsystemId,
+            SystemId = request.SystemId,
+            // Detection fields
+            DetectedDate = request.DetectedDate,
+            DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt,
+            DetectedNotificationMethods = notificationMethods,
+            DetectedByUserId = request.DetectedByUserId,
+            // Response fields
+            ResponseDate = request.ResponseDate,
+            ResponseResolvedAt = request.ResponseResolvedAt,
+            IsActive = true,
+            IsDeleted = false
         };
 
         var created = await _ticketService.CreateTicketAync(ticket, GetCurrentUserId());
@@ -191,108 +213,108 @@ public class TicketsController : ControllerBase
     }
 
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Editor,Admin")]
-        public async Task<ActionResult> UpdateTicket(long id, [FromBody] UpdateTicketRequest request)
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Editor,Admin")]
+    public async Task<ActionResult> UpdateTicket(long id, [FromBody] UpdateTicketRequest request)
+    {
+        var ticket = await _context.Tickets
+            .Include(t => t.ResponseByUser)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket == null) return NotFound();
+
+        var currentUserId = GetCurrentUserId();
+        var hasChanges = false;
+
+        // Update basic fields
+        if (request.Title != null && ticket.Title != request.Title)
         {
-            var ticket = await _context.Tickets
-                .Include(t => t.ResponseByUser)
-                .FirstOrDefaultAsync(t => t.Id == id);
-
-            if (ticket == null) return NotFound();
-
-            var currentUserId = GetCurrentUserId();
-            var hasChanges = false;
-
-            // Update basic fields
-            if (request.Title != null && ticket.Title != request.Title)
-            {
-                ticket.Title = request.Title;
-                hasChanges = true;
-            }
-
-            if (request.Description != null && ticket.Description != request.Description)
-            {
-                ticket.Description = request.Description;
-                hasChanges = true;
-            }
-
-            if (request.IsBlocking.HasValue && ticket.IsBlocking != request.IsBlocking.Value)
-            {
-                ticket.IsBlocking = request.IsBlocking.Value;
-                hasChanges = true;
-            }
-
-            if (request.TechnicalReportRequired.HasValue && ticket.TechnicalReportRequired != request.TechnicalReportRequired.Value)
-            {
-                ticket.TechnicalReportRequired = request.TechnicalReportRequired.Value;
-                hasChanges = true;
-            }
-
-            // Update reference IDs
-            if (request.CIId.HasValue) ticket.CIId = request.CIId;
-            if (request.ComponentId.HasValue) ticket.ComponentId = request.ComponentId;
-            if (request.SubsystemId.HasValue) ticket.SubsystemId = request.SubsystemId;
-            if (request.SystemId.HasValue) ticket.SystemId = request.SystemId;
-
-            // Update detection fields
-            if (request.DetectedDate.HasValue) ticket.DetectedDate = request.DetectedDate;
-            if (request.DetectedContractorNotifiedAt.HasValue) ticket.DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt;
-            if (request.DetectedByUserId.HasValue) ticket.DetectedByUserId = request.DetectedByUserId;
-
-            if (request.DetectedNotificationMethods != null)
-            {
-                var methods = new List<NotificationMethod>();
-                foreach (var method in request.DetectedNotificationMethods)
-                {
-                    if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
-                        methods.Add(nm);
-                }
-                ticket.DetectedNotificationMethods = methods.ToArray();
-                hasChanges = true;
-            }
-
-            // Update response fields
-            if (request.ResponseDate.HasValue) ticket.ResponseDate = request.ResponseDate;
-            if (request.ResponseResolvedAt.HasValue) ticket.ResponseResolvedAt = request.ResponseResolvedAt;
-
-            // Update response personnel if provided
-            if (request.ResponsePersonnelIds != null)
-            {
-                // Remove existing personnel
-                _context.TicketResponsePersonnel.RemoveRange(ticket.ResponseByUser);
-
-                // Add new personnel
-                foreach (var userId in request.ResponsePersonnelIds)
-                {
-                    _context.TicketResponsePersonnel.Add(new TicketResponsePersonnel
-                    {
-                        TicketId = ticket.Id,
-                        UserId = userId
-                    });
-                }
-                hasChanges = true;
-            }
-
-            if (hasChanges)
-            {
-                ticket.UpdatedAt = DateTime.UtcNow;
-                ticket.LastUpdatedById = currentUserId;
-
-                _context.TicketActions.Add(new TicketAction
-                {
-                    TicketId = id,
-                    ActionType = ActionType.Edit,
-                    Notes = "Ticket updated",
-                    PerformedById = currentUserId,
-                    PerformedAt = DateTime.UtcNow
-                });
-
-                await _context.SaveChangesAsync();
-            }
-
-            return NoContent();
+            ticket.Title = request.Title;
+            hasChanges = true;
         }
+
+        if (request.Description != null && ticket.Description != request.Description)
+        {
+            ticket.Description = request.Description;
+            hasChanges = true;
+        }
+
+        if (request.IsBlocking.HasValue && ticket.IsBlocking != request.IsBlocking.Value)
+        {
+            ticket.IsBlocking = request.IsBlocking.Value;
+            hasChanges = true;
+        }
+
+        if (request.TechnicalReportRequired.HasValue && ticket.TechnicalReportRequired != request.TechnicalReportRequired.Value)
+        {
+            ticket.TechnicalReportRequired = request.TechnicalReportRequired.Value;
+            hasChanges = true;
+        }
+
+        // Update reference IDs
+        if (request.CIId.HasValue) ticket.CIId = request.CIId;
+        if (request.ComponentId.HasValue) ticket.ComponentId = request.ComponentId;
+        if (request.SubsystemId.HasValue) ticket.SubsystemId = request.SubsystemId;
+        if (request.SystemId.HasValue) ticket.SystemId = request.SystemId;
+
+        // Update detection fields
+        if (request.DetectedDate.HasValue) ticket.DetectedDate = request.DetectedDate;
+        if (request.DetectedContractorNotifiedAt.HasValue) ticket.DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt;
+        if (request.DetectedByUserId.HasValue) ticket.DetectedByUserId = request.DetectedByUserId;
+
+        if (request.DetectedNotificationMethods != null)
+        {
+            var methods = new List<NotificationMethod>();
+            foreach (var method in request.DetectedNotificationMethods)
+            {
+                if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
+                    methods.Add(nm);
+            }
+            ticket.DetectedNotificationMethods = methods.ToArray();
+            hasChanges = true;
+        }
+
+        // Update response fields
+        if (request.ResponseDate.HasValue) ticket.ResponseDate = request.ResponseDate;
+        if (request.ResponseResolvedAt.HasValue) ticket.ResponseResolvedAt = request.ResponseResolvedAt;
+
+        // Update response personnel if provided
+        if (request.ResponsePersonnelIds != null)
+        {
+            // Remove existing personnel
+            _context.TicketResponsePersonnel.RemoveRange(ticket.ResponseByUser);
+
+            // Add new personnel
+            foreach (var userId in request.ResponsePersonnelIds)
+            {
+                _context.TicketResponsePersonnel.Add(new TicketResponsePersonnel
+                {
+                    TicketId = ticket.Id,
+                    UserId = userId
+                });
+            }
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+        {
+            ticket.UpdatedAt = DateTime.UtcNow;
+            ticket.LastUpdatedById = currentUserId;
+
+            _context.TicketActions.Add(new TicketAction
+            {
+                TicketId = id,
+                ActionType = ActionType.Edit,
+                Notes = "Ticket updated",
+                PerformedById = currentUserId,
+                PerformedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+        }
+
+        return NoContent();
+    }
 
     [HttpPost("{id}/status")]
     [Authorize(Roles = "Editor,Admin")]
@@ -383,13 +405,38 @@ public class TicketsController : ControllerBase
     [HttpGet("available-personnel")]
     public async Task<ActionResult<List<PersonnelOption>>> GetAvailablePersonnel()
     {
+        // Step 1: Query database with anonymous type (EF Core can translate this)
         var users = await _context.Users
             .Where(u => u.IsActive && (u.Role == UserRole.Editor || u.Role == UserRole.Admin))
-            .Select(u => new PersonnelOption(u.Id, u.DisplayName, u.Department))
             .OrderBy(u => u.DisplayName)
+            .Select(u => new
+            {
+                u.Id,
+                u.DisplayName,
+                u.Department,
+                RankCode = u.MilitaryRank != null ? u.MilitaryRank.DisplayName : null,  
+                Role = u.Role.ToString()
+            })
             .ToListAsync();
-        return Ok(users);
-        }
 
-    public record PersonnelOption(long Id, string DisplayName, string? Department);
+        // Step 2: Map to PersonnelOption in memory
+        var personnelOptions = users.Select(u => new PersonnelOption(
+            u.Id,
+            u.DisplayName,
+            u.Department,
+            u.RankCode,
+            u.Role
+        )).ToList();
+
+        return Ok(personnelOptions);
+    }
+
+    public record PersonnelOption(
+            long Id,
+            string DisplayName,
+            string? Department,
+            string? RankCode,
+            string Role
+        );
 }
+

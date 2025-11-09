@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109125431_ResponsePersonnelJoinFix")]
+    partial class ResponsePersonnelJoinFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,22 +227,6 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("ActivityControlCommanderId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("activity_control_commander_id");
-
-                    b.Property<DateTime?>("ActivityControlDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("activity_control_date");
-
-                    b.Property<long?>("ActivityControlPersonnelId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("activity_control_personnel_id");
-
-                    b.Property<string>("ActivityControlResult")
-                        .HasColumnType("text")
-                        .HasColumnName("activity_control_result");
-
                     b.Property<long?>("CIId")
                         .HasColumnType("bigint")
                         .HasColumnName("ci_id");
@@ -361,10 +348,6 @@ namespace Infrastructure.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ActivityControlCommanderId");
-
-                    b.HasIndex("ActivityControlPersonnelId");
 
                     b.HasIndex("CIId");
 
@@ -657,16 +640,6 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
-                    b.HasOne("Domain.Entities.User", "ActivityControlCommander")
-                        .WithMany()
-                        .HasForeignKey("ActivityControlCommanderId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Domain.Entities.User", "ActivityControlPersonnel")
-                        .WithMany()
-                        .HasForeignKey("ActivityControlPersonnelId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Domain.Entities.ConfigurationItem", "CI")
                         .WithMany()
                         .HasForeignKey("CIId")
@@ -703,10 +676,6 @@ namespace Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("SystemId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ActivityControlCommander");
-
-                    b.Navigation("ActivityControlPersonnel");
 
                     b.Navigation("CI");
 

@@ -85,6 +85,17 @@ namespace Infrastructure.Data
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired();
 
+                entity.HasOne(t => t.ActivityControlPersonnel)
+                .WithMany()
+                .HasForeignKey(t => t.ActivityControlPersonnelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(t => t.ActivityControlCommander)
+                .WithMany()
+                .HasForeignKey(t => t.ActivityControlCommanderId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+
                 entity.HasOne(e => e.LastUpdatedBy)
                     .WithMany(u => u.UpdatedTickets)
                     .HasForeignKey(e => e.LastUpdatedById)
@@ -122,6 +133,8 @@ namespace Infrastructure.Data
                     .HasForeignKey(t => t.SystemId)
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired(false);
+
+        
 
                 // Many-to-many relationship
                 entity.HasMany(t => t.ResponseByUser)
