@@ -144,7 +144,15 @@ public record UpdateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds,
-        string? ResponseActions);
+        string? ResponseActions,
+
+        // Activity control fields
+        long? ActivityControlPersonnelId,
+        long? ActivityControlCommanderId,
+        DateTime? ActivityControlDate,
+        string? ActivityControlResult
+
+        );
         
 
 

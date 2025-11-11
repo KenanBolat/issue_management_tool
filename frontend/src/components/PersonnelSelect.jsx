@@ -35,6 +35,7 @@ export default function PersonnelSelect({
 
     const loadPersonnel = async () => {
         try {
+            
             setLoading(true);
             setError(null);
             const response = await ticketsAPI.getAvailablePersonnel();

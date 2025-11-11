@@ -258,7 +258,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         try {
             await ticketsAPI.addComment(ticketId, { body: newComment });
             setNewComment('');
-            alert("Comment added successfully");
+            alert("Yeni bir islem eklenmistir.");
             loadTicketDetails();
         } catch (error) {
             console.error("Error adding comment:", error);
@@ -674,7 +674,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Personel Rütbe & Adı Soyadı</label>
 
-                                {/* FIXED: Changed from isMulti={true} to isMulti={false} and bound to activityControlPersonnelId */}
                                 <PersonnelSelect
                                     isMulti={false}
                                     value={formData.activityControlPersonnelId}
