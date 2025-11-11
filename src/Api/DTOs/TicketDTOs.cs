@@ -85,6 +85,7 @@ public record TicketDetail(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<ResponsePersonnelItem> ResponsePersonnel,
+        string? ResponseActions, 
 
         // Activity control fields
         long? ActivityControlPersonnelId,
@@ -142,7 +143,9 @@ public record UpdateTicketRequest(
         // Response fields
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
-        List<long>? ResponsePersonnelIds);
+        List<long>? ResponsePersonnelIds,
+        string? ResponseActions);
+        
 
 
 public record SystemOption(

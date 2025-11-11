@@ -36,13 +36,14 @@ export default function TicketDetail({ ticketId, onClose }) {
         updatedAt: '',
         //Detection Fields
         detectedDate: '',
-        detectContractorNotifiedAt: '',
+        detectedContractorNotifiedAt: '',
         detectedNotificationMethods: [],
         detectedDetectedByUserId: null,
         //Response fields
         responseDate: '',
         responseResolvedAt: '',
         responsePersonnelIds: [],
+        responseActions: '',
         activityControlPersonnelId: null,  // For PERSONEL Rütbe & Adı Soyadı
         activityControlCommanderId: null,  // For İLK. KOM. Rütbe & Adı Soyadı
         activityControlDate: '',
@@ -93,17 +94,17 @@ export default function TicketDetail({ ticketId, onClose }) {
             // Load systems
             const systemsResponse = await ticketsAPI.getAvailableSystems();
             setavailableSystems(systemsResponse.data);
-            
+
             const subsystemResponse = await ticketsAPI.getAvailableSubsystems(formData.systemId);
             setAvailableSubSystems(subsystemResponse.data);
-            
+
             const cisResponse = await ticketsAPI.getAvailableCIs(formData.subsystemId);
             setAvailableCIs(cisResponse.data);
-    
+
             // Load components if CI is selected
             const componentsResponse = await ticketsAPI.getAvailableComponents(formData.ciId);
             setAvailableComponents(componentsResponse.data);
-    
+
         } catch (error) {
             console.error("Error loading the available personnel to select from a dropdown!!!");
         }
@@ -143,6 +144,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: ticketData.responseDate ? formatDateTimeLocal(ticketData.responseDate) : "",
                 responseResolvedAt: ticketData.responseResolvedAt ? formatDateTimeLocal(ticketData.responseResolvedAt) : "",
                 responsePersonnelIds: ticketData.responsePersonnel?.map(p => p.userId) || [],
+                responseActions: ticketData.responseActions || '',
                 createdByName: ticketData.createdBy,
 
                 // Activity Control fields (load from backend if available)
@@ -205,8 +207,8 @@ export default function TicketDetail({ ticketId, onClose }) {
     };
 
     const handleComponentChange = (value) => {
-    handleInputChange('componentId', value);
-};
+        handleInputChange('componentId', value);
+    };
 
 
     const handleSave = async () => {
@@ -224,9 +226,10 @@ export default function TicketDetail({ ticketId, onClose }) {
                 ...formData,
                 // Convert datetime-local to ISO format 
                 detectedDate: formData.detectedDate ? new Date(formData.detectedDate).toISOString() : null,
-                detectedContractorNotifiedAt: formData.detectContractorNotifiedAt ? new Date(formData.detectContractorNotifiedAt).toISOString() : null,
+                detectedContractorNotifiedAt: formData.detectedContractorNotifiedAt ? new Date(formData.detectedContractorNotifiedAt).toISOString() : null,
                 responseDate: formData.responseDate ? new Date(formData.responseDate).toISOString() : null,
                 responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null,
+                
             }
 
             if (isNewTicket) {
@@ -416,104 +419,104 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                     {/* Configuration Item Section */}
                     <div style={styles.formSection}>
-    <h2 style={styles.sectionTitle}>
-        Configuration Item (CI) Breakdown
-    </h2>
-    <p style={styles.sectionSubtitle}>
-        Seçim Sırası → Sistem → Alt Sistem → CI → Komponent sırasında seçiniz / değiştiriniz
-    </p>
+                        <h2 style={styles.sectionTitle}>
+                            Configuration Item (CI) Breakdown
+                        </h2>
+                        <p style={styles.sectionSubtitle}>
+                            Seçim Sırası → Sistem → Alt Sistem → CI → Komponent sırasında seçiniz / değiştiriniz
+                        </p>
 
-    <div style={styles.hierarchyContainer}>
-        <div style={styles.hierarchyRow}>
-            <div style={styles.hierarchyItem}>
-                <label style={styles.label}>Sistem</label>
-                <select
-                    value={formData.systemId || ''}
-                    onChange={(e) => handleSystemChange(e.target.value ? parseInt(e.target.value) : null)}
-                    style={styles.select}
-                    disabled={isReadOnly}
-                >
-                    <option value="">Sistem Seç</option>
-                    {availableSystems.map(system => (
-                        <option key={system.id} value={system.id}>
-                            {system.code ? `${system.code} - ${system.name}` : system.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
+                        <div style={styles.hierarchyContainer}>
+                            <div style={styles.hierarchyRow}>
+                                <div style={styles.hierarchyItem}>
+                                    <label style={styles.label}>Sistem</label>
+                                    <select
+                                        value={formData.systemId || ''}
+                                        onChange={(e) => handleSystemChange(e.target.value ? parseInt(e.target.value) : null)}
+                                        style={styles.select}
+                                        disabled={isReadOnly}
+                                    >
+                                        <option value="">Sistem Seç</option>
+                                        {availableSystems.map(system => (
+                                            <option key={system.id} value={system.id}>
+                                                {system.code ? `${system.code} - ${system.name}` : system.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-            <div style={styles.hierarchyItem}>
-                <label style={styles.label}>Alt Sistem</label>
-                <select
-                    value={formData.subsystemId || ''}
-                    onChange={(e) => handleSubsystemChange(e.target.value ? parseInt(e.target.value) : null)}
-                    style={styles.select}
-                    disabled={isReadOnly || !formData.systemId}
-                >
-                    <option value="">Alt Sistem Seç</option>
-                    {availableSubSystems.map(subsystem => (
-                        <option key={subsystem.id} value={subsystem.id}>
-                            {subsystem.code ? `${subsystem.code} - ${subsystem.name}` : subsystem.name}
-                        </option>
-                    ))}
-                </select>
-                {!formData.systemId && (
-                    <small style={styles.helpText}>
-                        Önce sistem seçiniz
-                    </small>
-                )}
-            </div>
-        </div>
+                                <div style={styles.hierarchyItem}>
+                                    <label style={styles.label}>Alt Sistem</label>
+                                    <select
+                                        value={formData.subsystemId || ''}
+                                        onChange={(e) => handleSubsystemChange(e.target.value ? parseInt(e.target.value) : null)}
+                                        style={styles.select}
+                                        disabled={isReadOnly || !formData.systemId}
+                                    >
+                                        <option value="">Alt Sistem Seç</option>
+                                        {availableSubSystems.map(subsystem => (
+                                            <option key={subsystem.id} value={subsystem.id}>
+                                                {subsystem.code ? `${subsystem.code} - ${subsystem.name}` : subsystem.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {!formData.systemId && (
+                                        <small style={styles.helpText}>
+                                            Önce sistem seçiniz
+                                        </small>
+                                    )}
+                                </div>
+                            </div>
 
-        <div style={styles.hierarchyRow}>
-            <div style={styles.hierarchyItem}>
-                <label style={styles.label}>CI (Konfigurasyon Birimi)</label>
-                <select
-                    value={formData.ciId || ''}
-                    onChange={(e) => handleCIChange(e.target.value ? parseInt(e.target.value) : null)}
-                    style={styles.select}
-                    disabled={isReadOnly || !formData.subsystemId}
-                >
-                    <option value="">CI Seç</option>
-                    {availableCIs.map(ci => (
-                        <option key={ci.id} value={ci.id}>
-                            {ci.code ? `${ci.code} - ${ci.name}` : ci.name}
-                        </option>
-                    ))}
-                </select>
-                {!formData.subsystemId && (
-                    <small style={styles.helpText}>
-                        Önce alt sistem seçiniz
-                    </small>
-                )}
-            </div>
+                            <div style={styles.hierarchyRow}>
+                                <div style={styles.hierarchyItem}>
+                                    <label style={styles.label}>CI (Konfigurasyon Birimi)</label>
+                                    <select
+                                        value={formData.ciId || ''}
+                                        onChange={(e) => handleCIChange(e.target.value ? parseInt(e.target.value) : null)}
+                                        style={styles.select}
+                                        disabled={isReadOnly || !formData.subsystemId}
+                                    >
+                                        <option value="">CI Seç</option>
+                                        {availableCIs.map(ci => (
+                                            <option key={ci.id} value={ci.id}>
+                                                {ci.code ? `${ci.code} - ${ci.name}` : ci.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {!formData.subsystemId && (
+                                        <small style={styles.helpText}>
+                                            Önce alt sistem seçiniz
+                                        </small>
+                                    )}
+                                </div>
 
-            <div style={styles.hierarchyItem}>
-                <label style={styles.label}>Komponent</label>
-                <select
-                    value={formData.componentId || ''}
-                    onChange={(e) => handleInputChange('componentId', e.target.value ? parseInt(e.target.value) : null)}
-                    style={styles.select}
-                    disabled={isReadOnly || !formData.ciId}
-                >
-                    <option value="">Komponent Seç</option>
-                    {availableComponents.map(component => (
-                        <option key={component.id} value={component.id}>
-                            {component.code ? `${component.code} - ${component.name}` : component.name}
-                        </option>
-                    ))}
-                </select>
-                {!formData.ciId && (
-                    <small style={styles.helpText}>
-                        Önce CI seçiniz
-                    </small>
-                )}
-            </div>
-        </div>
+                                <div style={styles.hierarchyItem}>
+                                    <label style={styles.label}>Komponent</label>
+                                    <select
+                                        value={formData.componentId || ''}
+                                        onChange={(e) => handleInputChange('componentId', e.target.value ? parseInt(e.target.value) : null)}
+                                        style={styles.select}
+                                        disabled={isReadOnly || !formData.ciId}
+                                    >
+                                        <option value="">Komponent Seç</option>
+                                        {availableComponents.map(component => (
+                                            <option key={component.id} value={component.id}>
+                                                {component.code ? `${component.code} - ${component.name}` : component.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {!formData.ciId && (
+                                        <small style={styles.helpText}>
+                                            Önce CI seçiniz
+                                        </small>
+                                    )}
+                                </div>
+                            </div>
 
-        {/* Rest of the section remains the same */}
-    </div>
-</div>
+                            {/* Rest of the section remains the same */}
+                        </div>
+                    </div>
 
                     {/* Bildirim Detayları */}
                     <div style={styles.formSection}>
@@ -647,9 +650,14 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
                         </div>
 
+
+
                         <div style={styles.formRow}>
+                            <p><br></br></p>
                             <label style={styles.label}>Arızaya İlişkin Yapılan İşlemler</label>
                             <textarea
+                                value={formData.responseActions}  
+                                onChange={(e) => handleInputChange('responseActions', e.target.value)}  
                                 style={{ ...styles.input, ...styles.textarea }}
                                 rows={5}
                                 placeholder="Yapılan işlemlerin özeti"

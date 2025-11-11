@@ -207,6 +207,7 @@ public class TicketsController : ControllerBase
                     rp.UserId,
                     rp.User.DisplayName
                 )).ToList(),
+                ticket.ResponseActions,
                 // Related data
                 ticket.ActivityControlPersonnelId,
                 ticket.ActivityControlCommanderId,
@@ -365,6 +366,12 @@ public class TicketsController : ControllerBase
         // Update response fields
         if (request.ResponseDate.HasValue) ticket.ResponseDate = request.ResponseDate;
         if (request.ResponseResolvedAt.HasValue) ticket.ResponseResolvedAt = request.ResponseResolvedAt;
+
+        if(!string.IsNullOrWhiteSpace(request.ResponseActions))
+        {
+            ticket.ResponseActions = request.ResponseActions;
+            hasChanges = true;
+        }
 
         // Update response personnel if provided
         if (request.ResponsePersonnelIds != null)

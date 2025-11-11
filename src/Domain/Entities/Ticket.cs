@@ -97,6 +97,8 @@ namespace Domain.Entities
         [Column("response_resolved_at")]
         public DateTime? ResponseResolvedAt { get; set; }
 
+        [Column("response_actions")]
+        public string? ResponseActions { get; set; }
 
         // Activity Control fields - NEW
         [Column("activity_control_personnel_id")]
