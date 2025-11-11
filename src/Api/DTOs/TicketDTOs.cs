@@ -143,3 +143,27 @@ public record UpdateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds);
+
+
+public record SystemOption(
+        long Id,
+        string? Name
+);
+
+public record SubsystemOption(
+        long Id,
+        string Name,
+        long? SystemId
+);
+
+
+public record CIOption(
+        long Id,
+        string Name             
+); 
+
+public record ComponentOption( 
+        long Id,
+        string Name,
+        long? SubsystemId
+);

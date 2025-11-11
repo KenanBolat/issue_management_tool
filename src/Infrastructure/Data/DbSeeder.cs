@@ -52,6 +52,9 @@ namespace Infrastructure.Data
 
 
             var system1 = new SystemEntity { Name = "GGS" };
+            var system2 = new SystemEntity { Name = "MGS" };
+            var system3 = new SystemEntity { Name = "MTZ" };
+            
             var subsystem1 = new Subsystem { Name = "Payload", System = system1 };
             var component1 = new Component { Name = "Yazılım", Subsystem = subsystem1 };
             var ci1 = new ConfigurationItem { Name = "SPC" };

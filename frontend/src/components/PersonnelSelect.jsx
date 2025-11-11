@@ -51,7 +51,6 @@ export default function PersonnelSelect({
     const personnelOptions = availablePersonnel.map(person => {
         // Build label based on options
         let label = person.displayName;
-        debugger;
         const details = [];
         if (showRank && person.rankCode) {
             details.push(person.rankCode);

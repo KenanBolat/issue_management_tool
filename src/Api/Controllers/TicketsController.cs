@@ -24,6 +24,94 @@ public class TicketsController : ControllerBase
 
     private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    /// <summary>
+    /// Get available systems for dropdown
+    /// </summary>
+    [HttpGet("system")]
+    public async Task<ActionResult<List<SystemOption>>> GetAvailableSystems()
+    {
+        var systems = await _context.Systems
+            .OrderBy(s => s.Name)
+            .Select(s => new SystemOption(
+                s.Id,
+                s.Name
+            ))
+            .ToListAsync();
+
+        return Ok(systems);
+    }
+
+    /// <summary>
+    /// Get available subsystems for dropdown (optionally filtered by system)
+    /// </summary>
+    [HttpGet("subsystem")]
+    public async Task<ActionResult<List<SubsystemOption>>> GetAvailableSubsystems([FromQuery] long? systemId = null)
+    {
+        IQueryable<Subsystem> query = _context.Subsystems.AsNoTracking();
+
+        if (systemId.HasValue)
+        {
+            query = query.Where(s => s.SystemId == systemId.Value);
+        }
+
+        var subsystems = await query
+            .OrderBy(s => s.Name)
+            .Select(s => new SubsystemOption(
+                s.Id,
+                s.Name,
+                s.SystemId
+            ))
+            .ToListAsync();
+
+        return Ok(subsystems);
+    }
+    /// <summary>
+    /// Get available CIs for dropdown (optionally filtered by subsystem)
+    /// </summary>
+    [HttpGet("ci")]
+    public async Task<ActionResult<List<CIOption>>> GetAvailableCIs([FromQuery] long? subsystemId = null)
+    {
+        var query = _context.ConfigurationItems;
+
+        var cis = await query
+            .OrderBy(ci => ci.Name)
+            .Select(ci => new CIOption(
+                ci.Id,
+                ci.Name
+               ))
+            .ToListAsync();
+
+        return Ok(cis);
+    }
+
+
+    /// <summary>
+    /// Get available components for dropdown (optionally filtered by CI)
+    /// </summary>
+    [HttpGet("component")]
+    public async Task<ActionResult<List<ComponentOption>>> GetAvailableComponents([FromQuery] long? subsystemID = null)
+    {
+        // var query = _context.Components;
+        IQueryable<Component> query = _context.Components.AsNoTracking();
+
+        if (subsystemID.HasValue)
+        {
+            query = query.Where(c => c.SubsystemId == subsystemID.Value);
+        }
+
+        var components = await query
+            .OrderBy(c => c.Name)
+            .Select(c => new ComponentOption(
+                c.Id,
+                c.Name,
+                c.SubsystemId
+            ))
+            .ToListAsync();
+
+        return Ok(components);
+    }
+
+    
     [HttpGet]
     public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null)
     {
@@ -61,25 +149,25 @@ public class TicketsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TicketDetail>> GetTicket(long id)
     {
-       var ticket = await _context.Tickets
-                .Include(t => t.CreatedBy)
-                .Include(t => t.LastUpdatedBy)
-                .Include(t => t.DetectedByUser)
-                    .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser
-                .Include(t => t.CI)
-                .Include(t => t.Component)
-                .Include(t => t.Subsystem)
-                .Include(t => t.System)
-                .Include(t => t.ResponseByUser)
-                    .ThenInclude(rp => rp.User)
-                        .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for ResponsePersonnel
-                .Include(t => t.Actions)
-                    .ThenInclude(a => a.PerformedBy)
-                .Include(t => t.Comments)
-                    .ThenInclude(c => c.CreatedBy)
-                .FirstOrDefaultAsync(t => t.Id == id);
+        var ticket = await _context.Tickets
+                 .Include(t => t.CreatedBy)
+                 .Include(t => t.LastUpdatedBy)
+                 .Include(t => t.DetectedByUser)
+                     .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser
+                 .Include(t => t.CI)
+                 .Include(t => t.Component)
+                 .Include(t => t.Subsystem)
+                 .Include(t => t.System)
+                 .Include(t => t.ResponseByUser)
+                     .ThenInclude(rp => rp.User)
+                         .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for ResponsePersonnel
+                 .Include(t => t.Actions)
+                     .ThenInclude(a => a.PerformedBy)
+                 .Include(t => t.Comments)
+                     .ThenInclude(c => c.CreatedBy)
+                 .FirstOrDefaultAsync(t => t.Id == id);
 
-            if (ticket == null) return NotFound();
+        if (ticket == null) return NotFound();
 
         var detail = new TicketDetail(
             ticket.Id,
@@ -414,7 +502,7 @@ public class TicketsController : ControllerBase
                 u.Id,
                 u.DisplayName,
                 u.Department,
-                RankCode = u.MilitaryRank != null ? u.MilitaryRank.DisplayName : null,  
+                RankCode = u.MilitaryRank != null ? u.MilitaryRank.DisplayName : null,
                 Role = u.Role.ToString()
             })
             .ToListAsync();
@@ -438,5 +526,8 @@ public class TicketsController : ControllerBase
             string? RankCode,
             string Role
         );
+
+
+
 }
 

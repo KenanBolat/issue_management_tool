@@ -28,12 +28,28 @@ export const ticketsAPI = {
     getById: (id) => api.get(`/tickets/${id}`),
     
     create: (data) => api.post('/tickets', data),
-    update: (data) => api.put(`/tickets/${id}`, data),
+    update: (id, data) => api.put(`/tickets/${id}`, data),
     delete: (id, data) => api.put(`/tickets/${id}`, data),
  
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body), 
     getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
+
+    //dropdowns except users 
+    getAvailableSystems: () => api.get('/tickets/system'),
+    getAvailableSubsystems: (systemId = null) => {
+        const params = systemId ? { systemId } : {};
+        return api.get('/tickets/subsystem', { params });
+    },
+    getAvailableCIs: (subsystemId = null) => {
+        const params = subsystemId ? { subsystemId } : {};
+        return api.get('/tickets/ci', { params });
+    },
+    getAvailableComponents: (ciId = null) => {
+        const params = ciId ? { ciId } : {};
+        return api.get('/tickets/component', { params });
+    },
+
 };
 
 export const dashboardAPI = {
@@ -127,6 +143,7 @@ export const userApi = {
     // Update user
     update: async (id, userData) => {
         try {
+            debugger;
             const response = await fetch(`${API_BASE_URL}/users/${id}`, {
                 method: 'PUT',
                 headers: createHeaders(),
