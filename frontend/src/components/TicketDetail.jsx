@@ -59,6 +59,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         activityControlCommanderId: null,  // For İLK. KOM. Rütbe & Adı Soyadı
         activityControlDate: '',
         activityControlResult: '',
+        ttcomsCode: '',
 
     });
 
@@ -164,6 +165,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 activityControlCommanderId: ticketData.activityControlCommanderId || null,
                 activityControlDate: ticketData.activityControlDate ? formatDateTimeLocal(ticketData.activityControlDate) : '',
                 activityControlResult: ticketData.activityControlResult || '',
+                ttcomsCode: ticketData.ttcomsCode || '', 
 
             });
 
@@ -409,7 +411,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             disabled={saving}
                         >
                             <Save size={16} />
-                            {saving ? 'Saving...' : 'Save'}
+                            {saving ? 'Kaydediyot...' : 'Kaydet'}
                         </button>
                     )}
                     <button onClick={onClose} style={styles.closeButton}>
@@ -628,6 +630,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     type="text"
                                     style={styles.input}
                                     disabled={isReadOnly}
+                                    value={formData.ttcomsCode}
+                                    onChange={(e) => handleInputChange('ttcomsCode', e.target.value)}
                                     placeholder="TT00001"
                                 />
                             </div>

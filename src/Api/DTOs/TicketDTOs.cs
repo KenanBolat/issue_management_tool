@@ -22,13 +22,14 @@ public record CreateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds,
-        string? ResponseActions, 
+        string? ResponseActions,
 
         // Activity control fields
         long? ActivityControlPersonnelId,
         long? ActivityControlCommanderId,
         DateTime? ActivityControlDate,
-        string? ActivityControlResult);
+        string? ActivityControlResult,
+        string? TtcomsCode);
 
 // Change Status of the ticket 
 public record ChangeStatusRequest(
@@ -54,7 +55,8 @@ public record TicketListItem(
         bool IsDeleted,
         DateTime? DetectDate,
         DateTime? ResponseDate,
-        string? DetectedByUserName);
+        string? DetectedByUserName,
+        string? TtcomsCode);
 
 // Get the associated ticket detail
 public record TicketDetail(
@@ -102,7 +104,9 @@ public record TicketDetail(
 
         // Related data
         List<TicketActionItem> Actions,
-        List<CommentItem> Comments
+        List<CommentItem> Comments,
+
+        string? TtcomsCode
         );
 
 // Response personnel item
@@ -158,7 +162,8 @@ public record UpdateTicketRequest(
         long? ActivityControlCommanderId,
         DateTime? ActivityControlDate,
         string? ActivityControlResult,
-        string? Status
+        string? Status,
+        string? TtcomsCode
         );
         
 

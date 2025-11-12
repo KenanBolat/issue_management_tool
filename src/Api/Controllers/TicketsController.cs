@@ -140,7 +140,7 @@ public class TicketsController : ControllerBase
                 t.IsDeleted,
                 t.DetectedDate,
                 t.ResponseDate,
-                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null))
+                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null, t.TtcomsCode))
             .ToListAsync();
 
         return Ok(items);
@@ -213,7 +213,6 @@ public class TicketsController : ControllerBase
                 ticket.ActivityControlCommanderId,
                 ticket.ActivityControlDate,
                 ticket.ActivityControlResult,
-
                 ticket.Actions
                     .OrderByDescending(a => a.PerformedAt)
                     .Select(a => new TicketActionItem(
@@ -232,7 +231,8 @@ public class TicketsController : ControllerBase
                         c.Body,
                         c.CreatedBy.DisplayName,
                         c.CreatedAt
-                    )).ToList()
+                    )).ToList(), 
+                ticket.TtcomsCode
             );
 
         return Ok(detail);
@@ -242,65 +242,7 @@ public class TicketsController : ControllerBase
     [Authorize(Roles = "Editor,Admin")]
     public async Task<ActionResult<TicketDetail>> CreateTicket([FromBody] CreateTicketRequest request)
     {
-        // if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
-        //     return BadRequest(new { message = "Invalid status" });
-
-        // //Parse notification method if provided 
-        // NotificationMethod[]? notificationMethods = null;
-
-        // if (request.DetectedNotificationMethods != null && request.DetectedNotificationMethods.Length > 0)
-        // {
-        //     var methods = new List<NotificationMethod>();
-        //     foreach (var method in request.DetectedNotificationMethods)
-        //     {
-        //         if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
-        //             methods.Add(nm);
-        //     }
-        //     notificationMethods = methods.ToArray();
-        // }
-
-        // var ticket = new Ticket
-        // {
-        //     ExternalCode = $"ISSUE-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
-        //     Title = request.Title,
-        //     Description = request.Description,
-        //     IsBlocking = request.IsBlocking,
-        //     Status = status,
-        //     TechnicalReportRequired = request.TechnicalReportRequired,
-        //     CIId = request.CIId,
-        //     ComponentId = request.ComponentId,
-        //     SubsystemId = request.SubsystemId,
-        //     SystemId = request.SystemId,
-        //     // Detection fields
-        //     DetectedDate = request.DetectedDate,
-        //     DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt,
-        //     DetectedNotificationMethods = notificationMethods,
-        //     DetectedByUserId = request.DetectedByUserId,
-        //     // Response fields
-        //     ResponseDate = request.ResponseDate,
-        //     ResponseResolvedAt = request.ResponseResolvedAt,
-        //     IsActive = true,
-        //     IsDeleted = false
-        // };
-
-        // var created = await _ticketService.CreateTicketAync(ticket, GetCurrentUserId());
-
-        // // Add response personnel if provided
-        // if (request.ResponsePersonnelIds != null && request.ResponsePersonnelIds.Any())
-        // {
-        //     foreach (var userId in request.ResponsePersonnelIds)
-        //     {
-        //         _context.TicketResponsePersonnel.Add(new TicketResponsePersonnel
-        //         {
-        //             TicketId = created.Id,
-        //             UserId = userId
-        //         });
-        //     }
-        //     await _context.SaveChangesAsync();
-        // }
-        // return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
-
-
+        
         if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
             return BadRequest(new { message = "Invalid status" });
 
@@ -348,6 +290,7 @@ public class TicketsController : ControllerBase
             ActivityControlCommanderId = request.ActivityControlCommanderId,
             ActivityControlDate = request.ActivityControlDate,
             ActivityControlResult = request.ActivityControlResult,
+            TtcomsCode = request.TtcomsCode,
 
             IsActive = true,
             IsDeleted = false
@@ -391,6 +334,12 @@ public class TicketsController : ControllerBase
         if (request.Title != null && ticket.Title != request.Title)
         {
             ticket.Title = request.Title;
+            hasChanges = true;
+        }
+
+        if(request.TtcomsCode != null && ticket.TtcomsCode != request.TtcomsCode)
+        {
+            ticket.TtcomsCode = request.TtcomsCode;
             hasChanges = true;
         }
 

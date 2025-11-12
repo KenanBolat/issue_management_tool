@@ -48,7 +48,7 @@ public class DashboardController : ControllerBase
                 t.IsDeleted,
                 t.DetectedDate, 
                 t.ResponseDate,
-                t.DetectedByUser.DisplayName))
+                t.DetectedByUser.DisplayName, t.TtcomsCode))
             .ToListAsync();
 
         return Ok(new DashboardResponse(statusCounts, ongoingTickets));

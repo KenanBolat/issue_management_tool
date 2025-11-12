@@ -113,6 +113,8 @@ namespace Domain.Entities
         [Column("activity_control_result")]
         public string? ActivityControlResult { get; set; }
 
+        [Column("ttcoms_code")]
+        public string? TtcomsCode { get; set; }
          
         // Activity Control Navigation Properties - NEW
         public User? ActivityControlPersonnel { get; set; }
