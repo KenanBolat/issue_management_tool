@@ -3,7 +3,7 @@ import { ticketsAPI } from "../../services/api";
 import { Edit, Trash2, Eye } from "lucide-react";
 
 
-export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket}) {
+export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState("");
@@ -12,7 +12,18 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
     const [sortOrder, setSortOrder] = useState("desc");
     const [filter, setFilter] = useState("");
 
+    const STATUS_LABELS = {
+        'OPEN': 'AÇIK',
+        'PAUSED': 'DURDURULDU',
+        'CONFIRMED': 'DOĞRULANDI',
+        'CLOSED': 'KAPANDI',
+        'REOPENED': 'TEKRAR AÇILDI',
+        'CANCELLED': 'İPTAL'
+    };
 
+    const getStatusLabel = (status) => {
+        return STATUS_LABELS[status] || status;
+    };
 
     useEffect(() => {
         loadTickets();
@@ -118,7 +129,7 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                 <div>
                     <h1 style={styles.title}>SORUNLAR</h1>
                     <p style={styles.subtitle}>
-                         {filteredTickets.length} / {tickets.length} sorun gösterilmektedir
+                        {filteredTickets.length} / {tickets.length} sorun gösterilmektedir
                     </p>
                 </div>
             </div>
@@ -162,7 +173,7 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                 </div>
 
                 {(userRole === 'Editor' || userRole === 'Admin') && (
-                    <button 
+                    <button
                         style={styles.addBtn}
                         onClick={() => onCreateTicket()}
                     >
@@ -219,10 +230,10 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                                     <td style={styles.td}>{ticket.externalCode}</td>
                                     <td style={styles.td}>
                                         <div style={styles.titleCell}>
-                                            {ticket.title}
+                                            
                                             {ticket.isBlocking && (
-                                                <span style={styles.blockingBadge}>BLOCKING</span>
-                                            )}
+                                                <span style={styles.blockingBadge}>KRİTİK</span>
+                                            )} {ticket.title}
                                         </div>
                                     </td>
                                     <td style={styles.td}>
@@ -234,7 +245,7 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                                             backgroundColor: getStatusColor(ticket.status),
                                             color: getStatusTextColor(ticket.status),
                                         }}>
-                                            {ticket.status}
+                                            {getStatusLabel(ticket.status)}
                                         </span>
                                     </td>
                                     <td style={styles.td}>{ticket.createdByName}</td>
