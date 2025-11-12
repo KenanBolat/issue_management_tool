@@ -111,7 +111,7 @@ public class TicketsController : ControllerBase
         return Ok(components);
     }
 
-    
+
     [HttpGet]
     public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null)
     {
@@ -242,12 +242,70 @@ public class TicketsController : ControllerBase
     [Authorize(Roles = "Editor,Admin")]
     public async Task<ActionResult<TicketDetail>> CreateTicket([FromBody] CreateTicketRequest request)
     {
+        // if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
+        //     return BadRequest(new { message = "Invalid status" });
+
+        // //Parse notification method if provided 
+        // NotificationMethod[]? notificationMethods = null;
+
+        // if (request.DetectedNotificationMethods != null && request.DetectedNotificationMethods.Length > 0)
+        // {
+        //     var methods = new List<NotificationMethod>();
+        //     foreach (var method in request.DetectedNotificationMethods)
+        //     {
+        //         if (Enum.TryParse<NotificationMethod>(method, true, out var nm))
+        //             methods.Add(nm);
+        //     }
+        //     notificationMethods = methods.ToArray();
+        // }
+
+        // var ticket = new Ticket
+        // {
+        //     ExternalCode = $"ISSUE-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+        //     Title = request.Title,
+        //     Description = request.Description,
+        //     IsBlocking = request.IsBlocking,
+        //     Status = status,
+        //     TechnicalReportRequired = request.TechnicalReportRequired,
+        //     CIId = request.CIId,
+        //     ComponentId = request.ComponentId,
+        //     SubsystemId = request.SubsystemId,
+        //     SystemId = request.SystemId,
+        //     // Detection fields
+        //     DetectedDate = request.DetectedDate,
+        //     DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt,
+        //     DetectedNotificationMethods = notificationMethods,
+        //     DetectedByUserId = request.DetectedByUserId,
+        //     // Response fields
+        //     ResponseDate = request.ResponseDate,
+        //     ResponseResolvedAt = request.ResponseResolvedAt,
+        //     IsActive = true,
+        //     IsDeleted = false
+        // };
+
+        // var created = await _ticketService.CreateTicketAync(ticket, GetCurrentUserId());
+
+        // // Add response personnel if provided
+        // if (request.ResponsePersonnelIds != null && request.ResponsePersonnelIds.Any())
+        // {
+        //     foreach (var userId in request.ResponsePersonnelIds)
+        //     {
+        //         _context.TicketResponsePersonnel.Add(new TicketResponsePersonnel
+        //         {
+        //             TicketId = created.Id,
+        //             UserId = userId
+        //         });
+        //     }
+        //     await _context.SaveChangesAsync();
+        // }
+        // return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
+
+
         if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
             return BadRequest(new { message = "Invalid status" });
 
-        //Parse notification method if provided 
+        // Parse notification methods if provided 
         NotificationMethod[]? notificationMethods = null;
-
         if (request.DetectedNotificationMethods != null && request.DetectedNotificationMethods.Length > 0)
         {
             var methods = new List<NotificationMethod>();
@@ -261,24 +319,36 @@ public class TicketsController : ControllerBase
 
         var ticket = new Ticket
         {
-            ExternalCode = $"ISSUE-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+            ExternalCode = $"TKT-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             Title = request.Title,
             Description = request.Description,
             IsBlocking = request.IsBlocking,
             Status = status,
             TechnicalReportRequired = request.TechnicalReportRequired,
+
+            // Hierarchy fields
             CIId = request.CIId,
             ComponentId = request.ComponentId,
             SubsystemId = request.SubsystemId,
             SystemId = request.SystemId,
+
             // Detection fields
             DetectedDate = request.DetectedDate,
             DetectedContractorNotifiedAt = request.DetectedContractorNotifiedAt,
             DetectedNotificationMethods = notificationMethods,
             DetectedByUserId = request.DetectedByUserId,
+
             // Response fields
             ResponseDate = request.ResponseDate,
             ResponseResolvedAt = request.ResponseResolvedAt,
+            ResponseActions = request.ResponseActions,
+
+            // Activity Control fields
+            ActivityControlPersonnelId = request.ActivityControlPersonnelId,
+            ActivityControlCommanderId = request.ActivityControlCommanderId,
+            ActivityControlDate = request.ActivityControlDate,
+            ActivityControlResult = request.ActivityControlResult,
+
             IsActive = true,
             IsDeleted = false
         };
@@ -298,7 +368,9 @@ public class TicketsController : ControllerBase
             }
             await _context.SaveChangesAsync();
         }
+
         return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
+
     }
 
 
@@ -326,6 +398,31 @@ public class TicketsController : ControllerBase
         {
             ticket.Description = request.Description;
             hasChanges = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (Enum.TryParse<TicketStatus>(request.Status, true, out var newStatus))
+            {
+                if (ticket.Status != newStatus)
+                {
+                    var oldStatus = ticket.Status;
+                    ticket.Status = newStatus;
+                    hasChanges = true;
+
+                    // Log the status change in the action
+                    _context.TicketActions.Add(new TicketAction
+                    {
+                        TicketId = id,
+                        ActionType = ActionType.StatusChange,
+                        FromStatus = oldStatus,
+                        ToStatus = newStatus,
+                        Notes = $"Status changed from {oldStatus} to {newStatus}",
+                        PerformedById = currentUserId,
+                        PerformedAt = DateTime.UtcNow
+                    });
+                }
+            }
         }
 
         if (request.IsBlocking.HasValue && ticket.IsBlocking != request.IsBlocking.Value)
@@ -367,7 +464,7 @@ public class TicketsController : ControllerBase
         if (request.ResponseDate.HasValue) ticket.ResponseDate = request.ResponseDate;
         if (request.ResponseResolvedAt.HasValue) ticket.ResponseResolvedAt = request.ResponseResolvedAt;
 
-        if(!string.IsNullOrWhiteSpace(request.ResponseActions))
+        if (!string.IsNullOrWhiteSpace(request.ResponseActions))
         {
             ticket.ResponseActions = request.ResponseActions;
             hasChanges = true;
@@ -388,6 +485,31 @@ public class TicketsController : ControllerBase
                     UserId = userId
                 });
             }
+            hasChanges = true;
+        }
+
+
+        if (request.ActivityControlPersonnelId.HasValue)
+        {
+            ticket.ActivityControlPersonnelId = request.ActivityControlPersonnelId;
+            hasChanges = true;
+        }
+
+        if (request.ActivityControlCommanderId.HasValue)
+        {
+            ticket.ActivityControlCommanderId = request.ActivityControlCommanderId;
+            hasChanges = true;
+        }
+
+        if (request.ActivityControlDate.HasValue)
+        {
+            ticket.ActivityControlDate = request.ActivityControlDate;
+            hasChanges = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ActivityControlResult))
+        {
+            ticket.ActivityControlResult = request.ActivityControlResult;
             hasChanges = true;
         }
 

@@ -14,7 +14,7 @@ function App() {
     const [selectedTicketId, setSelectedTicketId] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState('new');
     const [currentUserId, setCurrentUserId] = useState(null);
-
+    const [refreshTickets, setRefreshTickets] = useState(0);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -48,6 +48,13 @@ function App() {
         setSelectedTicketId('new');
         setCurrentPage('ticket-detail');
     }   
+
+    const handleCloseTicketDetail = () => {
+        setSelectedTicketId(null);
+        setCurrentPage('tickets');
+        setRefreshTickets(prev => prev + 1); // Trigger refresh
+    };
+
 
     const handleViewUser = (userId) => {
         console.log("Viewing user:", userId);
@@ -100,8 +107,11 @@ function App() {
                         onViewTicket={handleViewTicket}
                         onEditTicket={handleEditTicket}
                         onCreateTicket={handleCreateTicket}
+                        refreshTrigger={refreshTickets}
                     />)}
-                {currentPage === 'ticket-detail' && (<TicketDetail ticketId={selectedTicketId} />)}
+                {currentPage === 'ticket-detail' && (<TicketDetail 
+                ticketId={selectedTicketId}
+                onClose={handleCloseTicketDetail} />)}
 
                 {currentPage === 'users' && (
                     <UserList 

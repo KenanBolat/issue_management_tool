@@ -15,7 +15,18 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [availableSubSystems, setAvailableSubSystems] = useState([]);
     const [availableCIs, setAvailableCIs] = useState([]);
     const [availableComponents, setAvailableComponents] = useState([]);
+    const STATUS_LABELS = {
+        'OPEN': 'AÇIK',
+        'PAUSED': 'DURDURULDU',
+        'CONFIRMED': 'DOĞRULANDI',
+        'CLOSED': 'KAPANDI',
+        'REOPENED': 'TEKRAR AÇILDI',
+        'CANCELLED': 'İPTAL'
+    };
 
+    const getStatusLabel = (status) => {
+        return STATUS_LABELS[status] || status;
+    };
 
     // Form state
     const [formData, setFormData] = useState({
@@ -115,6 +126,7 @@ export default function TicketDetail({ ticketId, onClose }) {
     const loadTicketDetails = async () => {
         try {
             setLoading(true);
+            debugger;
             const response = await ticketsAPI.getById(ticketId);
             const ticketData = response.data;
             setTicket(ticketData);
@@ -138,7 +150,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 detectedDate: ticketData.detectedDate ? formatDateTimeLocal(ticketData.detectedDate) : "",
                 detectedContractorNotifiedAt: ticketData.detectedContractorNotifiedAt ? formatDateTimeLocal(ticketData.detectedContractorNotifiedAt) : "",
                 detectedNotificationMethods: ticketData.detectedNotificationMethods || [],
-                detectedByUserId: ticketData.detectedByUserId,
+                detectedByUserId: ticketData.detectedByUserId || null,
                 // Response Fields 
 
                 responseDate: ticketData.responseDate ? formatDateTimeLocal(ticketData.responseDate) : "",
@@ -229,7 +241,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                 detectedContractorNotifiedAt: formData.detectedContractorNotifiedAt ? new Date(formData.detectedContractorNotifiedAt).toISOString() : null,
                 responseDate: formData.responseDate ? new Date(formData.responseDate).toISOString() : null,
                 responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null,
-                
+                activityControlDate: formData.activityControlDate ? new Date(formData.activityControlDate).toISOString() : null,
+
             }
 
             if (isNewTicket) {
@@ -266,20 +279,60 @@ export default function TicketDetail({ ticketId, onClose }) {
         }
     };
 
-    const handleStatusChange = async (newStatus, notes = '') => {
-        if (!window.confirm(`Change status to ${newStatus}?`)) return;
+    const handleStatusChange = async (newStatus) => {
+        const statusLabel = getStatusLabel(newStatus);
+        if (!window.confirm(`Durumu "${statusLabel}" olarak değiştirmek istediğinize emin misiniz?`)) return;
 
         try {
-            await ticketsAPI.changeStatus(ticketId, {
-                toStatus: newStatus,
-                notes: notes || `Status changed to ${newStatus}`,
-                confirmationStatus: formData.confirmationStatus
-            });
-            alert("Status changed successfully");
+            setSaving(true);
+
+            const toISOOrNull = (dateString) => {
+                if (!dateString || dateString === '') return null;
+                return new Date(dateString).toISOString();
+            };
+
+            // Build apiData directly with the new status (don't rely on formData state)
+            const apiData = {
+                title: formData.title,
+                description: formData.description,
+                isBlocking: formData.isBlocking,
+                technicalReportRequired: formData.technicalReportRequired,
+                status: newStatus,  // ✅ Use the newStatus parameter directly
+
+                ciId: formData.ciId || null,
+                componentId: formData.componentId || null,
+                subsystemId: formData.subsystemId || null,
+                systemId: formData.systemId || null,
+
+                detectedDate: toISOOrNull(formData.detectedDate),
+                detectedContractorNotifiedAt: toISOOrNull(formData.detectedContractorNotifiedAt),
+                detectedNotificationMethods: formData.detectedNotificationMethods || [],
+                detectedByUserId: formData.detectedByUserId || null,
+
+                responseDate: toISOOrNull(formData.responseDate),
+                responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
+                responsePersonnelIds: formData.responsePersonnelIds || [],
+                responseActions: formData.responseActions || null,
+
+                activityControlPersonnelId: formData.activityControlPersonnelId || null,
+                activityControlCommanderId: formData.activityControlCommanderId || null,
+                activityControlDate: toISOOrNull(formData.activityControlDate),
+                activityControlResult: formData.activityControlResult || null,
+            };
+
+            await ticketsAPI.update(ticketId, apiData);
+            alert(`Durum "${statusLabel}" olarak değiştirildi`);
+
+            // Update local state after successful save
+            setFormData(prev => ({ ...prev, status: newStatus }));
+
+            // Reload to get fresh data from backend
             loadTicketDetails();
         } catch (error) {
             console.error("Error changing status:", error);
-            alert("Error changing status");
+            alert("Durum değiştirilemedi: " + (error.response?.data?.message || error.message));
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -656,8 +709,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                             <p><br></br></p>
                             <label style={styles.label}>Arızaya İlişkin Yapılan İşlemler</label>
                             <textarea
-                                value={formData.responseActions}  
-                                onChange={(e) => handleInputChange('responseActions', e.target.value)}  
+                                value={formData.responseActions}
+                                onChange={(e) => handleInputChange('responseActions', e.target.value)}
                                 style={{ ...styles.input, ...styles.textarea }}
                                 rows={5}
                                 placeholder="Yapılan işlemlerin özeti"
@@ -673,7 +726,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Personel Rütbe & Adı Soyadı</label>
-
                                 <PersonnelSelect
                                     isMulti={false}
                                     value={formData.activityControlPersonnelId}
@@ -686,7 +738,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Böl. Kom. Rütbe & Adı Soyadı</label>
-                                {/* FIXED: Added PersonnelSelect instead of plain input */}
                                 <PersonnelSelect
                                     isMulti={false}
                                     value={formData.activityControlCommanderId}
@@ -701,6 +752,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 <label style={styles.label}>Faaliyet Kontrol Tarihi</label>
                                 <input
                                     type="datetime-local"
+                                    value={formData.activityControlDate}
+                                    onChange={(e) => handleInputChange('activityControlDate', e.target.value)}
                                     style={styles.input}
                                     disabled={isReadOnly}
                                 />
@@ -710,6 +763,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.formRow}>
                             <label style={styles.label}>Sonuç (FAAL / GAYRİ FAAL)</label>
                             <textarea
+                                value={formData.activityControlResult}
+                                onChange={(e) => handleInputChange('activityControlResult', e.target.value)}
                                 style={{ ...styles.input, ...styles.textarea }}
                                 rows={4}
                                 placeholder="(Gayri faal ise gerçekçesi ve faaliyet için öneriler yazılacaktır.)"
@@ -745,7 +800,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 backgroundColor: getStatusColor(formData.status),
                                 color: getStatusTextColor(formData.status)
                             }}>
-                                {formData.status}
+                                {getStatusLabel(formData.status)}
                             </span>
                         </div>
 
@@ -756,7 +811,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     style={{ ...styles.statusButton, ...styles.confirmButton }}
                                     disabled={formData.status === 'CONFIRMED'}
                                 >
-                                    Onayla
+                                    Doğrula
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('PAUSED')}
@@ -778,6 +833,13 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     disabled={formData.status === 'REOPENED'}
                                 >
                                     Yeniden Aç
+                                </button>
+                                                          <button
+                                    onClick={() => handleStatusChange('CANCELLED')}
+                                    style={{ ...styles.statusButton, ...styles.cancelButton }}
+                                    disabled={formData.status === 'CANCELLED'}
+                                >
+                                    Iptal Et!
                                 </button>
                             </div>
                         )}
@@ -981,6 +1043,11 @@ const styles = {
         fontSize: '0.85rem',
         color: '#333',
         padding: '0.2rem 0',
+    },
+
+    cancelButton: {
+        backgroundColor: '#ffebee',
+        color: '#d32f2f',
     },
 
     // End for the multiple selection

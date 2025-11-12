@@ -162,7 +162,10 @@ export default function TicketsTable({onViewTicket, onEditTicket, onCreateTicket
                 </div>
 
                 {(userRole === 'Editor' || userRole === 'Admin') && (
-                    <button style={styles.addBtn}>
+                    <button 
+                        style={styles.addBtn}
+                        onClick={() => onCreateTicket()}
+                    >
                         + Yeni Sorun Ekle
                     </button>
                 )}

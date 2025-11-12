@@ -21,7 +21,14 @@ public record CreateTicketRequest(
         // Response fields
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
-        List<long>? ResponsePersonnelIds);
+        List<long>? ResponsePersonnelIds,
+        string? ResponseActions, 
+
+        // Activity control fields
+        long? ActivityControlPersonnelId,
+        long? ActivityControlCommanderId,
+        DateTime? ActivityControlDate,
+        string? ActivityControlResult);
 
 // Change Status of the ticket 
 public record ChangeStatusRequest(
@@ -150,8 +157,8 @@ public record UpdateTicketRequest(
         long? ActivityControlPersonnelId,
         long? ActivityControlCommanderId,
         DateTime? ActivityControlDate,
-        string? ActivityControlResult
-
+        string? ActivityControlResult,
+        string? Status
         );
         
 
