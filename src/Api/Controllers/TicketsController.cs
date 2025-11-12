@@ -232,7 +232,11 @@ public class TicketsController : ControllerBase
                         c.CreatedBy.DisplayName,
                         c.CreatedAt
                     )).ToList(),
-                ticket.TtcomsCode
+                ticket.TtcomsCode,
+                ticket.ItemDescription,
+                ticket.ItemId,
+                ticket.ItemSerialNo
+
             );
 
         return Ok(detail);
@@ -292,6 +296,9 @@ public class TicketsController : ControllerBase
             ActivityControlDate = request.ActivityControlDate,
             ActivityControlResult = request.ActivityControlResult,
             TtcomsCode = request.TtcomsCode,
+            ItemDescription = request.ItemDescription,
+            ItemId = request.ItemId,
+            ItemSerialNo = request.ItemSerialNo,
 
             IsActive = true,
             IsDeleted = false
@@ -419,6 +426,35 @@ public class TicketsController : ControllerBase
             ticket.ResponseActions = request.ResponseActions;
             hasChanges = true;
         }
+
+        if (!string.IsNullOrWhiteSpace(request.ResponseActions))
+        {
+            ticket.ResponseActions = request.ResponseActions;
+            hasChanges = true;
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(request.ItemDescription))
+        {
+            ticket.ItemDescription = request.ItemDescription;
+            hasChanges = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ItemId))
+        {
+            ticket.ItemId = request.ItemId;
+            hasChanges = true;
+        }
+        if (!string.IsNullOrWhiteSpace(request.ItemSerialNo))
+        {
+            ticket.ItemSerialNo = request.ItemSerialNo;
+            hasChanges = true;
+        }
+       
+
+
+
+
 
         // Update response personnel if provided
         if (request.ResponsePersonnelIds != null)

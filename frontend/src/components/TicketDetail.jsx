@@ -165,7 +165,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 activityControlCommanderId: ticketData.activityControlCommanderId || null,
                 activityControlDate: ticketData.activityControlDate ? formatDateTimeLocal(ticketData.activityControlDate) : '',
                 activityControlResult: ticketData.activityControlResult || '',
-                ttcomsCode: ticketData.ttcomsCode || '', 
+                ttcomsCode: ticketData.ttcomsCode || '',
 
             });
 
@@ -650,6 +650,59 @@ export default function TicketDetail({ ticketId, onClose }) {
                         </div>
                     </div>
 
+                    {/* Malzeme Detayları */}
+                    <div style={styles.formSection}>
+                        <h2 style={styles.sectionTitle}>Malzeme Detayları</h2>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Parça Tanımı</label>
+                               <input
+                                    type="input"
+                                    value={formData.itemDescription}
+                                    onChange={(e) => handleInputChange('itemDescription', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Parça No</label>
+                                <input
+                                    type="input"
+                                    value={formData.itemId}
+                                    onChange={(e) => handleInputChange('itemId', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Seri No</label>
+                                <input
+                                    type="input"
+                                    value={formData.itemSerialNo}
+                                    onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+
+                                
+
+                                <div style={styles.formRow}>
+                                   
+                                </div>
+                            </div>
+         
+                        </div>
+
+
+
+                      
+                    </div>
                     {/* Müdahale Detayları */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Arıza Müdahale Detayları</h2>
@@ -838,7 +891,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 >
                                     Yeniden Aç
                                 </button>
-                                                          <button
+                                <button
                                     onClick={() => handleStatusChange('CANCELLED')}
                                     style={{ ...styles.statusButton, ...styles.cancelButton }}
                                     disabled={formData.status === 'CANCELLED'}

@@ -29,12 +29,16 @@ public record CreateTicketRequest(
         long? ActivityControlCommanderId,
         DateTime? ActivityControlDate,
         string? ActivityControlResult,
-        string? TtcomsCode);
+        string? TtcomsCode,
+        string? ItemDescription,
+        string? ItemId,
+        string? ItemSerialNo
+        );
 
 // Change Status of the ticket 
 public record ChangeStatusRequest(
-    string ToStatus, 
-    string? Notes, 
+    string ToStatus,
+    string? Notes,
     string? ConfirmationStatus);
 
 // Add comment and/or progress     
@@ -94,7 +98,7 @@ public record TicketDetail(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<ResponsePersonnelItem> ResponsePersonnel,
-        string? ResponseActions, 
+        string? ResponseActions,
 
         // Activity control fields
         long? ActivityControlPersonnelId,
@@ -106,7 +110,10 @@ public record TicketDetail(
         List<TicketActionItem> Actions,
         List<CommentItem> Comments,
 
-        string? TtcomsCode
+        string? TtcomsCode,
+        string? ItemDescription,
+        string? ItemId,
+        string? ItemSerialNo
         );
 
 // Response personnel item
@@ -128,12 +135,12 @@ public record TicketActionItem(
 public record CommentItem(
         long Id,
         string Body,
-        string CreatedByName, 
+        string CreatedByName,
         DateTime CreatedAt);
 
 // Get Dashboard result 
 public record DashboardResponse(
-        Dictionary<string, int> StatusCounts, 
+        Dictionary<string, int> StatusCounts,
         List<TicketListItem> OngoingTickets);
 
 // Update ticket request
@@ -163,10 +170,11 @@ public record UpdateTicketRequest(
         DateTime? ActivityControlDate,
         string? ActivityControlResult,
         string? Status,
-        string? TtcomsCode
+        string? TtcomsCode,
+        string? ItemDescription,
+        string? ItemId,
+        string? ItemSerialNo
         );
-        
-
 
 public record SystemOption(
         long Id,
@@ -179,13 +187,12 @@ public record SubsystemOption(
         long? SystemId
 );
 
-
 public record CIOption(
         long Id,
-        string Name             
-); 
+        string Name
+);
 
-public record ComponentOption( 
+public record ComponentOption(
         long Id,
         string Name,
         long? SubsystemId
