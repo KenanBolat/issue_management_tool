@@ -231,7 +231,7 @@ public class TicketsController : ControllerBase
                         c.Body,
                         c.CreatedBy.DisplayName,
                         c.CreatedAt
-                    )).ToList(), 
+                    )).ToList(),
                 ticket.TtcomsCode
             );
 
@@ -242,7 +242,7 @@ public class TicketsController : ControllerBase
     [Authorize(Roles = "Editor,Admin")]
     public async Task<ActionResult<TicketDetail>> CreateTicket([FromBody] CreateTicketRequest request)
     {
-        
+
         if (!Enum.TryParse<TicketStatus>(request.Status, true, out var status))
             return BadRequest(new { message = "Invalid status" });
 
@@ -261,7 +261,8 @@ public class TicketsController : ControllerBase
 
         var ticket = new Ticket
         {
-            ExternalCode = $"TKT-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+            // ExternalCode = $"TKT-{DateTime.UtcNow:yyyy}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+            ExternalCode = await GenerateNextExternalCodeAsync(),
             Title = request.Title,
             Description = request.Description,
             IsBlocking = request.IsBlocking,
@@ -337,7 +338,7 @@ public class TicketsController : ControllerBase
             hasChanges = true;
         }
 
-        if(request.TtcomsCode != null && ticket.TtcomsCode != request.TtcomsCode)
+        if (request.TtcomsCode != null && ticket.TtcomsCode != request.TtcomsCode)
         {
             ticket.TtcomsCode = request.TtcomsCode;
             hasChanges = true;
@@ -605,7 +606,38 @@ public class TicketsController : ControllerBase
             string Role
         );
 
+    private async Task<string> GenerateNextExternalCodeAsync()
+    {
+        var now = DateTime.UtcNow;
+        var year = now.Year;
+        var month = now.Month;
 
+        // Pattern to match: AKF-YYYY-MM-
+        var monthPrefix = $"AKF-{year:D4}-{month:D2}-";
+
+        // Find the last ticket created in this year-month
+        var lastTicket = await _context.Tickets
+            .Where(t => t.ExternalCode.StartsWith(monthPrefix))
+            .OrderByDescending(t => t.Id)
+            .Select(t => t.ExternalCode)
+            .FirstOrDefaultAsync();
+
+        int nextNumber = 1;
+
+        if (lastTicket != null)
+        {
+            // Extract the serial number from the last ticket
+            // Format: AKF-2024-04-5 -> extract "5"
+            var parts = lastTicket.Split('-');
+            if (parts.Length == 4 && int.TryParse(parts[3], out int lastNumber))
+            {
+                nextNumber = lastNumber + 1;
+            }
+        }
+
+        return $"{monthPrefix}{nextNumber}";
+    }
 
 }
+
 
