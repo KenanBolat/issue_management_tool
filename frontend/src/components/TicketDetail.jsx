@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
 import { ticketsAPI, userApi } from "../../services/api";
-import { X, Save, Send, FileText, MessageSquare, History, AlertCircle } from "lucide-react";
+import { generateTicketPDF } from "../utils/pdfGenerator.jsx"; 
+
+import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download } from "lucide-react";
 
 export default function TicketDetail({ ticketId, onClose }) {
     const [ticket, setTicket] = useState(null);
@@ -26,6 +28,20 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const getStatusLabel = (status) => {
         return STATUS_LABELS[status] || status;
+    };
+
+    const handleGeneratePDF = () => {
+        if (!ticket) {
+            alert("Ticket bilgileri yükleniyor, lütfen bekleyin...");
+            return;
+        }
+        
+        try {
+            generateTicketPDF(ticket, formData);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("PDF oluşturulurken hata oluştu");
+        }
     };
 
     // Form state
@@ -407,6 +423,17 @@ export default function TicketDetail({ ticketId, onClose }) {
                     )}
                 </div>
                 <div style={styles.headerRight}>
+
+                        {ticket && !isNewTicket && (
+                        <button
+                            onClick={handleGeneratePDF}
+                            style={{ ...styles.button, ...styles.pdfButton }}
+                            title="PDF Rapor Al"
+                        >
+                            <Download size={16} />
+                            PDF Rapor
+                        </button>
+                    )}
                     {canEdit && (
                         <button
                             onClick={handleSave}
@@ -1498,5 +1525,9 @@ const styles = {
         padding: '3rem',
         fontSize: '1.2rem',
         color: '#666',
+    },
+     pdfButton: {
+        backgroundColor: '#2196f3',
+        color: 'white',
     },
 };
