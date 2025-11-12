@@ -475,7 +475,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {/* Configuration Item Section */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>
-                            Configuration Item (CI) Breakdown
+                            Sistem Detay
                         </h2>
                         <p style={styles.sectionSubtitle}>
                             Seçim Sırası → Sistem → Alt Sistem → CI → Komponent sırasında seçiniz / değiştiriniz

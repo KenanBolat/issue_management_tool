@@ -30,7 +30,7 @@ export default function Login({ onLogin }) {
  return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>🛰️ SatSuMa </h1>
+        <h1 style={styles.title} >🛰️  </h1>
         <form onSubmit={handleSubmit} style={styles.form}>
           {error && <div style={styles.error}>{error}</div>}
           
@@ -87,7 +87,7 @@ const styles = {
   title: {
     textAlign: 'center',
     marginBottom: '2rem',
-    color: '#333',
+    color: '#333'
   },
   form: {
     display: 'flex',

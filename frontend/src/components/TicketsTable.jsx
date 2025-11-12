@@ -207,13 +207,16 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                     Sorun Kodu {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('externalCode')}>
-                                    TTCOMS-Kodu {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                    AKF-Kodu {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('title')}>
                                     Başlık {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('createdAt')}>
                                     Tarih {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={styles.th} onClick={() => handleSort('ttcomsCode')}>
+                                    TTCOMS Kodu {sortField === 'ttcomsCode' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th style={styles.th} onClick={() => handleSort('status')} >
                                     Durum {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
@@ -239,6 +242,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                     <td style={styles.td}>
                                         {new Date(ticket.createdAt).toLocaleDateString()}
                                     </td>
+                                    <td style={styles.td}> {ticket.ttcomsCode} </td>
                                     <td style={styles.td}>
                                         <span style={{
                                             ...styles.statusBadge,
