@@ -22,6 +22,7 @@ public record CreateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds,
+        List<long>? ResponseResolvedPersonnelIds,
         string? ResponseActions,
 
         // Activity control fields
@@ -98,6 +99,7 @@ public record TicketDetail(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<ResponsePersonnelItem> ResponsePersonnel,
+        List<ResponseResolvedPersonnelItem> ResponseResolvedPersonnel,
         string? ResponseActions,
 
         // Activity control fields
@@ -120,6 +122,11 @@ public record TicketDetail(
 public record ResponsePersonnelItem(
         long UserId,
         string DisplayName);
+
+public record ResponseResolvedPersonnelItem(
+        long UserId,
+        string DisplayName);
+
 
 // Update the action taken on the selected ticket 
 public record TicketActionItem(
@@ -162,6 +169,7 @@ public record UpdateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds,
+        List<long>? ResponseResolvedPersonnelIds,         
         string? ResponseActions,
 
         // Activity control fields

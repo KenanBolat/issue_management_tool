@@ -97,6 +97,11 @@ namespace Domain.Entities
         [Column("response_resolved_at")]
         public DateTime? ResponseResolvedAt { get; set; }
 
+        [Column("response_resolved_by_user_id")]
+        public long? ResponseResolvedByUserId { get; set; }
+
+
+
         [Column("response_actions")]
         public string? ResponseActions { get; set; }
 
@@ -145,5 +150,6 @@ namespace Domain.Entities
 
         // Many-to-many relationship
         public ICollection<TicketResponsePersonnel> ResponseByUser { get; set; } = new List<TicketResponsePersonnel>();
+        public ICollection<TicketResponseResolvedPersonnel> ResponseResolvedByUser { get; set; } = new List<TicketResponseResolvedPersonnel>();
     }
 }

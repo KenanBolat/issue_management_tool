@@ -54,6 +54,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         responseDate: '',
         responseResolvedAt: '',
         responsePersonnelIds: [],
+        responseResolvedPersonnelIds: [],
         responseActions: '',
         activityControlPersonnelId: null,  // For PERSONEL Rütbe & Adı Soyadı
         activityControlCommanderId: null,  // For İLK. KOM. Rütbe & Adı Soyadı
@@ -157,6 +158,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: ticketData.responseDate ? formatDateTimeLocal(ticketData.responseDate) : "",
                 responseResolvedAt: ticketData.responseResolvedAt ? formatDateTimeLocal(ticketData.responseResolvedAt) : "",
                 responsePersonnelIds: ticketData.responsePersonnel?.map(p => p.userId) || [],
+                responseResolvedPersonnelIds: ticketData.responseResolvedPersonnel?.map(p=>p.userId) || [],
                 responseActions: ticketData.responseActions || '',
                 createdByName: ticketData.createdBy,
 
@@ -314,6 +316,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: toISOOrNull(formData.responseDate),
                 responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
                 responsePersonnelIds: formData.responsePersonnelIds || [],
+                responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [], 
                 responseActions: formData.responseActions || null,
 
                 activityControlPersonnelId: formData.activityControlPersonnelId || null,
@@ -657,7 +660,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Parça Tanımı</label>
-                               <input
+                                <input
                                     type="input"
                                     value={formData.itemDescription}
                                     onChange={(e) => handleInputChange('itemDescription', e.target.value)}
@@ -690,18 +693,18 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
 
-                                
+
 
                                 <div style={styles.formRow}>
-                                   
+
                                 </div>
                             </div>
-         
+
                         </div>
 
 
 
-                      
+
                     </div>
                     {/* Müdahale Detayları */}
                     <div style={styles.formSection}>
@@ -758,7 +761,21 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     disabled={isReadOnly}
                                 />
                             </div>
+
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Sorunu Gideren Personel(ler)</label>
+                                <PersonnelSelect
+                                    isMulti={true}
+                                    value={formData.responseResolvedPersonnelIds}
+                                    onChange={(ids) => handleInputChange('responseResolvedPersonnelIds', ids)}
+                                    isDisabled={isReadOnly}
+                                    placeholder="Personel seçiniz..."
+                                    showRank={true}
+                                    showDepartment={true}
+                                />
+                            </div>
                         </div>
+
 
 
 

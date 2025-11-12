@@ -19,6 +19,7 @@ namespace Infrastructure.Data
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<CIJob> CIJobs { get; set; }
         public DbSet<TicketResponsePersonnel> TicketResponsePersonnel { get; set; }
+        public DbSet<TicketResponseResolvedPersonnel> TicketResponseResolvedPersonnel { get; set; }
         public DbSet<MilitaryRank> MilitaryRanks { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }
 
@@ -43,12 +44,12 @@ namespace Infrastructure.Data
                     .WithMany()
                     .HasForeignKey(e => e.CreatedById)
                     .OnDelete(DeleteBehavior.Restrict);
-                    
+
                 entity.HasOne(e => e.LastUpdatedBy)
                     .WithMany()
                     .HasForeignKey(e => e.LastUpdatedById)
                     .OnDelete(DeleteBehavior.Restrict);
-                    
+
                 entity.Property(e => e.PreferredLanguage).HasMaxLength(10);
                 entity.Property(e => e.PhoneNumber).HasMaxLength(20);
                 entity.Property(e => e.RankCode).HasMaxLength(100);
@@ -94,7 +95,7 @@ namespace Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(t => t.ActivityControlCommanderId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
 
                 entity.HasOne(e => e.LastUpdatedBy)
                     .WithMany(u => u.UpdatedTickets)
@@ -134,10 +135,16 @@ namespace Infrastructure.Data
                     .OnDelete(DeleteBehavior.Restrict)
                     .IsRequired(false);
 
-        
+
 
                 // Many-to-many relationship
                 entity.HasMany(t => t.ResponseByUser)
+                    .WithOne(trp => trp.Ticket)
+                    .HasForeignKey(trp => trp.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Many-to-many relationship
+                entity.HasMany(t => t.ResponseResolvedByUser)
                     .WithOne(trp => trp.Ticket)
                     .HasForeignKey(trp => trp.TicketId)
                     .OnDelete(DeleteBehavior.Cascade);
@@ -152,6 +159,23 @@ namespace Infrastructure.Data
 
                 entity.HasOne(x => x.Ticket)
                     .WithMany(t => t.ResponseByUser)
+                    .HasForeignKey(x => x.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            modelBuilder.Entity<TicketResponseResolvedPersonnel>(entity =>
+            {
+                entity.ToTable("ticket_response_resolved_personnel");
+                entity.HasKey(x => new { x.TicketId, x.UserId });
+
+                entity.HasOne(x => x.Ticket)
+                    .WithMany(t => t.ResponseResolvedByUser)
                     .HasForeignKey(x => x.TicketId)
                     .OnDelete(DeleteBehavior.Cascade);
 

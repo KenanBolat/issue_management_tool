@@ -153,7 +153,7 @@ public class TicketsController : ControllerBase
                  .Include(t => t.CreatedBy)
                  .Include(t => t.LastUpdatedBy)
                  .Include(t => t.DetectedByUser)
-                     .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser
+                     .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser 
                  .Include(t => t.CI)
                  .Include(t => t.Component)
                  .Include(t => t.Subsystem)
@@ -161,6 +161,9 @@ public class TicketsController : ControllerBase
                  .Include(t => t.ResponseByUser)
                      .ThenInclude(rp => rp.User)
                          .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for ResponsePersonnel
+                 .Include(t=> t.ResponseResolvedByUser)
+                     .ThenInclude(rp => rp.User)
+                         .ThenInclude(u => u.MilitaryRank) 
                  .Include(t => t.Actions)
                      .ThenInclude(a => a.PerformedBy)
                  .Include(t => t.Comments)
@@ -207,6 +210,12 @@ public class TicketsController : ControllerBase
                     rp.UserId,
                     rp.User.DisplayName
                 )).ToList(),
+                ticket.ResponseResolvedByUser.Select(rp => new ResponseResolvedPersonnelItem(
+                    rp.UserId,
+                    rp.User.DisplayName
+                )).ToList(),
+                
+
                 ticket.ResponseActions,
                 // Related data
                 ticket.ActivityControlPersonnelId,
@@ -320,6 +329,20 @@ public class TicketsController : ControllerBase
             await _context.SaveChangesAsync();
         }
 
+        // Add response personnel if provided
+        if (request.ResponseResolvedPersonnelIds != null && request.ResponseResolvedPersonnelIds.Any())
+        {
+            foreach (var userId in request.ResponseResolvedPersonnelIds)
+            {
+                _context.TicketResponseResolvedPersonnel.Add(new TicketResponseResolvedPersonnel
+                {
+                    TicketId = created.Id,
+                    UserId = userId
+                });
+            }
+            await _context.SaveChangesAsync();
+        }
+
         return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
 
     }
@@ -331,6 +354,7 @@ public class TicketsController : ControllerBase
     {
         var ticket = await _context.Tickets
             .Include(t => t.ResponseByUser)
+            .Include(t => t.ResponseResolvedByUser)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (ticket == null) return NotFound();
@@ -450,7 +474,7 @@ public class TicketsController : ControllerBase
             ticket.ItemSerialNo = request.ItemSerialNo;
             hasChanges = true;
         }
-       
+
 
 
 
@@ -466,6 +490,25 @@ public class TicketsController : ControllerBase
             foreach (var userId in request.ResponsePersonnelIds)
             {
                 _context.TicketResponsePersonnel.Add(new TicketResponsePersonnel
+                {
+                    TicketId = ticket.Id,
+                    UserId = userId
+                });
+            }
+            hasChanges = true;
+        }
+        
+
+         // Update response personnel if provided
+        if (request.ResponseResolvedPersonnelIds != null)
+        {
+            // Remove existing personnel
+            _context.TicketResponseResolvedPersonnel.RemoveRange(ticket.ResponseResolvedByUser);
+
+            // Add new personnel
+            foreach (var userId in request.ResponseResolvedPersonnelIds)
+            {
+                _context.TicketResponseResolvedPersonnel.Add(new TicketResponseResolvedPersonnel
                 {
                     TicketId = ticket.Id,
                     UserId = userId
