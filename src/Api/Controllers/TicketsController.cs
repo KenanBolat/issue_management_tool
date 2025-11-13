@@ -150,25 +150,30 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<TicketDetail>> GetTicket(long id)
     {
         var ticket = await _context.Tickets
-                 .Include(t => t.CreatedBy)
-                 .Include(t => t.LastUpdatedBy)
-                 .Include(t => t.DetectedByUser)
-                     .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for DetectedByUser 
-                 .Include(t => t.CI)
-                 .Include(t => t.Component)
-                 .Include(t => t.Subsystem)
-                 .Include(t => t.System)
-                 .Include(t => t.ResponseByUser)
-                     .ThenInclude(rp => rp.User)
-                         .ThenInclude(u => u.MilitaryRank)  // Include MilitaryRank for ResponsePersonnel
-                 .Include(t=> t.ResponseResolvedByUser)
-                     .ThenInclude(rp => rp.User)
-                         .ThenInclude(u => u.MilitaryRank) 
-                 .Include(t => t.Actions)
-                     .ThenInclude(a => a.PerformedBy)
-                 .Include(t => t.Comments)
-                     .ThenInclude(c => c.CreatedBy)
-                 .FirstOrDefaultAsync(t => t.Id == id);
+             .Include(t => t.CreatedBy)
+             .Include(t => t.LastUpdatedBy)
+             .Include(t => t.DetectedByUser)
+                 .ThenInclude(u => u.MilitaryRank)
+             .Include(t => t.CI)
+             .Include(t => t.Component)
+             .Include(t => t.Subsystem)
+             .Include(t => t.System)
+             .Include(t => t.ResponseByUser)
+                 .ThenInclude(rp => rp.User)
+                     .ThenInclude(u => u.MilitaryRank)
+             .Include(t => t.ResponseResolvedByUser)
+                 .ThenInclude(rp => rp.User)
+                     .ThenInclude(u => u.MilitaryRank)
+             // Include Activity Control Personnel with Ranks
+             .Include(t => t.ActivityControlPersonnel)
+                 .ThenInclude(u => u.MilitaryRank)
+             .Include(t => t.ActivityControlCommander)
+                 .ThenInclude(u => u.MilitaryRank)
+             .Include(t => t.Actions)
+                 .ThenInclude(a => a.PerformedBy)
+             .Include(t => t.Comments)
+                 .ThenInclude(c => c.CreatedBy)
+             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (ticket == null) return NotFound();
 
@@ -214,7 +219,7 @@ public class TicketsController : ControllerBase
                     rp.UserId,
                     rp.User.DisplayName
                 )).ToList(),
-                
+
 
                 ticket.ResponseActions,
                 // Related data
@@ -244,7 +249,11 @@ public class TicketsController : ControllerBase
                 ticket.TtcomsCode,
                 ticket.ItemDescription,
                 ticket.ItemId,
-                ticket.ItemSerialNo
+                ticket.ItemSerialNo,
+
+                ticket.ActivityControlPersonnel != null ? FormatUserName(ticket.ActivityControlPersonnel) : null,
+                ticket.ActivityControlCommander != null ? FormatUserName(ticket.ActivityControlCommander) : null
+
 
             );
 
@@ -491,9 +500,9 @@ public class TicketsController : ControllerBase
             }
             hasChanges = true;
         }
-        
 
-         // Update response personnel if provided
+
+        // Update response personnel if provided
         if (request.ResponseResolvedPersonnelIds != null)
         {
             // Remove existing personnel
@@ -709,6 +718,26 @@ public class TicketsController : ControllerBase
         }
 
         return $"{monthPrefix}{nextNumber}";
+    }
+
+    private string FormatUserName(User user)
+    {
+        if (user == null) return string.Empty;
+
+        // If military rank exists: "Rank Name Surname"
+        if (user.MilitaryRank != null && !string.IsNullOrWhiteSpace(user.MilitaryRank.DisplayName))
+        {
+            return $"{user.MilitaryRank.DisplayName} {user.DisplayName}";
+        }
+
+        // If non-military but has department: "Department Name Surname"
+        if (!string.IsNullOrWhiteSpace(user.Department))
+        {
+            return $"{user.Department} {user.DisplayName}";
+        }
+
+        // Otherwise just: "Name Surname"
+        return user.DisplayName;
     }
 
 }

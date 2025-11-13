@@ -1,16 +1,22 @@
 import { pdf } from '@react-pdf/renderer';
-import { TicketPDFDocument } from './TicketPDFDocument';
+import { Document } from '@react-pdf/renderer';
+import { TicketPDFDocument, TicketPDFPage } from './TicketPDFDocument';
 
+// Single ticket PDF generation
 export const generateTicketPDF = async (ticket, formData) => {
-    const blob = await pdf(<TicketPDFDocument ticket={ticket} formData={formData} />).toBlob();
-    
-    // Create download link
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Ariza_Kayit_${formData.externalCode || 'Form'}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+        const blob = await pdf(<TicketPDFDocument ticket={ticket} formData={formData} />).toBlob();
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ariza_Kayit_${formData.externalCode || 'Form'}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        throw error;
+    }
 };
 
 export const generateMultipleTicketsPDF = async (ticketsData) => {
@@ -18,23 +24,32 @@ export const generateMultipleTicketsPDF = async (ticketsData) => {
         alert('Seçili sorun bulunamadı!');
         return;
     }
-    debugger;
 
-    // Create document with multiple pages
-    const MultiPageDocument = () => (
-        <>
-            {ticketsData.map(({ ticket, formData }, index) => (
-                <TicketPDFDocument key={index} ticket={ticket} formData={formData} />
-            ))}
-        </>
-    );
+    try {
+        // ✅ Correct way: Use TicketPDFPage components directly
+        const MultiPageDocument = (
+            <Document>
+                {ticketsData.map(({ ticket, formData }, index) => (
+                    <TicketPDFPage 
+                        key={`ticket-${ticket.id || index}`} 
+                        ticket={ticket} 
+                        formData={formData} 
+                    />
+                ))}
+            </Document>
+        );
 
-    const blob = await pdf(<MultiPageDocument />).toBlob();
-    
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Ariza_Kayit_Toplu_${new Date().getTime()}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+        const blob = await pdf(MultiPageDocument).toBlob();
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ariza_Kayit_Toplu_${ticketsData.length}_Sorun_${new Date().getTime()}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Multi PDF Generation Error:', error);
+        throw error;
+    }
 };

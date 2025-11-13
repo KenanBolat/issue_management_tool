@@ -1,0 +1,19 @@
+<svg width="300" height="200" viewBox="100 60 240 220" xmlns="http://www.w3.org/2000/svg">
+  <!-- Satellite -->
+  <g transform="translate(250,120)" fill="#0094e0" stroke="#0094e0" stroke-width="2">
+    <!-- body -->
+    <rect x="-8" y="-8" width="16" height="16" rx="2" ry="2" fill="#0094e0"></rect>
+    <!-- solar panels -->
+    <rect x="-26" y="-6" width="14" height="12" fill="none"></rect>
+    <rect x="12" y="-6" width="14" height="12" fill="none"></rect>
+    <!-- connectors -->
+    <line x1="-12" y1="0" x2="-8" y2="0"></line>
+    <line x1="8" y1="0" x2="12" y2="0"></line>
+    <!-- antenna -->
+    <line x1="0" y1="-8" x2="0" y2="-16"></line>
+    <circle cx="0" cy="-18" r="2" fill="#0094e0"></circle>
+  </g>
+
+  <!-- Dashed orbit -->
+  <path d="M 120 260 C 180 160 260 110 300 120" fill="none" stroke="#0094e0" stroke-width="3" stroke-dasharray="6 6"></path>
+</svg>

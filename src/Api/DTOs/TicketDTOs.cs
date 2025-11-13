@@ -115,7 +115,9 @@ public record TicketDetail(
         string? TtcomsCode,
         string? ItemDescription,
         string? ItemId,
-        string? ItemSerialNo
+        string? ItemSerialNo,
+        string? ActivityControlPersonnelName,
+        string? ActivityControlCommanderName
         );
 
 // Response personnel item
@@ -169,7 +171,7 @@ public record UpdateTicketRequest(
         DateTime? ResponseDate,
         DateTime? ResponseResolvedAt,
         List<long>? ResponsePersonnelIds,
-        List<long>? ResponseResolvedPersonnelIds,         
+        List<long>? ResponseResolvedPersonnelIds,
         string? ResponseActions,
 
         // Activity control fields
