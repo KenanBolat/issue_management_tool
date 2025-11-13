@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
 import { ticketsAPI, userApi } from "../../services/api";
-import { generateTicketPDF } from "../utils/pdfGenerator.jsx"; 
+import { generateTicketPDF } from "../utils/pdfGenerator";
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download } from "lucide-react";
 
@@ -30,20 +30,19 @@ export default function TicketDetail({ ticketId, onClose }) {
         return STATUS_LABELS[status] || status;
     };
 
-    const handleGeneratePDF = () => {
+    const handleGeneratePDF = async () => {
         if (!ticket) {
             alert("Ticket bilgileri yükleniyor, lütfen bekleyin...");
             return;
         }
-        
+
         try {
-            generateTicketPDF(ticket, formData);
+            await generateTicketPDF(ticket, formData);
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("PDF oluşturulurken hata oluştu");
         }
     };
-
     // Form state
     const [formData, setFormData] = useState({
         externalCode: '',
@@ -174,7 +173,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: ticketData.responseDate ? formatDateTimeLocal(ticketData.responseDate) : "",
                 responseResolvedAt: ticketData.responseResolvedAt ? formatDateTimeLocal(ticketData.responseResolvedAt) : "",
                 responsePersonnelIds: ticketData.responsePersonnel?.map(p => p.userId) || [],
-                responseResolvedPersonnelIds: ticketData.responseResolvedPersonnel?.map(p=>p.userId) || [],
+                responseResolvedPersonnelIds: ticketData.responseResolvedPersonnel?.map(p => p.userId) || [],
                 responseActions: ticketData.responseActions || '',
                 createdByName: ticketData.createdBy,
 
@@ -332,7 +331,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: toISOOrNull(formData.responseDate),
                 responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
                 responsePersonnelIds: formData.responsePersonnelIds || [],
-                responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [], 
+                responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [],
                 responseActions: formData.responseActions || null,
 
                 activityControlPersonnelId: formData.activityControlPersonnelId || null,
@@ -424,7 +423,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 </div>
                 <div style={styles.headerRight}>
 
-                        {ticket && !isNewTicket && (
+                    {ticket && !isNewTicket && (
                         <button
                             onClick={handleGeneratePDF}
                             style={{ ...styles.button, ...styles.pdfButton }}
@@ -1526,7 +1525,7 @@ const styles = {
         fontSize: '1.2rem',
         color: '#666',
     },
-     pdfButton: {
+    pdfButton: {
         backgroundColor: '#2196f3',
         color: 'white',
     },

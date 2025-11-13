@@ -445,31 +445,25 @@ public class TicketsController : ControllerBase
         if (request.ResponseDate.HasValue) ticket.ResponseDate = request.ResponseDate;
         if (request.ResponseResolvedAt.HasValue) ticket.ResponseResolvedAt = request.ResponseResolvedAt;
 
-        if (!string.IsNullOrWhiteSpace(request.ResponseActions))
-        {
-            ticket.ResponseActions = request.ResponseActions;
-            hasChanges = true;
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.ResponseActions))
+        if (request.ResponseActions != null && ticket.ResponseActions != request.ResponseActions)
         {
             ticket.ResponseActions = request.ResponseActions;
             hasChanges = true;
         }
 
 
-        if (!string.IsNullOrWhiteSpace(request.ItemDescription))
+        if (request.ItemDescription != null && ticket.ItemDescription != request.ItemDescription)
         {
             ticket.ItemDescription = request.ItemDescription;
             hasChanges = true;
         }
 
-        if (!string.IsNullOrWhiteSpace(request.ItemId))
+        if (request.ItemId != null && ticket.ItemId != request.ItemId)
         {
             ticket.ItemId = request.ItemId;
             hasChanges = true;
         }
-        if (!string.IsNullOrWhiteSpace(request.ItemSerialNo))
+        if (request.ItemSerialNo != null && ticket.ItemSerialNo != request.ItemSerialNo)
         {
             ticket.ItemSerialNo = request.ItemSerialNo;
             hasChanges = true;
@@ -536,7 +530,7 @@ public class TicketsController : ControllerBase
             hasChanges = true;
         }
 
-        if (!string.IsNullOrWhiteSpace(request.ActivityControlResult))
+        if (request.ActivityControlResult != null && ticket.ActivityControlResult != request.ActivityControlResult)
         {
             ticket.ActivityControlResult = request.ActivityControlResult;
             hasChanges = true;
