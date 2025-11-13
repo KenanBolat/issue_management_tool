@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { dashboardAPI } from "../../services/api";
+import { dashboardAPI,ticketsAPI } from "../../services/api";
 import {
     LineChart, Line, XAxis,
     YAxis, CartesianGrid, Tooltip,
@@ -23,8 +23,8 @@ export default function Dashboard() {
         try {
             setLoading(true);
             const [dashResponse, allTicketRespons] = await Promise.all([
-                dashboardAPI.get(),
-                ticketAPI.getAll()
+                dashboardAPI.getStats(),
+                ticketsAPI.getAll()
             ]);
             setStats(dashResponse.data.statusCounts);
             setOngoingTickets(dashResponse.data.ongoingTickets);
