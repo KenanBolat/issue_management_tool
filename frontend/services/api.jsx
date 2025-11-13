@@ -29,7 +29,7 @@ export const ticketsAPI = {
     
     create: (data) => api.post('/tickets', data),
     update: (id, data) => api.put(`/tickets/${id}`, data),
-    delete: (id, data) => api.put(`/tickets/${id}`, data),
+    delete: (id) => api.delete(`/tickets/${id}`),
  
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body), 

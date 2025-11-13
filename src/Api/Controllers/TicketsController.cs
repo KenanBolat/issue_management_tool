@@ -207,17 +207,18 @@ public class TicketsController : ControllerBase
                 ticket.DetectedContractorNotifiedAt,
                 ticket.DetectedNotificationMethods?.Select(m => m.ToString()).ToArray(),
                 ticket.DetectedByUserId,
-                ticket.DetectedByUser?.DisplayName,
+                ticket.DetectedByUser != null ? FormatUserName(ticket.DetectedByUser) : null,
+
                 // Response fields
                 ticket.ResponseDate,
                 ticket.ResponseResolvedAt,
                 ticket.ResponseByUser.Select(rp => new ResponsePersonnelItem(
                     rp.UserId,
-                    rp.User.DisplayName
+                    FormatUserName(rp.User)
                 )).ToList(),
                 ticket.ResponseResolvedByUser.Select(rp => new ResponseResolvedPersonnelItem(
                     rp.UserId,
-                    rp.User.DisplayName
+                    FormatUserName(rp.User)
                 )).ToList(),
 
 

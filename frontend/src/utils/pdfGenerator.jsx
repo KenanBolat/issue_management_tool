@@ -19,6 +19,7 @@ export const generateTicketPDF = async (ticket, formData) => {
     }
 };
 
+// ✅ UPDATED: Multi-ticket PDF generation with page numbers
 export const generateMultipleTicketsPDF = async (ticketsData) => {
     if (!ticketsData || ticketsData.length === 0) {
         alert('Seçili sorun bulunamadı!');
@@ -26,14 +27,17 @@ export const generateMultipleTicketsPDF = async (ticketsData) => {
     }
 
     try {
-        // ✅ Correct way: Use TicketPDFPage components directly
+        const totalPages = ticketsData.length;
+
         const MultiPageDocument = (
             <Document>
                 {ticketsData.map(({ ticket, formData }, index) => (
                     <TicketPDFPage 
                         key={`ticket-${ticket.id || index}`} 
                         ticket={ticket} 
-                        formData={formData} 
+                        formData={formData}
+                        pageNumber={index + 1}  // ✅ Current page (1-indexed)
+                        totalPages={totalPages}  // ✅ Total pages
                     />
                 ))}
             </Document>
@@ -44,7 +48,7 @@ export const generateMultipleTicketsPDF = async (ticketsData) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `Ariza_Kayit_Toplu_${ticketsData.length}_Sorun_${new Date().getTime()}.pdf`;
+        link.download = `Ariza_Kayit_Toplu_${totalPages}_Sorun_${new Date().getTime()}.pdf`;
         link.click();
         URL.revokeObjectURL(url);
         

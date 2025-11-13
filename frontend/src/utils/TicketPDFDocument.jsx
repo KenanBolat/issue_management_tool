@@ -1,8 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
-// Optional: Register custom font if you want specific Turkish font
-// If not registered, it will use built-in fonts that support Turkish
 Font.register({
   family: 'Roboto',
   fonts: [
@@ -69,11 +67,21 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   emptyCell: {
-    color: 'transparent' // Invisible placeholder
+    color: 'transparent'
+  },
+  // ✅ NEW: Page number style
+  pageNumber: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 8,
+    color: '#666'
   }
 });
 
-const formatDate = (dateString) => {
+const formatDateTime = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, '0');
@@ -84,10 +92,18 @@ const formatDate = (dateString) => {
   return `${day}.${month}.${year} ${hours}:${minutes}`;
 };
 
+const formatDateOnly = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
 const EmptyCell = () => <Text style={styles.emptyCell}>.</Text>;
 
-// ✅ EXPORT: Single Page component (for multi-page PDFs)
-export const TicketPDFPage = ({ ticket, formData }) => (
+export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1 }) => (
   <Page size="A4" orientation="landscape" style={styles.page}>
     <Text style={styles.title}>ARIZA KAYIT FORMU</Text>
 
@@ -116,15 +132,15 @@ export const TicketPDFPage = ({ ticket, formData }) => (
           <Text>{formData.externalCode || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '18%' }]}>
-          <Text>{formatDate(formData.detectedDate) || <EmptyCell />}</Text>
+          <Text>{formatDateTime(formData.detectedDate) || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '18%' }]}>
-          <Text>{formatDate(formData.detectedContractorNotifiedAt) || <EmptyCell />}</Text>
+          <Text>{formatDateTime(formData.detectedContractorNotifiedAt) || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '37%' }]}>
           <Text>
             {formData.ttcomsCode 
-              ? `TTCOMS (${formData.ttcomsCode})` 
+              ? `${formData.ttcomsCode}` 
               : (formData.detectedNotificationMethods?.length > 0 
                   ? formData.detectedNotificationMethods.join(', ') 
                   : <EmptyCell />)}
@@ -214,10 +230,10 @@ export const TicketPDFPage = ({ ticket, formData }) => (
           <Text>{ticket?.responsePersonnel?.map(p => p.displayName).join(', ') || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '25%' }]}>
-          <Text>{formatDate(formData.responseDate) || <EmptyCell />}</Text>
+          <Text>{formatDateTime(formData.responseDate) || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '25%' }]}>
-          <Text>{formatDate(formData.responseResolvedAt) || <EmptyCell />}</Text>
+          <Text>{formatDateTime(formData.responseResolvedAt) || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, styles.lastCell, { width: '25%' }]}>
           <Text>{ticket?.responseResolvedPersonnel?.map(p => p.displayName).join(', ') || <EmptyCell />}</Text>
@@ -274,7 +290,7 @@ export const TicketPDFPage = ({ ticket, formData }) => (
           <Text>{formData.activityControlResult || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, { width: '25%' }]}>
-          <Text>{formatDate(formData.activityControlDate) || <EmptyCell />}</Text>
+          <Text>{formatDateTime(formData.activityControlDate) || <EmptyCell />}</Text>
         </View>
         <View style={[styles.tableCell, styles.lastCell, { width: '25%' }]}>
           <Text>{ticket?.activityControlCommanderName || <EmptyCell />}</Text>
@@ -291,20 +307,19 @@ export const TicketPDFPage = ({ ticket, formData }) => (
       </View>
       <View style={styles.tableRow}>
         <View style={[styles.tableCell, { width: '100%' }]}>
-          <Text>{formatDate(new Date())}</Text>
+          <Text>{formatDateOnly(new Date())}</Text>
         </View>
       </View>
     </View>
 
-    <Text style={{ position: 'absolute', bottom: 20, left: 0, right: 0, textAlign: 'center', fontSize: 8 }}>
-      {formData.externalCode || '1'} - 1
+    <Text style={styles.pageNumber}>
+      Sayfa {pageNumber} / {totalPages}
     </Text>
   </Page>
 );
 
-// ✅ EXPORT: Full document wrapper (for single ticket PDFs)
 export const TicketPDFDocument = ({ ticket, formData }) => (
   <Document>
-    <TicketPDFPage ticket={ticket} formData={formData} />
+    <TicketPDFPage ticket={ticket} formData={formData} pageNumber={1} totalPages={1} />
   </Document>
 );
