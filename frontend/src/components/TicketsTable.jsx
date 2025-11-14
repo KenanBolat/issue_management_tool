@@ -1,21 +1,14 @@
 import { useState, useEffect } from "react";
 import { ticketsAPI } from "../../services/api";
-import { Edit, Trash2, Eye, Download } from "lucide-react";
+import { Edit, Trash2, Eye, FileText, Download } from "lucide-react";
 import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
 
 export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
-    
-    // ✅ Search & Filter
-    const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     
-    // ✅ Sorting
-    const [sortField, setSortField] = useState("createdAt");
-    const [sortOrder, setSortOrder] = useState("desc");
-    
-    // ✅ Selection (for bulk PDF)
+    // ✅ NEW: Selection state
     const [selectedTickets, setSelectedTickets] = useState(new Set());
     const [generatingPDF, setGeneratingPDF] = useState(false);
 
@@ -35,9 +28,8 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     const loadTickets = async () => {
         try {
             setLoading(true);
-            const response = await ticketsAPI.getAll(statusFilter || null);
-            const ticketsData = Array.isArray(response.data) ? response.data : [];
-            setTickets(ticketsData);
+            const response = await ticketsAPI.getAll(statusFilter);
+            setTickets(response.data);
         } catch (error) {
             console.error("Error loading tickets:", error);
             alert("Error loading tickets");
@@ -46,37 +38,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
-    // ✅ Sorting function
-    const handleSort = (field) => {
-        if (sortField === field) {
-            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-        } else {
-            setSortField(field);
-            setSortOrder("asc");
-        }
-    };
-
-    // ✅ Delete function
-    const handleDelete = async (ticketId) => {
-        if (!window.confirm('Bu sorun kaydını silmek istediğinize emin misiniz?')) return;
-        
-        try {
-            await ticketsAPI.delete(ticketId);
-            alert('Sorun kaydı silindi');
-            loadTickets();
-            // Remove from selection if selected
-            setSelectedTickets(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(ticketId);
-                return newSet;
-            });
-        } catch (error) {
-            console.error('Error deleting ticket:', error);
-            alert('Sorun kaydı silinirken hata oluştu');
-        }
-    };
-
-    // ✅ Toggle individual ticket selection
+    // ✅ NEW: Toggle individual ticket selection
     const handleToggleTicket = (ticketId) => {
         setSelectedTickets(prev => {
             const newSet = new Set(prev);
@@ -89,16 +51,16 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         });
     };
 
-    // ✅ Toggle all tickets selection
+    // ✅ NEW: Toggle all tickets selection
     const handleToggleAll = () => {
-        if (selectedTickets.size === filteredTickets.length) {
+        if (selectedTickets.size === tickets.length) {
             setSelectedTickets(new Set());
         } else {
-            setSelectedTickets(new Set(filteredTickets.map(t => t.id)));
+            setSelectedTickets(new Set(tickets.map(t => t.id)));
         }
     };
 
-    // ✅ Generate bulk PDF
+    // ✅ NEW: Generate bulk PDF
     const handleGenerateBulkPDF = async () => {
         if (selectedTickets.size === 0) {
             alert("Lütfen en az bir sorun seçiniz!");
@@ -108,10 +70,12 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         try {
             setGeneratingPDF(true);
             
+            // Fetch full details for all selected tickets
             const ticketDetailsPromises = Array.from(selectedTickets).map(async (ticketId) => {
                 const response = await ticketsAPI.getById(ticketId);
                 const ticketData = response.data;
                 
+                // Format the data for PDF (same as TicketDetail does)
                 const formData = {
                     externalCode: ticketData.externalCode || '',
                     title: ticketData.title || '',
@@ -134,10 +98,15 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                 return { ticket: ticketData, formData };
             });
 
+            // Wait for all ticket details to load
             const ticketsData = await Promise.all(ticketDetailsPromises);
+
+            // Generate PDF with all tickets
             await generateMultipleTicketsPDF(ticketsData);
             
             alert(`${selectedTickets.size} adet sorun raporu PDF olarak oluşturuldu!`);
+            
+            // Clear selection after successful generation
             setSelectedTickets(new Set());
             
         } catch (error) {
@@ -148,45 +117,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
-    // ✅ Search, Filter & Sort
-    const filteredTickets = tickets
-        .filter(ticket => {
-            // Search filter
-            if (searchText) {
-                const search = searchText.toLowerCase();
-                const matchesSearch = 
-                    ticket.title.toLowerCase().includes(search) ||
-                    ticket.externalCode.toLowerCase().includes(search) ||
-                    (ticket.ttcomsCode && ticket.ttcomsCode.toLowerCase().includes(search));
-                if (!matchesSearch) return false;
-            }
-            return true;
-        })
-        .sort((a, b) => {
-            let aVal = a[sortField];
-            let bVal = b[sortField];
-
-            // Handle date sorting
-            if (sortField === "createdAt" || sortField === "detectedDate" || sortField === "responseDate") {
-                aVal = aVal ? new Date(aVal).getTime() : 0;
-                bVal = bVal ? new Date(bVal).getTime() : 0;
-            }
-
-            // Handle null/undefined values
-            if (aVal == null) return sortOrder === "asc" ? 1 : -1;
-            if (bVal == null) return sortOrder === "asc" ? -1 : 1;
-
-            if (sortOrder === "asc") {
-                return aVal > bVal ? 1 : -1;
-            } else {
-                return aVal < bVal ? 1 : -1;
-            }
-        });
-
     const getStatusLabel = (status) => STATUS_LABELS[status] || status;
-    const userRole = localStorage.getItem("role");
-    const isAdmin = userRole === 'Admin';
-    const canEdit = userRole === 'Editor' || userRole === 'Admin';
 
     if (loading) {
         return <div style={styles.loading}>Sorunlar yükleniyor...</div>;
@@ -194,54 +125,14 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
     return (
         <div style={styles.container}>
-            {/* Header */}
+            {/* Header with filters and actions */}
             <div style={styles.header}>
                 <div style={styles.headerLeft}>
-                    <div>
-                        <h1 style={styles.title}>Sorunlar (Tickets)</h1>
-                        <p style={styles.subtitle}>
-                            {filteredTickets.length} / {tickets.length} sorun gösterilmektedir
-                        </p>
-                    </div>
-                </div>
-                <div style={styles.headerRight}>
-                    {selectedTickets.size > 0 && (
-                        <button
-                            onClick={handleGenerateBulkPDF}
-                            style={{ ...styles.button, ...styles.pdfButton }}
-                            disabled={generatingPDF}
-                        >
-                            <Download size={18} />
-                            {generatingPDF 
-                                ? 'PDF Oluşturuluyor...' 
-                                : `${selectedTickets.size} Sorun için PDF`}
-                        </button>
-                    )}
-                    {canEdit && (
-                        <button
-                            onClick={onCreateTicket}
-                            style={{ ...styles.button, ...styles.createButton }}
-                        >
-                            + Yeni Sorun
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Controls - Search & Filter */}
-            <div style={styles.controls}>
-                <div style={styles.filterGroup}>
-                    <input
-                        type="text"
-                        placeholder="Sorun ara (Başlık, Kod, TTCOMS)..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        style={styles.searchInput}
-                    />
+                    <h1 style={styles.title}>Sorunlar (Tickets)</h1>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        style={styles.select}
+                        style={styles.filterSelect}
                     >
                         <option value="">Tüm Durumlar</option>
                         <option value="OPEN">Açık</option>
@@ -251,61 +142,61 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                         <option value="REOPENED">Yeniden Açıldı</option>
                         <option value="CANCELLED">İptal</option>
                     </select>
-                    <button onClick={loadTickets} style={styles.refreshBtn}>
-                        Yenile
+                </div>
+                <div style={styles.headerRight}>
+                    {/* ✅ NEW: Bulk PDF button */}
+                    {selectedTickets.size > 0 && (
+                        <button
+                            onClick={handleGenerateBulkPDF}
+                            style={{ ...styles.button, ...styles.pdfButton }}
+                            disabled={generatingPDF}
+                        >
+                            <Download size={18} />
+                            {generatingPDF 
+                                ? 'PDF Oluşturuluyor...' 
+                                : `${selectedTickets.size} Sorun için PDF Rapor`}
+                        </button>
+                    )}
+                    <button
+                        onClick={onCreateTicket}
+                        style={{ ...styles.button, ...styles.createButton }}
+                    >
+                        + Yeni Sorun
                     </button>
                 </div>
             </div>
 
-            {/* Table */}
-            {filteredTickets.length === 0 ? (
-                <div style={styles.emptyState}>
-                    <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Sorun bulunamadı</p>
-                    {tickets.length > 0 && searchText && (
-                        <p style={{ fontSize: '0.9rem', color: '#999' }}>
-                            Arama filtrelerini temizlemeyi deneyin. Toplam {tickets.length} sorun mevcut.
-                        </p>
-                    )}
-                </div>
-            ) : (
-                <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                        <thead>
+            {/* Tickets table */}
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            {/* ✅ NEW: Select all checkbox */}
+                            <th style={{ ...styles.th, width: '50px' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedTickets.size === tickets.length && tickets.length > 0}
+                                    onChange={handleToggleAll}
+                                    style={styles.checkbox}
+                                />
+                            </th>
+                            <th style={styles.th}>Sorun No</th>
+                            <th style={styles.th}>Başlık</th>
+                            <th style={styles.th}>Durum</th>
+                            <th style={styles.th}>Tespit Eden</th>
+                            <th style={styles.th}>Oluşturma Tarihi</th>
+                            <th style={styles.th}>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tickets.length === 0 ? (
                             <tr>
-                                <th style={{ ...styles.th, width: '50px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTickets.size === filteredTickets.length && filteredTickets.length > 0}
-                                        onChange={handleToggleAll}
-                                        style={styles.checkbox}
-                                    />
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('id')}>
-                                    ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('externalCode')}>
-                                    Sorun No {sortField === 'externalCode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('title')}>
-                                    Başlık {sortField === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('status')}>
-                                    Durum {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('ttcomsCode')}>
-                                    TTCOMS {sortField === 'ttcomsCode' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('detectedByUserName')}>
-                                    Tespit Eden {sortField === 'detectedByUserName' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={styles.th} onClick={() => handleSort('createdAt')}>
-                                    Oluşturma {sortField === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
-                                </th>
-                                <th style={{ ...styles.th, cursor: 'default' }}>İşlemler</th>
+                                <td colSpan="7" style={styles.emptyMessage}>
+                                    Sorun bulunamadı
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {filteredTickets.map((ticket) => (
+                        ) : (
+                            tickets.map((ticket) => (
                                 <tr 
                                     key={ticket.id} 
                                     style={{
@@ -313,6 +204,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                         backgroundColor: selectedTickets.has(ticket.id) ? '#e3f2fd' : 'white'
                                     }}
                                 >
+                                    {/* ✅ NEW: Individual checkbox */}
                                     <td style={styles.td}>
                                         <input
                                             type="checkbox"
@@ -321,18 +213,17 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                             style={styles.checkbox}
                                         />
                                     </td>
-                                    <td style={styles.td}>#{ticket.id}</td>
                                     <td style={styles.td}>
                                         <span style={styles.ticketCode}>{ticket.externalCode}</span>
                                     </td>
                                     <td style={styles.td}>
                                         <div style={styles.titleCell}>
+                                            <span style={styles.ticketTitle}>{ticket.title}</span>
                                             {ticket.isBlocking && (
                                                 <span style={styles.blockingBadge}>
-                                                    ⚠️ KRİTİK
+                                                    ⚠️ Kritik
                                                 </span>
                                             )}
-                                            <span style={styles.ticketTitle}>{ticket.title}</span>
                                         </div>
                                     </td>
                                     <td style={styles.td}>
@@ -346,7 +237,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                             {getStatusLabel(ticket.status)}
                                         </span>
                                     </td>
-                                    <td style={styles.td}>{ticket.ttcomsCode || '-'}</td>
                                     <td style={styles.td}>{ticket.detectedByUserName || '-'}</td>
                                     <td style={styles.td}>
                                         {new Date(ticket.createdAt).toLocaleDateString('tr-TR')}
@@ -360,34 +250,23 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                             >
                                                 <Eye size={16} />
                                             </button>
-                                            {canEdit && (
-                                                <button
-                                                    onClick={() => onEditTicket(ticket.id)}
-                                                    style={{ ...styles.actionButton, ...styles.editButton }}
-                                                    title="Düzenle"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                            )}
-                                            {isAdmin && (
-                                                <button
-                                                    onClick={() => handleDelete(ticket.id)}
-                                                    style={{ ...styles.actionButton, ...styles.deleteButton }}
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={() => onEditTicket(ticket.id)}
+                                                style={{ ...styles.actionButton, ...styles.editButton }}
+                                                title="Düzenle"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
-            {/* Selection summary */}
+            {/* ✅ NEW: Selection summary */}
             {selectedTickets.size > 0 && (
                 <div style={styles.selectionSummary}>
                     <span>{selectedTickets.size} sorun seçildi</span>
@@ -431,7 +310,7 @@ const getStatusTextColor = (status) => {
 const styles = {
     container: {
         padding: '1.5rem',
-        maxWidth: '1600px',
+        maxWidth: '1400px',
         margin: '0 auto',
     },
     header: {
@@ -458,46 +337,12 @@ const styles = {
         fontWeight: 'bold',
         margin: 0,
     },
-    subtitle: {
-        color: '#666',
-        fontSize: '0.9rem',
-        margin: '0.5rem 0 0 0',
-    },
-    controls: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        marginBottom: '1.5rem',
-        gap: '1rem',
-    },
-    filterGroup: {
-        display: 'flex',
-        gap: '1rem',
-        flex: 1,
-    },
-    searchInput: {
-        padding: '0.6rem',
+    filterSelect: {
+        padding: '0.5rem 1rem',
         border: '1px solid #ddd',
         borderRadius: '4px',
-        flex: 1,
-        maxWidth: '400px',
-        fontSize: '0.9rem',
-    },
-    select: {
-        padding: '0.6rem',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        minWidth: '150px',
         fontSize: '0.9rem',
         cursor: 'pointer',
-    },
-    refreshBtn: {
-        padding: '0.6rem 1.2rem',
-        background: '#f5f5f5',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '0.9rem',
-        fontWeight: '500',
     },
     button: {
         display: 'flex',
@@ -519,13 +364,6 @@ const styles = {
         backgroundColor: '#2196f3',
         color: 'white',
     },
-    emptyState: {
-        textAlign: 'center',
-        padding: '3rem',
-        background: 'white',
-        borderRadius: '8px',
-        color: '#666',
-    },
     tableContainer: {
         backgroundColor: 'white',
         borderRadius: '8px',
@@ -544,8 +382,6 @@ const styles = {
         fontSize: '0.9rem',
         color: '#555',
         borderBottom: '2px solid #ddd',
-        cursor: 'pointer',
-        userSelect: 'none',
     },
     td: {
         padding: '1rem',
@@ -553,6 +389,7 @@ const styles = {
         fontSize: '0.9rem',
     },
     row: {
+        cursor: 'pointer',
         transition: 'background-color 0.2s',
     },
     checkbox: {
@@ -608,10 +445,6 @@ const styles = {
         backgroundColor: '#fff3e0',
         color: '#f57c00',
     },
-    deleteButton: {
-        backgroundColor: '#ffebee',
-        color: '#d32f2f',
-    },
     selectionSummary: {
         marginTop: '1rem',
         padding: '1rem',
@@ -631,6 +464,12 @@ const styles = {
         cursor: 'pointer',
         fontSize: '0.85rem',
         fontWeight: '500',
+    },
+    emptyMessage: {
+        padding: '3rem',
+        textAlign: 'center',
+        color: '#999',
+        fontSize: '1rem',
     },
     loading: {
         textAlign: 'center',
