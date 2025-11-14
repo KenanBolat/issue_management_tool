@@ -50,6 +50,47 @@ export const ticketsAPI = {
         return api.get('/tickets/component', { params });
     },
 
+    exportToExcel: async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/tickets/export/excel`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+            
+            // Get filename from Content-Disposition header if available
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `Ariza_Kayitlari_${new Date().getTime()}.xlsx`;
+            if (contentDisposition) {
+                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+            return { success: true };
+        } catch (error) {
+            console.error('Excel export error:', error);
+            throw error;
+        }
+    }
+
 };
 
 export const dashboardAPI = {

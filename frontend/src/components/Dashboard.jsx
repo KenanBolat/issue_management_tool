@@ -1,18 +1,34 @@
 import { useState, useEffect } from "react";
-import { dashboardAPI,ticketsAPI } from "../../services/api";
+import { dashboardAPI, ticketsAPI } from "../../services/api";
 import {
     LineChart, Line, XAxis,
     YAxis, CartesianGrid, Tooltip,
-    Legend, ResponsiveContainer, BarChart, Bar} from "recharts";
+    Legend, ResponsiveContainer, BarChart, Bar
+} from "recharts";
 
-import { Clock, CheckCircle, AlertCircle, Users } from "lucide-react";
+import { Clock, CheckCircle, AlertCircle, Box,Users, Network } from "lucide-react";
 
 
-export default function Dashboard() {
+export default function Dashboard({ onCreateTicket, onNavigate }) {
     const [stats, setStats] = useState({});
     const [ongoingTickets, setOngoingTickets] = useState([]);
     const [recentTickets, setRecentTickets] = useState([]);
     const [loading, setLoading] = useState([]);
+
+    // ✅ NEW: Additional hierarchy stats
+    const [systemStats, setSystemStats] = useState([]);
+    const [subsystemStats, setSubsystemStats] = useState([]);
+    const [ciStats, setCiStats] = useState([]);
+
+    // ✅ Turkish status labels
+    const STATUS_LABELS = {
+        'OPEN': 'Açık',
+        'PAUSED': 'Duduruldu',
+        'CONFIRMED': 'Doğrulandı',
+        'CLOSED': 'Kapandı',
+        'REOPENED': 'Tekrar Açıldı',
+        'CANCELLED': 'İptal'
+    };
 
 
     useEffect(() => {
@@ -28,6 +44,11 @@ export default function Dashboard() {
             ]);
             setStats(dashResponse.data.statusCounts);
             setOngoingTickets(dashResponse.data.ongoingTickets);
+
+
+            if (dashResponse.data.systemStats) setSystemStats(dashResponse.data.systemStats);
+            if (dashResponse.data.subsystemStats) setSubsystemStats(dashResponse.data.subsystemStats);
+            if (dashResponse.data.ciStats) setCiStats(dashResponse.data.ciStats);
 
             // Get recent tickets (sorted by Date Created )
             const allTickets = allTicketRespons.data.items || allTicketRespons.data;
@@ -62,9 +83,15 @@ export default function Dashboard() {
 
     // Prepare chart data from stats 
 
+    // const chartData = Object.entries(stats).map(([status, count]) => ({
+    //     name: status,
+    //     count: count,
+    // }));
+
     const chartData = Object.entries(stats).map(([status, count]) => ({
-        name: status,
+        name: STATUS_LABELS[status] || status,
         count: count,
+        originalStatus: status
     }));
 
     const userName = localStorage.getItem("displayName");
@@ -77,8 +104,8 @@ export default function Dashboard() {
 
     return (
         <div style={styles.container}>
-            
-            
+
+
             {/* Header */}
             <div style={styles.header}>
                 <div>
@@ -88,16 +115,24 @@ export default function Dashboard() {
             </div>
             {/* Quick Actions */}
             <div style={styles.statsGrid}>
-            {(userRole === 'Editor' || userRole === 'Admin') && (
-                <div style={styles.quickActions}>
-                    <button style={styles.actionButton}>+ Yeni Sorun Ekle</button>
-                    <button style={{ ...styles.actionButton, ...styles.secondaryButton }}>
-                        Tüm sorunları göster
+                {(userRole === 'Editor' || userRole === 'Admin') && (
+                    <div style={styles.quickActions}>  <button
+                        onClick={onCreateTicket}
+                        style={{ ...styles.button, ...styles.createButton }}
+                    >
+                        + Yeni Sorun
                     </button>
-                </div>
-            )}
+
+                        <button
+                            onClick={() => onNavigate('tickets')}
+                            style={styles.viewAllBtn}
+                        >
+                            Hepsini Gör
+                        </button>
+                    </div>
+                )}
             </div>
-            
+
 
             {/* Stats Cards */}
             <div style={styles.statsGrid}>
@@ -173,6 +208,71 @@ export default function Dashboard() {
                 </div>
             </div>
 
+             {/* ✅ NEW: Hierarchy Stats Row */}
+            {(systemStats.length > 0 || subsystemStats.length > 0 || ciStats.length > 0) && (
+                <div style={styles.hierarchyStatsRow}>
+                    {/* Systems Stats */}
+                    {systemStats.length > 0 && (
+                        <div style={styles.chartCard}>
+                            <h3 style={styles.cardTitle}>
+                                <Network size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                                Sistemlere Göre Sorunlar
+                            </h3>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={systemStats}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="openCount" fill="#2196f3" name="Açık" stackId="a" />
+                                    <Bar dataKey="closedCount" fill="#4caf50" name="Kapalı" stackId="a" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* Subsystems Stats */}
+                    {subsystemStats.length > 0 && (
+                        <div style={styles.chartCard}>
+                            <h3 style={styles.cardTitle}>
+                                <Layers size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                                Alt Sistemlere Göre Sorunlar
+                            </h3>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={subsystemStats.slice(0, 10)}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="openCount" fill="#ff9800" name="Açık" stackId="a" />
+                                    <Bar dataKey="closedCount" fill="#388e3c" name="Kapalı" stackId="a" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+
+                    {/* CI Stats */}
+                    {ciStats.length > 0 && (
+                        <div style={styles.chartCard}>
+                            <h3 style={styles.cardTitle}>
+                                <Box size={18} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
+                                CI'lere Göre Sorunlar
+                            </h3>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={ciStats.slice(0, 10)}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="openCount" fill="#9c27b0" name="Açık" stackId="a" />
+                                    <Bar dataKey="closedCount" fill="#689f38" name="Kapalı" stackId="a" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Two Column Layout */}
             <div style={styles.contentGrid}>
                 {/* Ongoing Tickets */}
@@ -218,10 +318,10 @@ export default function Dashboard() {
                     <div style={styles.cardHeader}>
                         <h3 style={styles.cardTitle}>Son Açılan Sorunlar</h3>
                         <button
-                            onClick={() => window.location.href = '#/tickets'}
+                            onClick={() => onNavigate('tickets')}
                             style={styles.viewAllBtn}
                         >
-                                Hepsini Gör
+                            Hepsini Gör
                         </button>
                     </div>
                     <div style={styles.taskList}>
@@ -262,6 +362,22 @@ const styles = {
         margin: '0 auto',
         backgroundColor: '#f5f5f5',
         minHeight: '100vh',
+    },
+    createButton: {
+        backgroundColor: '#4caf50',
+        color: 'white',
+    },
+    button: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.6rem 1.2rem',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '0.9rem',
+        fontWeight: '500',
+        transition: 'all 0.2s',
     },
     loading: {
         textAlign: 'center',

@@ -120,3 +120,11 @@
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.pdb
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.genruntimeconfig.cache
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/ref/Api.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/EPPlus.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/EPPlus.Interfaces.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/EPPlus.System.Drawing.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Microsoft.IO.RecyclableMemoryStream.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/System.Drawing.Common.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Drawing.Common.dll

@@ -101,7 +101,9 @@ function App() {
 
 
             <main>
-                {currentPage === 'dashboard' && <Dashboard />}
+                {currentPage === 'dashboard' && <Dashboard 
+                            onCreateTicket={handleCreateTicket} 
+                            onNavigate={handleNavigate}/>}
                 {currentPage === 'tickets' && (
                     <TicketsTable
                         onViewTicket={handleViewTicket}

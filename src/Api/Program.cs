@@ -7,6 +7,7 @@ using Application.Services;
 using Infrastructure.Auth;
 using Infrastructure.Data;
 using Api.Data;
+using Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +75,9 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
+
+builder.Services.AddScoped<ExcelExportService>();
+
 
 var app = builder.Build();
 

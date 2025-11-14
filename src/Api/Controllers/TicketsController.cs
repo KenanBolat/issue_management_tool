@@ -7,6 +7,11 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using System.Security.Claims;
+using Api.Services;
+
+
+
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -15,11 +20,15 @@ public class TicketsController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly TicketService _ticketService;
+    private readonly ExcelExportService _excelExportService;
 
-    public TicketsController(AppDbContext context, TicketService ticketService)
+
+    public TicketsController(AppDbContext context, TicketService ticketService, ExcelExportService excelExportService)
     {
         _context = context;
         _ticketService = ticketService;
+        _excelExportService = excelExportService;
+
     }
 
     private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -740,6 +749,51 @@ public class TicketsController : ControllerBase
         // Otherwise just: "Name Surname"
         return user.DisplayName;
     }
+
+    [HttpGet("export/excel")]
+[Authorize(Roles = "Editor,Admin")]
+public async Task<IActionResult> ExportToExcel()
+{
+    try
+    {
+        var tickets = await _context.Tickets
+            .Include(t => t.CreatedBy)
+            .Include(t => t.LastUpdatedBy)
+            .Include(t => t.DetectedByUser)
+                .ThenInclude(u => u.MilitaryRank)
+            .Include(t => t.CI)
+            .Include(t => t.Component)
+            .Include(t => t.Subsystem)
+            .Include(t => t.System)
+            .Include(t => t.ResponseByUser)
+                .ThenInclude(rp => rp.User)
+                    .ThenInclude(u => u.MilitaryRank)
+            .Include(t => t.ResponseResolvedByUser)
+                .ThenInclude(rp => rp.User)
+                    .ThenInclude(u => u.MilitaryRank)
+            .Include(t => t.ActivityControlPersonnel)
+                .ThenInclude(u => u.MilitaryRank)
+            .Include(t => t.ActivityControlCommander)
+                .ThenInclude(u => u.MilitaryRank)
+            .Where(t => t.IsActive && !t.IsDeleted)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        var excelData = await _excelExportService.GenerateTicketsExcelAsync(tickets);
+
+        var fileName = $"Ariza_Kayitlari_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        
+        return File(
+            excelData,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName
+        );
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = "Excel export failed", error = ex.Message });
+    }
+}
 
 }
 
