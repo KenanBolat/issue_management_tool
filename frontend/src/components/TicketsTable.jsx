@@ -46,6 +46,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     const loadTickets = async () => {
         try {
             setLoading(true);
+
             const response = await ticketsAPI.getAll(statusFilter || null, showDeleted);
             const ticketsData = Array.isArray(response.data) ? response.data : [];
             setTickets(ticketsData);
@@ -477,15 +478,16 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                         <option value="REOPENED">Yeniden Açıldı</option>
                         <option value="CANCELLED">İptal</option>
                     </select>
-                    <label style={styles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            checked={showDeleted}
-                            onChange={(e) => setShowDeleted(e.target.checked)}
-                            style={styles.checkbox}
-                        />
-                        Silinen Sorunlar
-                    </label>
+                    {isAdmin && (
+                        <label style={styles.deletedToggle}>
+                            <input
+                                type="checkbox"
+                                checked={showDeleted}
+                                onChange={(e) => setShowDeleted(e.target.checked)}
+                            />
+                            Silinen sorunlar
+                        </label>
+                    )}
                     <button onClick={loadTickets} style={styles.refreshBtn}>
                         Yenile
                     </button>
@@ -709,6 +711,15 @@ const styles = {
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     },
+    deletedToggle: {
+        display: "flex",
+        alignItems: "center",
+        gap: "0.4rem",
+        fontSize: "0.9rem",
+        whiteSpace: "nowrap",
+        padding: "0 0.3rem",
+        cursor: "pointer",
+    },
     headerLeft: {
         display: 'flex',
         alignItems: 'center',
@@ -780,7 +791,7 @@ const styles = {
         backgroundColor: '#4caf50',
         color: 'white',
     },
-    
+
     excelButton: {
         backgroundColor: '#0d9488',
         color: 'white',
