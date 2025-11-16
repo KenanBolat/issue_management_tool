@@ -152,7 +152,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                     </label>
 
                     <button onClick={loadUsers} style={styles.refreshBtn}>
-                        Refresh
+                        Yenile
                     </button>
                 </div>
 

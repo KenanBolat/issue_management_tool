@@ -83,7 +83,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             ? "-"
             : start.toLocaleString("tr-TR");
 
-        const ciText = ticket.ciName || "-";
 
         const lastActDate = ticket.lastActivityDate
             ? new Date(ticket.lastActivityDate).toLocaleString("tr-TR")
@@ -93,7 +92,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
         return (
             `Başlangıç: ${startText} (${durationText})\n` +
-            `Konfigürasyon Öğesi: ${ciText}\n` +
             `Son Aktivite: ${lastActDate} - ${lastActItem}`
         );
     };

@@ -40,7 +40,7 @@ namespace Infrastructure.Data
             await context.SaveChangesAsync();
 
             // ===== STEP 2: Create All Users =====
-            
+
             // Admin user
             var admin = new User
             {
@@ -168,8 +168,8 @@ namespace Infrastructure.Data
 
             // Add all users
             context.Users.AddRange(
-                admin, editor, viewer, kenanBolat, 
-                personnel1, personnel2, personnel3, 
+                admin, editor, viewer, kenanBolat,
+                personnel1, personnel2, personnel3,
                 aliUser, kenanUser
             );
             await context.SaveChangesAsync();
@@ -187,7 +187,7 @@ namespace Infrastructure.Data
             var systemGGS = new SystemEntity { Name = "GGS" };
             var systemMGS = new SystemEntity { Name = "MGS" };
             var systemMTZ = new SystemEntity { Name = "MTZ" };
-            
+
             context.Systems.AddRange(systemGGS, systemMGS, systemMTZ);
             await context.SaveChangesAsync();
 
@@ -201,9 +201,9 @@ namespace Infrastructure.Data
             var subsystemSASS = new Subsystem { Name = "SASS", SystemId = systemGGS.Id };
             var subsystemSUSS = new Subsystem { Name = "SUSS", SystemId = systemGGS.Id };
             var subsystemUSS = new Subsystem { Name = "USS", SystemId = systemGGS.Id };
-            
+
             context.Subsystems.AddRange(
-                subsystemPayload, subsystemMGS, subsystemCMS, subsystemGenel, 
+                subsystemPayload, subsystemMGS, subsystemCMS, subsystemGenel,
                 subsystemPlatform, subsystemSAS, subsystemSASS, subsystemSUSS, subsystemUSS
             );
             await context.SaveChangesAsync();
@@ -211,7 +211,7 @@ namespace Infrastructure.Data
             // ===== STEP 5: Create Components and Configuration Items =====
             var component1 = new Component { Name = "Yazılım", SubsystemId = subsystemPayload.Id };
             context.Components.Add(component1);
-            
+
             var ci1 = new ConfigurationItem { Name = "SPC" };
             context.ConfigurationItems.Add(ci1);
             await context.SaveChangesAsync();
@@ -269,7 +269,7 @@ namespace Infrastructure.Data
                 IsActive = true,
                 IsDeleted = false
             };
-            
+
             context.Tickets.AddRange(ticket1, ticket2, ticket3);
             await context.SaveChangesAsync();
 
@@ -286,7 +286,7 @@ namespace Infrastructure.Data
                 new TicketResponsePersonnel { TicketId = ticket1.Id, UserId = personnel2.Id },
                 new TicketResponsePersonnel { TicketId = ticket1.Id, UserId = personnel3.Id }
             );
-            
+
             await context.SaveChangesAsync();
 
             // ===== STEP 8: Create Ticket Actions (Audit Trail) =====
@@ -321,6 +321,40 @@ namespace Infrastructure.Data
             );
 
             await context.SaveChangesAsync();
+            // ===== STEP X: Seed Components =====
+            var componentNames = new[]
+            {
+    "Yazılım",
+    "Donanım",
+    "Prosedür"
+};
+
+            foreach (var name in componentNames)
+            {
+                if (!context.Components.Any(c => c.Name == name))
+                    context.Components.Add(new Component { Name = name });
+            }
+
+            await context.SaveChangesAsync();
+
+            // ===== STEP X: Seed Configuration Items =====
+            var configurationNames = new[]
+            {
+    "ANT", "CAD", "CDE", "CQS", "DHF", "DSS", "FDS", "Genel", "GIS",
+    "IES", "IPS", "MFS", "MP", "MTZ-PLF", "NET-EQUIP", "PROCEDIT", "SAP",
+    "SAW", "SHL", "SPC", "SSPA", "SSS", "T&F", "TU-EXT-I/F", "X-BBB"
+};
+
+            foreach (var name in configurationNames)
+            {
+                if (!context.ConfigurationItems.Any(ci => ci.Name == name))
+                    context.ConfigurationItems.Add(new ConfigurationItem { Name = name });
+            }
+
+            await context.SaveChangesAsync();
+
+
         }
+
     }
 }
