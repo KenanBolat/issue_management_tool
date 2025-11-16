@@ -20,19 +20,22 @@ export const authAPI = {
 };
 
 export const ticketsAPI = {
-    
-    getAll: (status = null) => {
-        const params = status ? { status } : {};
+
+    getAll: (status = null, includeDeleted = false) => {
+        const params = {};
+        if (status) params.status = status;
+        if (includeDeleted) params.includeDeleted = true;
         return api.get('/tickets', { params });
     },
     getById: (id) => api.get(`/tickets/${id}`),
-    
+
     create: (data) => api.post('/tickets', data),
     update: (id, data) => api.put(`/tickets/${id}`, data),
     delete: (id) => api.delete(`/tickets/${id}`),
- 
+    restore: (id) => api.post(`/tickets/${id}/restore`),
+
     changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
-    addComment: (id, body) => api.post(`/tickets/${id}/comments`, body), 
+    addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
     getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
 
     //dropdowns except users 
@@ -59,11 +62,11 @@ export const ticketsAPI = {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error('Export failed');
             }
-            
+
             // Get filename from Content-Disposition header if available
             const contentDisposition = response.headers.get('Content-Disposition');
             let filename = `Ariza_Kayitlari_${new Date().getTime()}.xlsx`;
@@ -73,7 +76,7 @@ export const ticketsAPI = {
                     filename = matches[1].replace(/['"]/g, '');
                 }
             }
-            
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -83,7 +86,7 @@ export const ticketsAPI = {
             link.click();
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            
+
             return { success: true };
         } catch (error) {
             console.error('Excel export error:', error);

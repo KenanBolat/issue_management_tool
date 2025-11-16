@@ -1,23 +1,31 @@
 import { useState, useEffect } from "react";
 import { ticketsAPI } from "../../services/api";
-import { Edit, Trash2, Eye, Download } from "lucide-react";
+import { Edit, Trash2, Eye, Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
+
 
 export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
+
+
     // ✅ Search & Filter
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-    
+
+    const [showDeleted, setShowDeleted] = useState(false);
+
+
     // ✅ Sorting
     const [sortField, setSortField] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
-    
+
     // ✅ Selection (for bulk PDF)
     const [selectedTickets, setSelectedTickets] = useState(new Set());
     const [generatingPDF, setGeneratingPDF] = useState(false);
+    const [exportingExcel, setExportingExcel] = useState(false);
+
 
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
@@ -30,12 +38,12 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
     useEffect(() => {
         loadTickets();
-    }, [statusFilter]);
+    }, [statusFilter, showDeleted]);
 
     const loadTickets = async () => {
         try {
             setLoading(true);
-            const response = await ticketsAPI.getAll(statusFilter || null);
+            const response = await ticketsAPI.getAll(statusFilter || null, showDeleted);
             const ticketsData = Array.isArray(response.data) ? response.data : [];
             setTickets(ticketsData);
         } catch (error) {
@@ -56,10 +64,23 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
+    const handleExportExcel = async () => {
+        try {
+            setExportingExcel(true);
+            await ticketsAPI.exportToExcel(); // api.jsx içindeki endpoint çağrısı
+            // ticketsAPI.exportToExcel zaten dosyayı indirtiyor
+        } catch (error) {
+            console.error("Excel export error:", error);
+            alert("Excel dışa aktarma sırasında hata oluştu.");
+        } finally {
+            setExportingExcel(false);
+        }
+    };
+
     // ✅ Delete function
     const handleDelete = async (ticketId) => {
         if (!window.confirm('Bu sorun kaydını silmek istediğinize emin misiniz?')) return;
-        
+
         try {
             await ticketsAPI.delete(ticketId);
             alert('Sorun kaydı silindi');
@@ -73,6 +94,26 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         } catch (error) {
             console.error('Error deleting ticket:', error);
             alert('Sorun kaydı silinirken hata oluştu');
+        }
+    };
+
+    // ✅ Restore function
+    const handleRestore = async (ticketId) => {
+        if (!window.confirm('Bu sorun kaydını geri almak istediğinize emin misiniz?')) return;
+
+        try {
+            await ticketsAPI.restore(ticketId);
+            alert('Sorun kaydı geri alındı!');
+            loadTickets();
+            // ensure it’s unselected
+            setSelectedTickets(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(ticketId);
+                return newSet;
+            });
+        } catch (error) {
+            console.error('Sorunu Geri Almada problem olmuştur :', error);
+            alert('Sorunu Geri Almada problem olmuştur');
         }
     };
 
@@ -107,11 +148,11 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
         try {
             setGeneratingPDF(true);
-            
+
             const ticketDetailsPromises = Array.from(selectedTickets).map(async (ticketId) => {
                 const response = await ticketsAPI.getById(ticketId);
                 const ticketData = response.data;
-                
+
                 const formData = {
                     externalCode: ticketData.externalCode || '',
                     title: ticketData.title || '',
@@ -136,10 +177,10 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
             const ticketsData = await Promise.all(ticketDetailsPromises);
             await generateMultipleTicketsPDF(ticketsData);
-            
+
             alert(`${selectedTickets.size} adet sorun raporu PDF olarak oluşturuldu!`);
             setSelectedTickets(new Set());
-            
+
         } catch (error) {
             console.error("Error generating bulk PDF:", error);
             alert("PDF oluşturulurken hata oluştu: " + error.message);
@@ -154,7 +195,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             // Search filter
             if (searchText) {
                 const search = searchText.toLowerCase();
-                const matchesSearch = 
+                const matchesSearch =
                     ticket.title.toLowerCase().includes(search) ||
                     ticket.externalCode.toLowerCase().includes(search) ||
                     (ticket.ttcomsCode && ticket.ttcomsCode.toLowerCase().includes(search));
@@ -205,6 +246,17 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                     </div>
                 </div>
                 <div style={styles.headerRight}>
+
+                    {canEdit && (
+                        <button
+                            onClick={handleExportExcel}
+                            style={{ ...styles.button, ...styles.excelButton }}
+                            disabled={exportingExcel}
+                        >
+                            <FileSpreadsheet size={18} />
+                            {exportingExcel ? " + Excel hazırlanıyor..." : "Excel'e Aktar"}
+                        </button>
+                    )}
                     {selectedTickets.size > 0 && (
                         <button
                             onClick={handleGenerateBulkPDF}
@@ -212,8 +264,8 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                             disabled={generatingPDF}
                         >
                             <Download size={18} />
-                            {generatingPDF 
-                                ? 'PDF Oluşturuluyor...' 
+                            {generatingPDF
+                                ? 'PDF Oluşturuluyor...'
                                 : `${selectedTickets.size} Sorun için PDF`}
                         </button>
                     )}
@@ -251,6 +303,15 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                         <option value="REOPENED">Yeniden Açıldı</option>
                         <option value="CANCELLED">İptal</option>
                     </select>
+                    <label style={styles.checkboxLabel}>
+                        <input
+                            type="checkbox"
+                            checked={showDeleted}
+                            onChange={(e) => setShowDeleted(e.target.checked)}
+                            style={styles.checkbox}
+                        />
+                        Silinen Sorunlar
+                    </label>
                     <button onClick={loadTickets} style={styles.refreshBtn}>
                         Yenile
                     </button>
@@ -306,8 +367,8 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                         </thead>
                         <tbody>
                             {filteredTickets.map((ticket) => (
-                                <tr 
-                                    key={ticket.id} 
+                                <tr
+                                    key={ticket.id}
                                     style={{
                                         ...styles.row,
                                         backgroundColor: selectedTickets.has(ticket.id) ? '#e3f2fd' : 'white'
@@ -370,14 +431,25 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                                 </button>
                                             )}
                                             {isAdmin && (
-                                                <button
-                                                    onClick={() => handleDelete(ticket.id)}
-                                                    style={{ ...styles.actionButton, ...styles.deleteButton }}
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                                ticket.isDeleted ? (
+                                                    <button
+                                                        onClick={() => handleRestore(ticket.id)}
+                                                        style={{ ...styles.actionButton, ...styles.restoreButton }}
+                                                        title="Geri Al"
+                                                    >
+                                                        <RotateCcw size={16} />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDelete(ticket.id)}
+                                                        style={{ ...styles.actionButton, ...styles.deleteButton }}
+                                                        title="Sil"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )
                                             )}
+
                                         </div>
                                     </td>
                                 </tr>
@@ -515,6 +587,10 @@ const styles = {
         backgroundColor: '#4caf50',
         color: 'white',
     },
+    excelButton: {
+        backgroundColor: '#0d9488',
+        color: 'white',
+    },
     pdfButton: {
         backgroundColor: '#2196f3',
         color: 'white',
@@ -638,4 +714,14 @@ const styles = {
         fontSize: '1.2rem',
         color: '#666',
     },
+    checkboxLabel: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        fontSize: '0.85rem',
+    },
+    restoreButton: {
+        color: '#0d9488',
+    },
+
 };

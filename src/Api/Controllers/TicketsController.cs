@@ -122,13 +122,19 @@ public class TicketsController : ControllerBase
 
 
     [HttpGet]
-    public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null)
+    public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null, [FromQuery] bool includeDeleted = false)
     {
         var query = _context.Tickets
         .Include(t => t.CreatedBy)
         .Include(t => t.CIJobs)
         .Include(t => t.DetectedByUser)
         .AsQueryable();
+
+        if (includeDeleted)
+        {
+            // override global query filters so soft-deleted tickets are also visible
+            query = query.IgnoreQueryFilters();
+        }
 
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<TicketStatus>(status, true, out var statusEnum))
             query = query.Where(t => t.Status == statusEnum);
@@ -752,49 +758,85 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet("export/excel")]
-[Authorize(Roles = "Editor,Admin")]
-public async Task<IActionResult> ExportToExcel()
-{
-    try
+    [Authorize(Roles = "Editor,Admin")]
+    public async Task<IActionResult> ExportToExcel()
     {
-        var tickets = await _context.Tickets
-            .Include(t => t.CreatedBy)
-            .Include(t => t.LastUpdatedBy)
-            .Include(t => t.DetectedByUser)
-                .ThenInclude(u => u.MilitaryRank)
-            .Include(t => t.CI)
-            .Include(t => t.Component)
-            .Include(t => t.Subsystem)
-            .Include(t => t.System)
-            .Include(t => t.ResponseByUser)
-                .ThenInclude(rp => rp.User)
+        try
+        {
+            var tickets = await _context.Tickets
+                .Include(t => t.CreatedBy)
+                .Include(t => t.LastUpdatedBy)
+                .Include(t => t.DetectedByUser)
                     .ThenInclude(u => u.MilitaryRank)
-            .Include(t => t.ResponseResolvedByUser)
-                .ThenInclude(rp => rp.User)
+                .Include(t => t.CI)
+                .Include(t => t.Component)
+                .Include(t => t.Subsystem)
+                .Include(t => t.System)
+                .Include(t => t.ResponseByUser)
+                    .ThenInclude(rp => rp.User)
+                        .ThenInclude(u => u.MilitaryRank)
+                .Include(t => t.ResponseResolvedByUser)
+                    .ThenInclude(rp => rp.User)
+                        .ThenInclude(u => u.MilitaryRank)
+                .Include(t => t.ActivityControlPersonnel)
                     .ThenInclude(u => u.MilitaryRank)
-            .Include(t => t.ActivityControlPersonnel)
-                .ThenInclude(u => u.MilitaryRank)
-            .Include(t => t.ActivityControlCommander)
-                .ThenInclude(u => u.MilitaryRank)
-            .Where(t => t.IsActive && !t.IsDeleted)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+                .Include(t => t.ActivityControlCommander)
+                    .ThenInclude(u => u.MilitaryRank)
+                .Where(t => t.IsActive && !t.IsDeleted)
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
 
-        var excelData = await _excelExportService.GenerateTicketsExcelAsync(tickets);
+            var excelData = await _excelExportService.GenerateTicketsExcelAsync(tickets);
 
-        var fileName = $"Ariza_Kayitlari_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-        
-        return File(
-            excelData,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            fileName
-        );
+            var fileName = $"Ariza_Kayitlari_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            return File(
+                excelData,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName
+            );
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Excel export failed", error = ex.Message });
+        }
     }
-    catch (Exception ex)
+
+    [HttpPost("{id}/restore")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> RestoreTicket(long id)
     {
-        return BadRequest(new { message = "Excel export failed", error = ex.Message });
+        // Need IgnoreQueryFilters to see soft-deleted tickets
+        var ticket = await _context.Tickets
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (ticket == null)
+            return NotFound();
+
+        if (!ticket.IsDeleted)
+            return BadRequest(new { message = "Ticket is not deleted." });
+
+        var currentUserId = GetCurrentUserId();
+
+        ticket.IsDeleted = false;
+        ticket.IsActive = true;
+        ticket.UpdatedAt = DateTime.UtcNow;
+        ticket.LastUpdatedById = currentUserId;
+
+        _context.TicketActions.Add(new TicketAction
+        {
+            TicketId = id,
+            ActionType = ActionType.Edit,
+            Notes = "Ticket restored (undelete)",
+            PerformedById = currentUserId,
+            PerformedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
-}
 
 }
 
