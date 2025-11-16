@@ -709,6 +709,7 @@ public class TicketsController : ControllerBase
 
         // Find the last ticket created in this year-month
         var lastTicket = await _context.Tickets
+            .IgnoreQueryFilters()
             .Where(t => t.ExternalCode.StartsWith(monthPrefix))
             .OrderByDescending(t => t.Id)
             .Select(t => t.ExternalCode)
