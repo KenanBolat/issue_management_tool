@@ -178,33 +178,41 @@ public class TicketsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TicketDetail>> GetTicket(long id)
     {
-        var ticket = await _context.Tickets
-             .Include(t => t.CreatedBy)
-             .Include(t => t.LastUpdatedBy)
-             .Include(t => t.DetectedByUser)
-                 .ThenInclude(u => u.MilitaryRank)
-             .Include(t => t.CI)
-             .Include(t => t.Component)
-             .Include(t => t.Subsystem)
-             .Include(t => t.System)
-             .Include(t => t.ResponseByUser)
-                 .ThenInclude(rp => rp.User)
-                     .ThenInclude(u => u.MilitaryRank)
-             .Include(t => t.ResponseResolvedByUser)
-                 .ThenInclude(rp => rp.User)
-                     .ThenInclude(u => u.MilitaryRank)
-             // Include Activity Control Personnel with Ranks
-             .Include(t => t.ActivityControlPersonnel)
-                 .ThenInclude(u => u.MilitaryRank)
-             .Include(t => t.ActivityControlCommander)
-                 .ThenInclude(u => u.MilitaryRank)
-             .Include(t => t.Actions)
-                 .ThenInclude(a => a.PerformedBy)
-             .Include(t => t.Comments)
-                 .ThenInclude(c => c.CreatedBy)
-             .FirstOrDefaultAsync(t => t.Id == id);
+        var isAdmin = User.IsInRole("Admin");
+        IQueryable<Ticket> query = _context.Tickets
+       .Include(t => t.CreatedBy)
+       .Include(t => t.LastUpdatedBy)
+       .Include(t => t.DetectedByUser)
+           .ThenInclude(u => u.MilitaryRank)
+       .Include(t => t.CI)
+       .Include(t => t.Component)
+       .Include(t => t.Subsystem)
+       .Include(t => t.System)
+       .Include(t => t.ResponseByUser)
+           .ThenInclude(rp => rp.User)
+               .ThenInclude(u => u.MilitaryRank)
+       .Include(t => t.ResponseResolvedByUser)
+           .ThenInclude(rp => rp.User)
+               .ThenInclude(u => u.MilitaryRank)
+       .Include(t => t.ActivityControlPersonnel)
+           .ThenInclude(u => u.MilitaryRank)
+       .Include(t => t.ActivityControlCommander)
+           .ThenInclude(u => u.MilitaryRank)
+       .Include(t => t.Actions)
+           .ThenInclude(a => a.PerformedBy)
+       .Include(t => t.Comments)
+           .ThenInclude(c => c.CreatedBy);
 
-        if (ticket == null) return NotFound();
+        if (isAdmin)
+        {
+            query = query.IgnoreQueryFilters();
+        }
+        var ticket = await query.FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null)
+            return NotFound();
+
+        if (!isAdmin && ticket.IsDeleted)
+            return NotFound();
 
         var detail = new TicketDetail(
             ticket.Id,

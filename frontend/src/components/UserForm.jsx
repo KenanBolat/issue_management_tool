@@ -1,27 +1,27 @@
-import {useState, useEffect} from 'react';
-import {userApi} from '../../services/api';
-import {X, Save, Eye, EyeOff} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { userApi } from '../../services/api';
+import { X, Save, Eye, EyeOff } from 'lucide-react';
 
 
-export default function UserForm({userId, onClose, onSave}) {  
+export default function UserForm({ userId, onClose, onSave }) {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [militaryRanks, setMilitaryRanks] = useState([]);
     const [showPassword, setShowPassword] = useState(false);
-    
+
 
     const [formData, setFormData] = useState({
         email: '',
         password: '',
         displayName: '',
         role: 'Viewer',
-        affiliation: '',
+        affiliation: '',   // ✅ default
         department: '',
         militaryRankId: null,
         phoneNumber: '',
     });
 
-    
+
     const currentUserRole = localStorage.getItem('role'); // Assuming role is stored in localStorage
 
     console.log(localStorage.getItem('role'))
@@ -68,18 +68,18 @@ export default function UserForm({userId, onClose, onSave}) {
     };
 
     const handleInputChange = (field, value) => {
-        setFormData(prev => ({...prev, [field]: value})) ;
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Basic validation
         if (!formData.email || !formData.displayName) {
             alert('Email and Display Name are required.');
             return;
         }
-        
+
         if (isNewUser && !formData.password) {
             alert('Password is required for new users.');
             return;
@@ -108,7 +108,7 @@ export default function UserForm({userId, onClose, onSave}) {
     const isMilitaryAffiliation = () => {
         return ['Airforce', 'Navy', 'Army', 'Marines', 'CoastGuard'].includes(formData.affiliation);
     }
-    
+
     if (loading) {
         return <div style={styles.loading}>Loading user data...</div>;
     }
@@ -125,11 +125,11 @@ export default function UserForm({userId, onClose, onSave}) {
         );
     }
 
-  return (
+    return (
         <div style={styles.container}>
             <div style={styles.header}>
                 <h1 style={styles.title}>
-                    {isNewUser ? 'Create New User' : 'Edit User'}
+                    {isNewUser ? 'Yeni Kullanıcı Ekle' : 'Kullanıcıyı Düzenle'}
                 </h1>
                 <button onClick={onClose} style={styles.closeButton}>
                     <X size={20} />
@@ -140,8 +140,8 @@ export default function UserForm({userId, onClose, onSave}) {
                 <div style={styles.formGrid}>
                     {/* Left Column */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Account Information</h2>
-                        
+                        <h2 style={styles.sectionTitle}>Hesap Bilgisi</h2>
+
                         <div style={styles.formRow}>
                             <label style={styles.label}>
                                 Email <span style={styles.required}>*</span>
@@ -159,7 +159,7 @@ export default function UserForm({userId, onClose, onSave}) {
                         {isNewUser && (
                             <div style={styles.formRow}>
                                 <label style={styles.label}>
-                                    Password <span style={styles.required}>*</span>
+                                    Şifre <span style={styles.required}>*</span>
                                 </label>
                                 <div style={styles.passwordInputGroup}>
                                     <input
@@ -182,7 +182,7 @@ export default function UserForm({userId, onClose, onSave}) {
 
                         <div style={styles.formRow}>
                             <label style={styles.label}>
-                                Display Name <span style={styles.required}>*</span>
+                                Ad Soyad <span style={styles.required}>*</span>
                             </label>
                             <input
                                 type="text"
@@ -195,7 +195,7 @@ export default function UserForm({userId, onClose, onSave}) {
 
                         <div style={styles.formRow}>
                             <label style={styles.label}>
-                                Role <span style={styles.required}>*</span>
+                                Yetki <span style={styles.required}>*</span>
                             </label>
                             <select
                                 value={formData.role}
@@ -213,7 +213,7 @@ export default function UserForm({userId, onClose, onSave}) {
                         </div>
 
                         <div style={styles.formRow}>
-                            <label style={styles.label}>Phone Number</label>
+                            <label style={styles.label}>Telefon</label>
                             <input
                                 type="tel"
                                 value={formData.phoneNumber}
@@ -226,11 +226,11 @@ export default function UserForm({userId, onClose, onSave}) {
 
                     {/* Right Column */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Organization Information</h2>
-                        
+                        <h2 style={styles.sectionTitle}>Ogranizasyon Bilgisi</h2>
+
                         <div style={styles.formRow}>
                             <label style={styles.label}>
-                                Affiliation <span style={styles.required}>*</span>
+                                Kurum <span style={styles.required}>*</span>
                             </label>
                             <select
                                 value={formData.affiliation}
@@ -238,8 +238,9 @@ export default function UserForm({userId, onClose, onSave}) {
                                 style={styles.select}
                                 disabled={!isAdmin && !isNewUser}
                             >
-                                <option value="Airforce">Airforce (Hava Kuvvetleri)</option>
-                                <option value="Contractor">Yüklenici (TUSAS)</option>
+                                <option value="">Seçiniz</option>
+                                <option value="Airforce">Hava Kuvvetleri</option>
+                                <option value="Contractor">TUSAS</option>
                                 <option value="Subcontractor">Alt Yüklenici </option>
                                 <option value="Other">Other</option>
                             </select>
@@ -247,14 +248,14 @@ export default function UserForm({userId, onClose, onSave}) {
 
                         {isMilitaryAffiliation() && (
                             <div style={styles.formRow}>
-                                <label style={styles.label}>Military Rank</label>
+                                <label style={styles.label}>Rütbe</label>
                                 <select
                                     value={formData.militaryRankId || ''}
-                                    onChange={(e) => handleInputChange('militaryRankId', 
+                                    onChange={(e) => handleInputChange('militaryRankId',
                                         e.target.value ? parseInt(e.target.value) : null)}
                                     style={styles.select}
                                 >
-                                    <option value="">Select Rank</option>
+                                    <option value="">Seçiniz</option>
                                     {militaryRanks.map((rank) => (
                                         <option key={rank.id} value={rank.id}>
                                             {rank.displayName}
@@ -265,23 +266,23 @@ export default function UserForm({userId, onClose, onSave}) {
                         )}
 
                         <div style={styles.formRow}>
-                            <label style={styles.label}>Department</label>
+                            <label style={styles.label}>Birim</label>
                             <input
                                 type="text"
                                 value={formData.department}
                                 onChange={(e) => handleInputChange('department', e.target.value)}
                                 style={styles.input}
-                                placeholder="e.g., Engineering, Operations"
+                                placeholder="e.g., Ağ Alt Yapısı, Görüntü İşleme Zinciri"
                             />
                         </div>
 
                         <div style={styles.formRow}>
                             <div style={styles.infoBox}>
-                                <strong>Account Type:</strong> {formData.role}<br/>
-                                <strong>Organization:</strong> {formData.affiliation}
+                                <strong>Hesap Tipi:</strong> {formData.role}<br />
+                                <strong>Ogranizasyon:</strong> {formData.affiliation}
                                 {isMilitaryAffiliation() && formData.militaryRankId && (
                                     <>
-                                        <br/><strong>Military Service:</strong> Yes
+                                        <br /><strong>Askeri Birim:</strong> Evet
                                     </>
                                 )}
                             </div>
@@ -290,15 +291,15 @@ export default function UserForm({userId, onClose, onSave}) {
                 </div>
 
                 <div style={styles.formActions}>
-                    <button 
-                        type="button" 
-                        onClick={onClose} 
+                    <button
+                        type="button"
+                        onClick={onClose}
                         style={styles.cancelButton}
                     >
                         Cancel
                     </button>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         style={styles.saveButton}
                         disabled={saving}
                     >
