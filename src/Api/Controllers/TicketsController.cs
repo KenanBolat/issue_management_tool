@@ -672,7 +672,7 @@ public class TicketsController : ControllerBase
     {
         // Step 1: Query database with anonymous type (EF Core can translate this)
         var users = await _context.Users
-            .Where(u => u.IsActive && (u.Role == UserRole.Editor || u.Role == UserRole.Admin))
+            .Where(u => u.IsActive)
             .OrderBy(u => u.DisplayName)
             .Select(u => new
             {

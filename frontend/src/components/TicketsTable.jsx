@@ -26,6 +26,9 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [exportingExcel, setExportingExcel] = useState(false);
 
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+    const [bulkRestoring, setBulkRestoring] = useState(false);
+
 
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
@@ -97,6 +100,56 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
+    // handle Bulk Delete
+    const handleBulkDelete = async () => {
+        if (selectedTickets.size === 0) return;
+
+        const selectedTicketObjects = tickets.filter(t =>
+            selectedTickets.has(t.id)
+        );
+
+        // Sadece silinmemiş olanlar silinebilir
+        const deletable = selectedTicketObjects.filter(t => !t.isDeleted);
+        const alreadyDeleted = selectedTicketObjects.filter(t => t.isDeleted);
+
+        if (deletable.length === 0) {
+            alert("Seçili sorunların hepsi zaten silinmiş; silinecek kayıt yok.");
+            return;
+        }
+
+        let message = `${deletable.length} adet sorunu silmek istediğinize emin misiniz?`;
+        if (alreadyDeleted.length > 0) {
+            message += `\n${alreadyDeleted.length} adet sorun zaten silinmiş olduğu için atlanacak.`;
+        }
+
+        if (!window.confirm(message)) return;
+
+        try {
+            setBulkDeleting(true);
+
+            await Promise.all(
+                deletable.map(t => ticketsAPI.delete(t.id))
+            );
+
+            alert(`${deletable.length} adet sorun kaydı silindi.`);
+
+            // Silinenleri seçimden çıkar
+            setSelectedTickets(prev => {
+                const s = new Set(prev);
+                deletable.forEach(t => s.delete(t.id));
+                return s;
+            });
+
+            loadTickets();
+        } catch (error) {
+            console.error("Bulk delete error:", error);
+            alert("Toplu silme sırasında hata oluştu.");
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
+
     // ✅ Restore function
     const handleRestore = async (ticketId) => {
         if (!window.confirm('Bu sorun kaydını geri almak istediğinize emin misiniz?')) return;
@@ -116,6 +169,61 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             alert('Sorunu Geri Almada problem olmuştur');
         }
     };
+
+    // Bulk Restore 
+
+    const handleBulkRestore = async () => {
+        if (selectedTickets.size === 0) return;
+
+        // Seçili satırların tamamını bul
+        const selectedTicketObjects = tickets.filter(t =>
+            selectedTickets.has(t.id)
+        );
+
+        // Sadece silinmiş olanlar restore edilebilir
+        const restorable = selectedTicketObjects.filter(t => t.isDeleted);
+        const notRestorable = selectedTicketObjects.filter(t => !t.isDeleted);
+
+        if (restorable.length === 0) {
+            alert("Seçili sorunların hiçbiri silinmiş değil; geri alınacak kayıt yok.");
+            return;
+        }
+
+        let message = `${restorable.length} adet silinmiş sorun geri alınacak.`;
+        if (notRestorable.length > 0) {
+            message += `\n${notRestorable.length} adet sorun zaten silinmemiş olduğu için atlanacak.`;
+        }
+        message += "\nDevam etmek istiyor musunuz?";
+
+        if (!window.confirm(message)) return;
+
+        try {
+            setBulkRestoring(true);
+
+            // Sadece silinmiş olanlara istek at
+            await Promise.all(
+                restorable.map(t => ticketsAPI.restore(t.id))
+            );
+
+            alert(`${restorable.length} adet sorun kaydı geri alındı.`);
+
+            // Restore edilenleri seçimden çıkar
+            setSelectedTickets(prev => {
+                const s = new Set(prev);
+                restorable.forEach(t => s.delete(t.id));
+                return s;
+            });
+
+            // Listeyi yenile
+            loadTickets();
+        } catch (error) {
+            console.error("Bulk restore error:", error);
+            alert("Toplu geri alma sırasında hata oluştu.");
+        } finally {
+            setBulkRestoring(false);
+        }
+    };
+
 
     // ✅ Toggle individual ticket selection
     const handleToggleTicket = (ticketId) => {
@@ -246,7 +354,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                     </div>
                 </div>
                 <div style={styles.headerRight}>
-
                     {canEdit && (
                         <button
                             onClick={handleExportExcel}
@@ -254,21 +361,47 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                             disabled={exportingExcel}
                         >
                             <FileSpreadsheet size={18} />
-                            {exportingExcel ? " + Excel hazırlanıyor..." : "Excel'e Aktar"}
+                            {exportingExcel ? "Excel hazırlanıyor..." : "Excel'e Aktar"}
                         </button>
                     )}
-                    {selectedTickets.size > 0 && (
-                        <button
-                            onClick={handleGenerateBulkPDF}
-                            style={{ ...styles.button, ...styles.pdfButton }}
-                            disabled={generatingPDF}
-                        >
-                            <Download size={18} />
-                            {generatingPDF
-                                ? 'PDF Oluşturuluyor...'
-                                : `${selectedTickets.size} Sorun için PDF`}
-                        </button>
+
+                    {selectedTickets.size > 0 && canEdit && (
+                        <>
+                            {isAdmin && (
+                                <button
+                                    onClick={handleBulkRestore}
+                                    style={{ ...styles.button, ...styles.restoreTopButton }}
+                                    disabled={bulkRestoring}
+                                    title="Geri Al"
+                                >
+                                    <RotateCcw size={18} />
+                                    {bulkRestoring ? "Geri alınıyor..." : "Geri Al"}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={handleBulkDelete}
+                                style={{ ...styles.button, ...styles.bulkDeleteButton }}
+                                disabled={bulkDeleting}
+                                title="Sorunları Sil"
+                            >
+                                <Trash2 size={18} />
+                                {bulkDeleting ? "Siliniyor..." : "Sil"}
+                            </button>
+
+                            <button
+                                onClick={handleGenerateBulkPDF}
+                                style={{ ...styles.button, ...styles.pdfButton }}
+                                disabled={generatingPDF}
+                            >
+                                <Download size={18} />
+                                {generatingPDF
+                                    ? "PDF Oluşturuluyor..."
+                                    : `${selectedTickets.size} Sorun için PDF`}
+                            </button>
+                        </>
                     )}
+
                     {canEdit && (
                         <button
                             onClick={onCreateTicket}
@@ -278,6 +411,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                         </button>
                     )}
                 </div>
+
             </div>
 
             {/* Controls - Search & Filter */}
@@ -591,6 +725,19 @@ const styles = {
         backgroundColor: '#0d9488',
         color: 'white',
     },
+    excelButton: {
+        backgroundColor: '#0d9488',
+        color: 'white',
+    },
+    restoreTopButton: {
+        backgroundColor: '#facc15',
+        color: '#78350f',
+    },
+    bulkDeleteButton: {
+        backgroundColor: '#ef4444',
+        color: 'white',
+    },
+
     pdfButton: {
         backgroundColor: '#2196f3',
         color: 'white',
