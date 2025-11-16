@@ -83,12 +83,17 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState([]);
     const [actions, setActions] = useState([]);
-    const [activeTab, setActiveTab] = useState('details');
+    // const [activeTab, setActiveTab] = useState('details');
+    const [activeTab, setActiveTab] = useState('history');
+
+
 
     const userRole = localStorage.getItem("role");
     const isReadOnly = userRole === 'Viewer';
     const canEdit = userRole === 'Editor' || userRole === 'Admin';
     const isNewTicket = !ticketId || ticketId === 'new';
+    const canViewComments = userRole === 'Editor' || userRole === 'Admin';
+
 
 
     const notificationMethodOptions = [
@@ -974,16 +979,19 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {ticket && (
                         <>
                             <div style={styles.tabContainer}>
-                                <button
-                                    onClick={() => setActiveTab('comments')}
-                                    style={{
-                                        ...styles.tab,
-                                        ...(activeTab === 'comments' ? styles.activeTab : {})
-                                    }}
-                                >
-                                    <MessageSquare size={16} />
-                                    Yapılan İşlemler ({comments.length})
-                                </button>
+                                {canViewComments && (
+                                    <button
+                                        onClick={() => setActiveTab('comments')}
+                                        style={{
+                                            ...styles.tab,
+                                            ...(activeTab === 'comments' ? styles.activeTab : {})
+                                        }}
+                                    >
+                                        <MessageSquare size={16} />
+                                        Yapılan İşlemler ({comments.length})
+                                    </button>
+                                )}
+
                                 <button
                                     onClick={() => setActiveTab('history')}
                                     style={{
@@ -997,7 +1005,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
 
                             {/* Comments Tab */}
-                            {activeTab === 'comments' && (
+                            {activeTab === 'comments' && canViewComments &&  (
                                 <div style={styles.tabContent}>
                                     {canEdit && (
                                         <div style={styles.commentInputSection}>
