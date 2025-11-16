@@ -57,6 +57,46 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
+    const getTicketTooltip = (ticket) => {
+        const now = new Date();
+
+        // Başlangıç tarihi: önce tespit tarihi varsa onu, yoksa oluşturma
+        const start = ticket.detectedDate
+            ? new Date(ticket.detectedDate)
+            : new Date(ticket.createdAt);
+
+        let durationText = "-";
+        if (!isNaN(start.getTime())) {
+            const diffMs = now - start;
+            const diffHours = diffMs / (1000 * 60 * 60);
+            if (Math.abs(diffHours) < 24) {
+                const hours = Math.round(diffHours);
+                durationText = `${hours} saat`;
+            } else {
+                const days = Math.round(diffHours / 24);
+                durationText = `${days} gün`;
+            }
+        }
+
+        const startText = isNaN(start.getTime())
+            ? "-"
+            : start.toLocaleString("tr-TR");
+
+        const ciText = ticket.ciName || "-";
+
+        const lastActDate = ticket.lastActivityDate
+            ? new Date(ticket.lastActivityDate).toLocaleString("tr-TR")
+            : "-";
+
+        const lastActItem = ticket.lastActivityItem || "-";
+
+        return (
+            `Başlangıç: ${startText} (${durationText})\n` +
+            `Konfigürasyon Öğesi: ${ciText}\n` +
+            `Son Aktivite: ${lastActDate} - ${lastActItem}`
+        );
+    };
+
     // ✅ Sorting function
     const handleSort = (field) => {
         if (sortField === field) {
@@ -505,13 +545,23 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                     key={ticket.id}
                                     style={{
                                         ...styles.row,
-                                        backgroundColor: selectedTickets.has(ticket.id) ? '#e3f2fd' : 'white'
+                                        backgroundColor: selectedTickets.has(ticket.id) ? '#e3f2fd' : 'white',
+                                        cursor: 'pointer',
+                                    }}
+                                    title={getTicketTooltip(ticket)}
+                                    onClick={(e) => {
+                                        // Eğer tıklanan şey buton / input ise satır navigasyonu yapma
+                                        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) {
+                                            return;
+                                        }
+                                        onViewTicket(ticket.id);
                                     }}
                                 >
                                     <td style={styles.td}>
                                         <input
                                             type="checkbox"
                                             checked={selectedTickets.has(ticket.id)}
+                                            onClick={(e) => e.stopPropagation()}
                                             onChange={() => handleToggleTicket(ticket.id)}
                                             style={styles.checkbox}
                                         />
@@ -549,7 +599,10 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                     <td style={styles.td}>
                                         <div style={styles.actions}>
                                             <button
-                                                onClick={() => onViewTicket(ticket.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onViewTicket(ticket.id);
+                                                }}
                                                 style={{ ...styles.actionButton, ...styles.viewButton }}
                                                 title="Görüntüle"
                                             >
@@ -557,8 +610,10 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                             </button>
                                             {canEdit && (
                                                 <button
-                                                    onClick={() => onEditTicket(ticket.id)}
-                                                    style={{ ...styles.actionButton, ...styles.editButton }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onEditTicket(ticket.id);
+                                                    }} style={{ ...styles.actionButton, ...styles.editButton }}
                                                     title="Düzenle"
                                                 >
                                                     <Edit size={16} />
@@ -567,16 +622,20 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                                             {isAdmin && (
                                                 ticket.isDeleted ? (
                                                     <button
-                                                        onClick={() => handleRestore(ticket.id)}
-                                                        style={{ ...styles.actionButton, ...styles.restoreButton }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRestore(ticket.id);
+                                                        }} style={{ ...styles.actionButton, ...styles.restoreButton }}
                                                         title="Geri Al"
                                                     >
                                                         <RotateCcw size={16} />
                                                     </button>
                                                 ) : (
                                                     <button
-                                                        onClick={() => handleDelete(ticket.id)}
-                                                        style={{ ...styles.actionButton, ...styles.deleteButton }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDelete(ticket.id);
+                                                        }} style={{ ...styles.actionButton, ...styles.deleteButton }}
                                                         title="Sil"
                                                     >
                                                         <Trash2 size={16} />
@@ -721,10 +780,7 @@ const styles = {
         backgroundColor: '#4caf50',
         color: 'white',
     },
-    excelButton: {
-        backgroundColor: '#0d9488',
-        color: 'white',
-    },
+    
     excelButton: {
         backgroundColor: '#0d9488',
         color: 'white',

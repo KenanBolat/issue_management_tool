@@ -140,23 +140,37 @@ public class TicketsController : ControllerBase
             query = query.Where(t => t.Status == statusEnum);
 
         var items = await query
-            .OrderByDescending(t => t.CreatedAt)
-            .Take(50)
-            .Select(t => new TicketListItem(
-                t.Id,
-                t.ExternalCode,
-                t.Title,
-                t.Status.ToString(),
-                t.IsBlocking,
-                t.CreatedAt,
-                t.CreatedBy.DisplayName,
-                t.CIJobs.Any(j => j.Status == CIJobStatus.Succeeded),
-                t.IsActive,
-                t.IsDeleted,
-                t.DetectedDate,
-                t.ResponseDate,
-                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null, t.TtcomsCode))
-            .ToListAsync();
+    .OrderByDescending(t => t.CreatedAt)
+    .Select(t => new TicketListItem(
+        t.Id,
+        t.ExternalCode,
+        t.Title,
+        t.Status.ToString(),
+        t.IsBlocking,
+        t.CreatedAt,
+        t.CreatedBy.DisplayName,
+        t.CIJobs.Any(j => j.Status == CIJobStatus.Succeeded),
+        t.IsActive,
+        t.IsDeleted,
+        t.DetectedDate,
+        t.ResponseDate,
+        t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null,
+        t.TtcomsCode,
+        // NEW: last activity date
+        t.Actions
+        .OrderByDescending(a => a.PerformedAt)
+        .Select(a => (DateTime?)a.PerformedAt)
+        .FirstOrDefault()
+        ?? (DateTime?)t.UpdatedAt
+        ?? (DateTime?)t.CreatedAt,
+        // NEW: last activity item (action type, or "Oluşturma")
+        t.Actions
+            .OrderByDescending(a => a.PerformedAt)
+            .Select(a => a.ActionType.ToString())
+            .FirstOrDefault() ?? "Created"
+    ))
+    .ToListAsync();
+
 
         return Ok(items);
     }

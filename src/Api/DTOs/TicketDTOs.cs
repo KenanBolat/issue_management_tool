@@ -61,7 +61,9 @@ public record TicketListItem(
         DateTime? DetectDate,
         DateTime? ResponseDate,
         string? DetectedByUserName,
-        string? TtcomsCode);
+        string? TtcomsCode,
+        DateTime? LastActivityDate,
+        string? LastActivityItem);
 
 // Get the associated ticket detail
 public record TicketDetail(

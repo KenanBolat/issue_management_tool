@@ -4,81 +4,103 @@ import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/rendere
 Font.register({
   family: 'Roboto',
   fonts: [
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf', fontWeight: 'normal' },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 'bold' }
-  ]
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf',
+      fontWeight: 'normal',
+    },
+    {
+      src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf',
+      fontWeight: 'bold',
+    },
+  ],
 });
 
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    fontSize: 7,
-    fontFamily: 'Roboto'
+    paddingTop: 32,
+    paddingBottom: 40,
+    paddingHorizontal: 28,
+    fontSize: 8,
+    fontFamily: 'Roboto',
   },
   title: {
     fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10
+    marginBottom: 8,
   },
+  // main outer table
   table: {
     display: 'table',
     width: '100%',
     borderStyle: 'solid',
     borderWidth: 1,
-    borderColor: '#000',
-    marginBottom: 2
+    borderColor: '#000000',
   },
-  tableRow: {
+  row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    minHeight: 20 
+    borderBottomColor: '#000000',
   },
-  tableHeader: {
-    backgroundColor: '#ffffff',
+  // generic cell
+  headerCell: {
+    borderRightWidth: 1,
+    borderRightColor: '#000000',
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+    textAlign: 'center',
     fontWeight: 'bold',
-    textAlign: 'center',
-    padding: 3,
-    display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#000',
   },
-  tableCell: {
+  cell: {
     borderRightWidth: 1,
-    borderRightColor: '#000',
-    padding: 3,
+    borderRightColor: '#000000',
+    paddingVertical: 3,
+    paddingHorizontal: 3,
     textAlign: 'center',
-    display: 'flex',
     justifyContent: 'center',
-    minHeight: 20 
   },
   lastCell: {
-    borderRightWidth: 0
+    borderRightWidth: 0,
   },
-  sectionHeader: {
-    backgroundColor: '#dcdcdc',
-    padding: 3,
-    textAlign: 'center',
+  leftText: {
+    textAlign: 'left',
+  },
+  // rows with more height (description / actions / activity result)
+  tallRow: {
+    minHeight: 45,
+  },
+  veryTallRow: {
+    minHeight: 55,
+  },
+  fullRowHeader: {
+    paddingVertical: 3,
+    paddingHorizontal: 3,
     fontWeight: 'bold',
-    fontSize: 7,
-    marginTop: 2
+    textAlign: 'left',
+  },
+  fullRowHeaderCenter: {
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  fullRowCell: {
+    paddingVertical: 3,
+    paddingHorizontal: 3,
+    textAlign: 'center',
   },
   emptyCell: {
-    color: 'transparent'
+    color: 'transparent',
   },
-  // ✅ NEW: Page number style
   pageNumber: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 16,
     left: 0,
     right: 0,
     textAlign: 'center',
     fontSize: 8,
-    color: '#666'
-  }
+  },
 });
 
 const formatDateTime = (dateString) => {
@@ -92,12 +114,12 @@ const formatDateTime = (dateString) => {
   return `${day}.${month}.${year} ${hours}:${minutes}`;
 };
 
-const formatDateOnly = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
+const formatDateOnly = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
   return `${day}.${month}.${year}`;
 };
 
@@ -107,213 +129,246 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
   <Page size="A4" orientation="landscape" style={styles.page}>
     <Text style={styles.title}>ARIZA KAYIT FORMU</Text>
 
-    {/* Section 1: Main Information */}
     <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '12%' }]}>
+      {/* 1. row: ARIZA NO / TARİHLER / BİLDİRİM ŞEKLİ / OPERASYONEL AKIŞI ETKİLER */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '12%' }]}>
           <Text>ARIZA NO</Text>
         </View>
-        <View style={[styles.tableHeader, { width: '18%' }]}>
-          <Text>ARIZANIN TESPİT{'\n'}EDİLDİĞİ TARİH / SAAT</Text>
+        <View style={[styles.headerCell, { width: '18%' }]}>
+          <Text>ARIZANIN TESPİT</Text>
+          <Text>EDİLDİĞİ TARİH / SAAT</Text>
         </View>
-        <View style={[styles.tableHeader, { width: '18%' }]}>
-          <Text>YÜKLENİCİYE BİLDİRİM{'\n'}TARİHİ / SAATİ</Text>
+        <View style={[styles.headerCell, { width: '18%' }]}>
+          <Text>YÜKLENİCİYE BİLDİRİM</Text>
+          <Text>TARİHİ / SAATİ</Text>
         </View>
-        <View style={[styles.tableHeader, { width: '37%' }]}>
-          <Text>BİLDİRİM ŞEKLİ{'\n'}</Text>
+        <View style={[styles.headerCell, { width: '37%' }]}>
+          <Text>BİLDİRİM ŞEKLİ</Text>
           <Text style={{ fontSize: 6 }}>(Çıktısı / Fotokopisi Forma Eklenecektir)</Text>
         </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '15%' }]}>
-          <Text>OPERASYONEL AKIŞI{'\n'}ETKİLER</Text>
+        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
+          <Text>OPERASYONEL AKIŞI</Text>
+          <Text>ETKİLER</Text>
         </View>
       </View>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableCell, { width: '12%' }]}>
+
+      {/* 2. row: values for above */}
+      <View style={styles.row}>
+        <View style={[styles.cell, { width: '12%' }]}>
           <Text>{formData.externalCode || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '18%' }]}>
+        <View style={[styles.cell, { width: '18%' }]}>
           <Text>{formatDateTime(formData.detectedDate) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '18%' }]}>
+        <View style={[styles.cell, { width: '18%' }]}>
           <Text>{formatDateTime(formData.detectedContractorNotifiedAt) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '37%' }]}>
+        <View style={[styles.cell, { width: '37%' }]}>
           <Text>
-            {formData.ttcomsCode 
-              ? `${formData.ttcomsCode}` 
-              : (formData.detectedNotificationMethods?.length > 0 
-                  ? formData.detectedNotificationMethods.join(', ') 
-                  : <EmptyCell />)}
+            {formData.ttcomsCode
+              ? formData.ttcomsCode
+              : formData.detectedNotificationMethods?.length > 0
+              ? formData.detectedNotificationMethods.join(', ')
+              : <EmptyCell />}
           </Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
           <Text>{formData.isBlocking ? 'EVET' : 'HAYIR'}</Text>
         </View>
       </View>
-    </View>
 
-    {/* Section 2: Part Information */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
+      {/* 3. row: PARÇA TANIMI / PARÇA NO / SERİ NO / ARIZAYI TESPİT EDEN... */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
           <Text>PARÇA TANIMI</Text>
         </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
           <Text>PARÇA NO</Text>
         </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
           <Text>SERİ NO</Text>
         </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '25%' }]}>
-          <Text>ARIZAYI TESPİT EDEN{'\n'}PERSONEL RÜTBE - ADI SOYADI</Text>
+        <View style={[styles.headerCell, styles.lastCell, { width: '25%' }]}>
+          <Text>ARIZAYI TESPİT EDEN</Text>
+          <Text>PERSONEL RÜTBE - ADI SOYADI</Text>
         </View>
       </View>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+
+      {/* 4. row: part values */}
+      <View style={styles.row}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formData.itemDescription || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formData.itemId || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formData.itemSerialNo || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '25%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '25%' }]}>
           <Text>{ticket?.detectedByUserName || <EmptyCell />}</Text>
         </View>
       </View>
-    </View>
 
-    {/* Section 3: Fault Description */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '84%' }]}>
+      {/* 5. row: TESPİT EDİLEN ARIZA / İMZA */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '84%' }]}>
           <Text>TESPİT EDİLEN ARIZA</Text>
         </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '16%' }]}>
           <Text>İMZA</Text>
         </View>
       </View>
-      <View style={[styles.tableRow, { minHeight: 40 }]}>
-        <View style={[styles.tableCell, { width: '84%', textAlign: 'left', alignItems: 'flex-start' }]}>
-          <Text>{formData.description || <EmptyCell />}</Text>
+
+      {/* 6. row: description */}
+      <View style={[styles.row, styles.veryTallRow]}>
+        <View
+          style={[
+            styles.cell,
+            { width: '84%', alignItems: 'flex-start' },
+          ]}
+        >
+          <Text style={styles.leftText}>{formData.description || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '16%' }]}>
           <EmptyCell />
         </View>
       </View>
-    </View>
 
-    {/* Section 4: Contractor Header */}
-    <View style={styles.sectionHeader}>
-      <Text>YÜKLENİCİ FİRMA TARAFINDAN YAPILAN İŞLEMLER</Text>
-    </View>
-
-    {/* Section 5: Response Details */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>ARIZAYA MÜDAHALE{'\n'}EDEN PERSONEL</Text>
-        </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>ARIZAYA MÜDAHALE{'\n'}TARİHİ / SAATİ</Text>
-        </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>ARIZANIN{'\n'}GİDERİLDİĞİ{'\n'}TARİH / SAAT</Text>
-        </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '25%' }]}>
-          <Text>ARIZAYI GİDEREN{'\n'}SORUMLU YÜKLENİCİ{'\n'}PERSONELİ - ADI SOYADI</Text>
+      {/* 7. row: YÜKLENİCİ FİRMA TARAFINDAN... (full width header) */}
+      <View style={styles.row}>
+        <View style={[styles.fullRowHeader, { width: '100%' }]}>
+          <Text>YÜKLENİCİ FİRMA TARAFINDAN YAPILAN İŞLEMLER</Text>
         </View>
       </View>
-      <View style={[styles.tableRow, { minHeight: 30 }]}>
-        <View style={[styles.tableCell, { width: '25%' }]}>
-          <Text>{ticket?.responsePersonnel?.map(p => p.displayName).join(', ') || <EmptyCell />}</Text>
+
+      {/* 8. row: ARIZAYA MÜDAHALE EDEN / TARİHLER / SORUMLU PERSONEL */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>ARIZAYA MÜDAHALE</Text>
+          <Text>EDEN PERSONEL</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>ARIZAYA MÜDAHALE</Text>
+          <Text>TARİHİ / SAATİ</Text>
+        </View>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>ARIZANIN</Text>
+          <Text>GİDERİLDİĞİ TARİH / SAAT</Text>
+        </View>
+        <View style={[styles.headerCell, styles.lastCell, { width: '25%' }]}>
+          <Text>ARIZAYI GİDEREN SORUMLU</Text>
+          <Text>YÜKLENİCİ PERSONELİ - ADI SOYADI</Text>
+        </View>
+      </View>
+
+      {/* 9. row: response values */}
+      <View style={[styles.row, styles.tallRow]}>
+        <View style={[styles.cell, { width: '25%' }]}>
+          <Text>
+            {ticket?.responsePersonnel?.map((p) => p.displayName).join(', ') || <EmptyCell />}
+          </Text>
+        </View>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formatDateTime(formData.responseDate) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formatDateTime(formData.responseResolvedAt) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '25%' }]}>
-          <Text>{ticket?.responseResolvedPersonnel?.map(p => p.displayName).join(', ') || <EmptyCell />}</Text>
+        <View style={[styles.cell, styles.lastCell, { width: '25%' }]}>
+          <Text>
+            {ticket?.responseResolvedPersonnel?.map((p) => p.displayName).join(', ') || (
+              <EmptyCell />
+            )}
+          </Text>
         </View>
       </View>
-    </View>
 
-    {/* Section 6: Actions */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '84%' }]}>
+      {/* 10. row: ARIZAYA İLİŞKİN YAPILAN İŞLEM... / İMZA */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '84%' }]}>
           <Text>ARIZAYA İLİŞKİN YAPILAN İŞLEM VE FAAL EDİLMESİ İÇİN GEREKLİ İHTİYAÇLAR</Text>
         </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '16%' }]}>
           <Text>İMZA</Text>
         </View>
       </View>
-      <View style={[styles.tableRow, { minHeight: 40 }]}>
-        <View style={[styles.tableCell, { width: '84%', textAlign: 'left', alignItems: 'flex-start' }]}>
-          <Text>{formData.responseActions || <EmptyCell />}</Text>
+
+      {/* 11. row: actions text */}
+      <View style={[styles.row, styles.veryTallRow]}>
+        <View
+          style={[
+            styles.cell,
+            { width: '84%', alignItems: 'flex-start' },
+          ]}
+        >
+          <Text style={styles.leftText}>{formData.responseActions || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '16%' }]}>
           <EmptyCell />
         </View>
       </View>
-    </View>
 
-    {/* Section 7: Activity Control Header */}
-    <View style={styles.sectionHeader}>
-      <Text>FAALİYET KONTROLÜ</Text>
-    </View>
-
-    {/* Section 8: Activity Control */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>FAALİYET KONTROLÜNÜ{'\n'}YAPAN KULLANICI{'\n'}PERSONELİ RÜTBE -{'\n'}ADI SOYADI / İMZA</Text>
-        </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>SONUÇ (FAAL / GAYRİ FAAL){'\n'}(Gayri faal ise gerekçesi ve{'\n'}faaliyet için öneriler{'\n'}yazılacaktır - Sözleşme{'\n'}gereklerine göre)</Text>
-        </View>
-        <View style={[styles.tableHeader, { width: '25%' }]}>
-          <Text>TARİH / SAAT</Text>
-        </View>
-        <View style={[styles.tableHeader, styles.lastCell, { width: '25%' }]}>
-          <Text>BİRİM KOMUTANI{'\n'}RÜTBE - ADI SOYADI / İMZA</Text>
+      {/* 12. row: FAALİYET KONTROLÜ header (full width) */}
+      <View style={styles.row}>
+        <View style={[styles.fullRowHeader, { width: '100%' }]}>
+          <Text>FAALİYET KONTROLÜ</Text>
         </View>
       </View>
-      <View style={[styles.tableRow, { minHeight: 50 }]}>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+
+      {/* 13. row: FAALİYET KONTROLÜNÜ YAPAN / SONUÇ / TARİH / BİRİM KOMUTANI */}
+      <View style={styles.row}>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>FAALİYET KONTROLÜNÜ</Text>
+          <Text>YAPAN KULLANICI PERSONELİ</Text>
+          <Text>RÜTBE - ADI SOYADI / İMZA</Text>
+        </View>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>SONUÇ (FAAL / GAYRİ FAAL)</Text>
+          <Text style={{ fontSize: 6 }}>
+            (Gayri faal ise gerekçesi ve faaliyet için öneriler
+          </Text>
+          <Text style={{ fontSize: 6 }}>yazılacaktır – Sözleşme gereklerine göre)</Text>
+        </View>
+        <View style={[styles.headerCell, { width: '25%' }]}>
+          <Text>TARİH / SAAT</Text>
+        </View>
+        <View style={[styles.headerCell, styles.lastCell, { width: '25%' }]}>
+          <Text>BİRİM KOMUTANI</Text>
+          <Text>RÜTBE - ADI SOYADI / İMZA</Text>
+        </View>
+      </View>
+
+      {/* 14. row: activity control values */}
+      <View style={[styles.row, styles.tallRow]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{ticket?.activityControlPersonnelName || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formData.activityControlResult || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '25%' }]}>
           <Text>{formatDateTime(formData.activityControlDate) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.tableCell, styles.lastCell, { width: '25%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '25%' }]}>
           <Text>{ticket?.activityControlCommanderName || <EmptyCell />}</Text>
         </View>
       </View>
-    </View>
 
-    {/* Section 9: Approval */}
-    <View style={styles.table}>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableHeader, { width: '100%' }]}>
-          <Text>ONAY</Text>
-        </View>
-      </View>
-      <View style={styles.tableRow}>
-        <View style={[styles.tableCell, { width: '100%' }]}>
-          <Text>{formatDateOnly(new Date())}</Text>
-        </View>
-      </View>
+
     </View>
+    <View style={{ marginTop: 8, textAlign: 'center' }}>
+  <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>ONAY</Text>
+  <Text>{formatDateOnly(new Date())}</Text>
+</View>
+
+<Text style={styles.pageNumber}>
+  {pageNumber} - {totalPages}
+</Text>
 
     <Text style={styles.pageNumber}>
-      Sayfa {pageNumber} / {totalPages}
+      {pageNumber} - {totalPages}
     </Text>
   </Page>
 );

@@ -60,9 +60,9 @@ public class DashboardController : ControllerBase
         var ongoingTickets = await _context.Tickets
             .Include(t => t.CreatedBy)
             .Include(t => t.CIJobs)
-            .Include(t => t.DetectedByUser)  
+            .Include(t => t.DetectedByUser)
             .Where(t => t.Status != TicketStatus.CLOSED && t.Status != TicketStatus.CANCELLED)
-            .Where(t => t.IsActive && !t.IsDeleted)  
+            .Where(t => t.IsActive && !t.IsDeleted)
             .OrderByDescending(t => t.IsBlocking)
             .ThenByDescending(t => t.UpdatedAt)
             .Take(20)
@@ -79,8 +79,9 @@ public class DashboardController : ControllerBase
                 t.IsDeleted,
                 t.DetectedDate,
                 t.ResponseDate,
-                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null,  
-                t.TtcomsCode
+                t.DetectedByUser != null ? t.DetectedByUser.DisplayName : null,
+                t.TtcomsCode,
+                null, null
             ))
             .ToListAsync();
 
