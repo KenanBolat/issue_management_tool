@@ -169,8 +169,8 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
             {formData.ttcomsCode
               ? formData.ttcomsCode
               : formData.detectedNotificationMethods?.length > 0
-              ? formData.detectedNotificationMethods.join(', ')
-              : <EmptyCell />}
+                ? formData.detectedNotificationMethods.join(', ')
+                : <EmptyCell />}
           </Text>
         </View>
         <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
@@ -180,16 +180,20 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
 
       {/* 3. row: PARÇA TANIMI / PARÇA NO / SERİ NO / ARIZAYI TESPİT EDEN... */}
       <View style={styles.row}>
-        <View style={[styles.headerCell, { width: '25%' }]}>
+        {/* PARÇA TANIMI spans ARIZA NO (12%) + ARIZANIN TESPİT... (18%) = 30% */}
+        <View style={[styles.headerCell, { width: '30%' }]}>
           <Text>PARÇA TANIMI</Text>
         </View>
-        <View style={[styles.headerCell, { width: '25%' }]}>
+        {/* PARÇA NO aligns with YÜKLENİCİYE BİLDİRİM TARİHİ / SAATİ (18%) */}
+        <View style={[styles.headerCell, { width: '18%' }]}>
           <Text>PARÇA NO</Text>
         </View>
-        <View style={[styles.headerCell, { width: '25%' }]}>
+        {/* SERİ NO aligns with BİLDİRİM ŞEKLİ (37%) */}
+        <View style={[styles.headerCell, { width: '37%' }]}>
           <Text>SERİ NO</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '25%' }]}>
+        {/* ARIZAYI TESPİT EDEN ... aligns with OPERASYONEL AKIŞI ETKİLER (15%) */}
+        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
           <Text>ARIZAYI TESPİT EDEN</Text>
           <Text>PERSONEL RÜTBE - ADI SOYADI</Text>
         </View>
@@ -197,26 +201,26 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
 
       {/* 4. row: part values */}
       <View style={styles.row}>
-        <View style={[styles.cell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '30%' }]}>
           <Text>{formData.itemDescription || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '18%' }]}>
           <Text>{formData.itemId || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '25%' }]}>
+        <View style={[styles.cell, { width: '37%' }]}>
           <Text>{formData.itemSerialNo || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '25%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
           <Text>{ticket?.detectedByUserName || <EmptyCell />}</Text>
         </View>
       </View>
 
       {/* 5. row: TESPİT EDİLEN ARIZA / İMZA */}
       <View style={styles.row}>
-        <View style={[styles.headerCell, { width: '84%' }]}>
+        <View style={[styles.headerCell, { width: '85%' }]}>
           <Text>TESPİT EDİLEN ARIZA</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
           <Text>İMZA</Text>
         </View>
       </View>
@@ -226,12 +230,12 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
         <View
           style={[
             styles.cell,
-            { width: '84%', alignItems: 'flex-start' },
+            { width: '85%', alignItems: 'flex-start' },
           ]}
         >
           <Text style={styles.leftText}>{formData.description || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '16%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
           <EmptyCell />
         </View>
       </View>
@@ -359,13 +363,13 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
 
     </View>
     <View style={{ marginTop: 8, textAlign: 'center' }}>
-  <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>ONAY</Text>
-  <Text>{formatDateOnly(new Date())}</Text>
-</View>
+      <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>ONAY</Text>
+      <Text>{formatDateOnly(new Date())}</Text>
+    </View>
 
-<Text style={styles.pageNumber}>
-  {pageNumber} - {totalPages}
-</Text>
+    <Text style={styles.pageNumber}>
+      {pageNumber} - {totalPages}
+    </Text>
 
     <Text style={styles.pageNumber}>
       {pageNumber} - {totalPages}
