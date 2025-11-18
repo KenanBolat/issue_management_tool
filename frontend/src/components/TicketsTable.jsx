@@ -32,11 +32,12 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
-        'PAUSED': 'DURDURULDU',
-        'CONFIRMED': 'DOĞRULANDI',
         'CLOSED': 'KAPANDI',
-        'REOPENED': 'TEKRAR AÇILDI',
-        'CANCELLED': 'İPTAL'
+        'CONFIRMED': 'ONAYLANDI',
+        'PAUSED': 'DURDURULDU',
+        'CANCELLED': 'İPTAL',
+        'REOPENED': 'TEKRAR AÇILDI'
+
     };
 
     useEffect(() => {
@@ -470,11 +471,12 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                     >
                         <option value="">Tüm Durumlar</option>
                         <option value="OPEN">Açık</option>
-                        <option value="CONFIRMED">Doğrulandı</option>
+                        <option value="CLOSED">Kapalı</option>
+                        <option value="CONFIRMED">Onaylandı</option>
                         <option value="PAUSED">Durduruldu</option>
-                        <option value="CLOSED">Kapatıldı</option>
-                        <option value="REOPENED">Yeniden Açıldı</option>
                         <option value="CANCELLED">İptal</option>
+                        <option value="REOPENED">Yeniden Açıldı</option>
+
                     </select>
                     {isAdmin && (
                         <label style={styles.deletedToggle}>

@@ -19,9 +19,9 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [availableComponents, setAvailableComponents] = useState([]);
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
-        'PAUSED': 'DURDURULDU',
-        'CONFIRMED': 'DOĞRULANDI',
         'CLOSED': 'KAPANDI',
+        'CONFIRMED': 'ONAYLANDI',
+        'PAUSED': 'DURDURULDU',
         'REOPENED': 'TEKRAR AÇILDI',
         'CANCELLED': 'İPTAL'
     };
@@ -912,39 +912,40 @@ export default function TicketDetail({ ticketId, onClose }) {
                         {ticket && canEdit && (
                             <div style={styles.statusActions}>
                                 <button
+                                    onClick={() => handleStatusChange('CLOSED')}
+                                    style={{ ...styles.statusButton, ...styles.closeStatusButton }}
+                                    disabled={formData.status === 'CLOSED'}
+                                >
+                                    KAPANDI
+                                </button>
+                                <button
                                     onClick={() => handleStatusChange('CONFIRMED')}
                                     style={{ ...styles.statusButton, ...styles.confirmButton }}
                                     disabled={formData.status === 'CONFIRMED'}
                                 >
-                                    Doğrula
+                                    ONAYLANDI
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('PAUSED')}
                                     style={{ ...styles.statusButton, ...styles.pauseButton }}
                                     disabled={formData.status === 'PAUSED'}
                                 >
-                                    Durdur
+                                    DURDURULDU
                                 </button>
-                                <button
-                                    onClick={() => handleStatusChange('CLOSED')}
-                                    style={{ ...styles.statusButton, ...styles.closeStatusButton }}
-                                    disabled={formData.status === 'CLOSED'}
-                                >
-                                    Kapat
-                                </button>
+
                                 <button
                                     onClick={() => handleStatusChange('REOPENED')}
                                     style={{ ...styles.statusButton, ...styles.reopenButton }}
                                     disabled={formData.status === 'REOPENED'}
                                 >
-                                    Yeniden Aç
+                                    YENİDEN AÇILDI
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('CANCELLED')}
                                     style={{ ...styles.statusButton, ...styles.cancelButton }}
                                     disabled={formData.status === 'CANCELLED'}
                                 >
-                                    Iptal Et!
+                                    İPTAL EDİLDİ
                                 </button>
                             </div>
                         )}
@@ -1005,7 +1006,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
 
                             {/* Comments Tab */}
-                            {activeTab === 'comments' && canViewComments &&  (
+                            {activeTab === 'comments' && canViewComments && (
                                 <div style={styles.tabContent}>
                                     {canEdit && (
                                         <div style={styles.commentInputSection}>
