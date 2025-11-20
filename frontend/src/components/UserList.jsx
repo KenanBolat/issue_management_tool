@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { userApi } from '../../services/api.jsx';
-import { Edit, Trash2, Eye, Shield } from 'lucide-react';
+import { Edit, Trash2, Eye, Shield, RotateCcw,RefreshCw } from 'lucide-react';
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
     const [users, setUsers] = useState([]);
@@ -9,11 +9,11 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const [affiliationFilter, setAffiliationFilter] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [showInactive, setShowInactive] = useState(false);
+    const [showDeleted, setShowDeleted] = useState(false); 
 
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
 
-    debugger;
 
     useEffect(() => {
         loadUsers();
@@ -24,6 +24,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             setLoading(true);
             const response = await userApi.getAll(showInactive);
             setUsers(response.data || []);
+            debugger;
         } catch (error) {
             console.error('Error loading users:', error);
             alert('Failed to load users. Please try again later.');
@@ -31,6 +32,23 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             setLoading(false);
         }
     };
+
+    const handleRestoreUser = async (userId) => {
+        if (!window.confirm('Bu kullanıcıyı geri yüklemek istediğinize emin misiniz?')) {
+            return;
+        }
+
+        try {
+            await userApi.restore(userId);
+            debugger;
+            alert('Kullanıcı başarıyla geri yüklendi!');
+            loadUsers();
+        } catch (error) {
+            console.error('Error restoring user:', error);
+            alert('Kullanıcı geri yüklenirken hata oluştu!');
+        }
+    };
+
 
     const handleDeleteUser = async (userId) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
@@ -243,6 +261,16 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             >
                                                 <Shield size={16} />
                                             </button> */}
+
+                                            {!user.isActive ? (
+                                    <button
+                                        onClick={() => handleRestoreUser(user.id)}
+                                        style={{ ...styles.actionBtn, color: '#d32f2f' }}
+                                        title="Geri Yükle"
+                                    >
+                                        <RotateCcw size={18} />
+                                    </button>
+                                ) : ( <> </>)}
                                             <button
                                                 style={{ ...styles.actionBtn, color: '#d32f2f' }}
                                                 title="Delete User"
@@ -250,6 +278,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             >
                                                 <Trash2 size={16} />
                                             </button>
+
+                                          
                                         </div>
                                     </td>
                                 </tr>

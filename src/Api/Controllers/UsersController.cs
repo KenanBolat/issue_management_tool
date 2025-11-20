@@ -108,7 +108,7 @@ namespace Api.Controllers
                 user.PreferredLanguage,
                 user.IsActive,
                 user.CreatedAt,
-                user.UpdatedAt,         
+                user.UpdatedAt,
                 permissions
                 );
             return Ok(detail);
@@ -175,98 +175,246 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, await GetUser(user.Id));
         }
 
-        //PUT: api/users/{id} (Update user)
-        [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest request)
+        // //PUT: api/users/{id} (Update user)
+        // [HttpPut("{id}")]
+        // public async Task<ActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest request)
+        // {
+        //     var currentUserId = GetCurrentUserId();
+        //     var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+        //     _logger.LogInformation("Updating user profile for ID: {RequestedUserId} by CurrentUserId: {CurrentUserId} with Role: {CurrentUserRole}",
+        //     id,
+        //     currentUserId,
+        //     currentUserRole);
+
+        //     if (id != currentUserId && currentUserRole != "Admin")
+        //     {
+        //         _logger.LogWarning("Unauthorized update attempt by UserId: {CurrentUserId} to access UserId: {RequestedUserId}", currentUserId, id);
+        //         return Forbid();
+        //     }
+
+        //     var user = await _context.Users.FindAsync(id);
+        //     if (user == null)
+        //     {
+        //         _logger.LogWarning("User with ID: {RequestedUserId} not found", id);
+        //         return NotFound();
+        //     }
+
+        //     //Update fields
+
+        //     if (!string.IsNullOrEmpty(request.DisplayName)) user.DisplayName = request.DisplayName;
+        //     if (!string.IsNullOrEmpty(request.PhoneNumber)) user.PhoneNumber = request.PhoneNumber;
+        //     if (!string.IsNullOrEmpty(request.Department)) user.Department = request.Department;
+
+
+        //     if (request.MilitaryRankId.HasValue)
+        //     {
+        //         var rank = await _context.MilitaryRanks.FindAsync(request.MilitaryRankId.Value);
+        //         if (rank != null)
+        //         {
+        //             user.MilitaryRankId = request.MilitaryRankId;
+        //             _logger.LogInformation("MilitaryRankId updated to {MilitaryRankId} for UserId: {UserId}", request.MilitaryRankId.Value, user.Id);
+        //         }
+        //         else
+        //         {
+        //             _logger.LogWarning("Invalid MilitaryRankId provided: {MilitaryRankId}", request.MilitaryRankId.Value);
+
+        //         }
+
+        //     }
+
+
+        //     // Only Admin can change role and affiliation
+        //     if (currentUserRole == "Admin")
+        //     {
+        //         if (!string.IsNullOrEmpty(request.Role))
+        //         {
+        //             if (Enum.TryParse<UserRole>(request.Role, true, out var newRole))
+        //             {
+        //                 user.Role = newRole;
+        //                 _logger.LogInformation("Role updated to {Role} for UserId: {UserId}", newRole, user.Id);
+        //             }
+        //             else
+        //             {
+        //                 _logger.LogWarning("Invalid role provided: {Role}", request.Role);
+        //             }
+        //         }
+
+        //         if (!string.IsNullOrEmpty(request.Affiliation))
+        //         {
+        //             if (Enum.TryParse<Affiliation>(request.Affiliation, true, out var newAffiliation))
+        //             {
+        //                 user.Affiliation = newAffiliation;
+        //                 _logger.LogInformation("Affiliation updated to {Affiliation} for UserId: {UserId}", newAffiliation, user.Id);
+        //             }
+        //             else
+        //             {
+        //                 _logger.LogWarning("Invalid affiliation provided: {Affiliation}", request.Affiliation);
+        //             }
+        //         }
+        //     }
+
+
+
+
+
+        //     user.UpdatedAt = DateTime.UtcNow;
+        //     user.LastUpdatedById = currentUserId;
+        //     await _context.SaveChangesAsync();
+
+
+        //     _logger.LogInformation("User with ID: {UserId} updated successfully", user.Id);
+
+        //     return NoContent();
+        // }
+        /// <summary>
+/// PUT: api/users/{id} (Update user)
+/// </summary>
+[HttpPut("{id}")]
+public async Task<ActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest request)
+{
+    var currentUserId = GetCurrentUserId();
+    var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+    
+    _logger.LogInformation(
+        "Updating user profile for ID: {RequestedUserId} by CurrentUserId: {CurrentUserId} with Role: {CurrentUserRole}",
+        id,
+        currentUserId,
+        currentUserRole
+    );
+    
+    // Authorization check
+    if (id != currentUserId && currentUserRole != "Admin")
+    {
+        _logger.LogWarning(
+            "Unauthorized update attempt by UserId: {CurrentUserId} to access UserId: {RequestedUserId}", 
+            currentUserId, 
+            id
+        );
+        return Forbid();
+    }
+    
+    // Include MilitaryRank to check affiliation properly
+    var user = await _context.Users
+        .Include(u => u.MilitaryRank)
+        .FirstOrDefaultAsync(u => u.Id == id);
+    
+    if (user == null)
+    {
+        _logger.LogWarning("User with ID: {RequestedUserId} not found", id);
+        return NotFound();
+    }
+    
+    // ✅ TRACK OLD AFFILIATION for comparison
+    var oldAffiliation = user.Affiliation;
+    
+    // Update basic fields
+    if (!string.IsNullOrEmpty(request.DisplayName)) 
+        user.DisplayName = request.DisplayName;
+    
+    if (!string.IsNullOrEmpty(request.PhoneNumber)) 
+        user.PhoneNumber = request.PhoneNumber;
+    
+    if (!string.IsNullOrEmpty(request.Department)) 
+        user.Department = request.Department;
+    
+    // ✅ Only Admin can change role and affiliation
+    if (currentUserRole == "Admin")
+    {
+        // Update Role
+        if (!string.IsNullOrEmpty(request.Role))
         {
-            var currentUserId = GetCurrentUserId();
-            var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
-
-            _logger.LogInformation("Updating user profile for ID: {RequestedUserId} by CurrentUserId: {CurrentUserId} with Role: {CurrentUserRole}",
-            id,
-            currentUserId,
-            currentUserRole);
-
-            if (id != currentUserId && currentUserRole != "Admin")
+            if (Enum.TryParse<UserRole>(request.Role, true, out var newRole))
             {
-                _logger.LogWarning("Unauthorized update attempt by UserId: {CurrentUserId} to access UserId: {RequestedUserId}", currentUserId, id);
-                return Forbid();
+                user.Role = newRole;
+                _logger.LogInformation("Role updated to {Role} for UserId: {UserId}", newRole, user.Id);
             }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            else
             {
-                _logger.LogWarning("User with ID: {RequestedUserId} not found", id);
-                return NotFound();
+                _logger.LogWarning("Invalid role provided: {Role}", request.Role);
             }
-
-            //Update fields
-
-            if (!string.IsNullOrEmpty(request.DisplayName)) user.DisplayName = request.DisplayName;
-            if (!string.IsNullOrEmpty(request.PhoneNumber)) user.PhoneNumber = request.PhoneNumber;
-            if (!string.IsNullOrEmpty(request.Department)) user.Department = request.Department;
-
-
-            if (request.MilitaryRankId.HasValue)
-            {
-                var rank = await _context.MilitaryRanks.FindAsync(request.MilitaryRankId.Value);
-                if (rank != null)
-                {
-                    user.MilitaryRankId = request.MilitaryRankId;
-                    _logger.LogInformation("MilitaryRankId updated to {MilitaryRankId} for UserId: {UserId}", request.MilitaryRankId.Value, user.Id);
-                }
-                else
-                {
-                    _logger.LogWarning("Invalid MilitaryRankId provided: {MilitaryRankId}", request.MilitaryRankId.Value);
-
-                }
-
-            }
-
-
-            // Only Admin can change role and affiliation
-            if (currentUserRole == "Admin")
-            {
-                if (!string.IsNullOrEmpty(request.Role))
-                {
-                    if (Enum.TryParse<UserRole>(request.Role, true, out var newRole))
-                    {
-                        user.Role = newRole;
-                        _logger.LogInformation("Role updated to {Role} for UserId: {UserId}", newRole, user.Id);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Invalid role provided: {Role}", request.Role);
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(request.Affiliation))
-                {
-                    if (Enum.TryParse<Affiliation>(request.Affiliation, true, out var newAffiliation))
-                    {
-                        user.Affiliation = newAffiliation;
-                        _logger.LogInformation("Affiliation updated to {Affiliation} for UserId: {UserId}", newAffiliation, user.Id);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Invalid affiliation provided: {Affiliation}", request.Affiliation);
-                    }
-                }
-            }
-
-
-
-
-
-            user.UpdatedAt = DateTime.UtcNow;
-            user.LastUpdatedById = currentUserId;
-            await _context.SaveChangesAsync();
-
-
-            _logger.LogInformation("User with ID: {UserId} updated successfully", user.Id);
-
-            return NoContent();
         }
+        
+        // Update Affiliation
+        if (!string.IsNullOrEmpty(request.Affiliation))
+        {
+            if (Enum.TryParse<Affiliation>(request.Affiliation, true, out var newAffiliation))
+            {
+                user.Affiliation = newAffiliation;
+                _logger.LogInformation(
+                    "Affiliation updated from {OldAffiliation} to {NewAffiliation} for UserId: {UserId}", 
+                    oldAffiliation, 
+                    newAffiliation, 
+                    user.Id
+                );
+                
+                // ✅ FIX: Clear military rank when changing FROM Military TO non-Military
+                if (oldAffiliation == Affiliation.Airforce && newAffiliation != Affiliation.Airforce)
+                {
+                    user.MilitaryRankId = null;
+                    _logger.LogInformation(
+                        "Cleared MilitaryRankId for UserId: {UserId} due to affiliation change from Military to {NewAffiliation}",
+                        user.Id,
+                        newAffiliation
+                    );
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Invalid affiliation provided: {Affiliation}", request.Affiliation);
+            }
+        }
+    }
+    
+    // ✅ UPDATE MILITARY RANK LOGIC
+    // Only process military rank if current affiliation is Military (after potential update above)
+    if (user.Affiliation == Affiliation.Airforce)
+    {
+        if (request.MilitaryRankId.HasValue)
+        {
+            var rank = await _context.MilitaryRanks.FindAsync(request.MilitaryRankId.Value);
+            if (rank != null)
+            {
+                user.MilitaryRankId = request.MilitaryRankId;
+                _logger.LogInformation(
+                    "MilitaryRankId updated to {MilitaryRankId} for UserId: {UserId}", 
+                    request.MilitaryRankId.Value, 
+                    user.Id
+                );
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Invalid MilitaryRankId provided: {MilitaryRankId}", 
+                    request.MilitaryRankId.Value
+                );
+            }
+        }
+    }
+    else
+    {
+        // ✅ IMPORTANT: Ensure military rank is always null for non-military users
+        if (user.MilitaryRankId != null)
+        {
+            user.MilitaryRankId = null;
+            _logger.LogInformation(
+                "Cleared MilitaryRankId for UserId: {UserId} because affiliation is {Affiliation} (not Military)",
+                user.Id,
+                user.Affiliation
+            );
+        }
+    }
+    
+    // Update metadata
+    user.UpdatedAt = DateTime.UtcNow;
+    user.LastUpdatedById = currentUserId;
+    
+    await _context.SaveChangesAsync();
+    
+    _logger.LogInformation("User with ID: {UserId} updated successfully", user.Id);
+    
+    return NoContent();
+}
 
         // PUT : api/users/{id}/password (Change password)
         [HttpPut("{id}/password")]
@@ -446,6 +594,48 @@ namespace Api.Controllers
                 .ToListAsync();
             _logger.LogInformation("Retrieved {RankCount} military ranks", ranks.Count);
             return Ok(ranks);
+        }
+
+        /// <summary>
+        /// Restore a soft-deleted user
+        /// </summary>
+        [HttpPost("{id}/restore")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestoreUser(long id)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .IgnoreQueryFilters()  // Include deleted users
+                    .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                if (user.IsActive)
+                {
+
+                    _logger.LogInformation("User {UserId} restored by admin", user.IsActive);
+                    return BadRequest(new { message = "User is not deleted" });
+                }
+
+                // Restore the user
+                user.IsActive = true;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} restored by admin", id);
+
+                return Ok(new { message = "User restored successfully", user });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restoring user {UserId}", id);
+                return StatusCode(500, new { message = "Failed to restore user" });
+            }
         }
 
 

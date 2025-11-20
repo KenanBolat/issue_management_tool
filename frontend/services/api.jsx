@@ -187,7 +187,6 @@ export const userApi = {
     // Update user
     update: async (id, userData) => {
         try {
-            debugger;
             const response = await fetch(`${API_BASE_URL}/users/${id}`, {
                 method: 'PUT',
                 headers: createHeaders(),
@@ -202,6 +201,26 @@ export const userApi = {
             return { success: true };
         } catch (error) {
             console.error(`Error updating user ${id}:`, error);
+            throw error;
+        }
+    },
+
+    restore: async (id) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/${id}/restore`, {
+                method: 'POST',
+                headers: createHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { success: true, data };
+        } catch (error) {
+            console.error(`Error restoring user ${id}:`, error);
             throw error;
         }
     },

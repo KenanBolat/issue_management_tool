@@ -135,19 +135,19 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
         <View style={[styles.headerCell, { width: '12%' }]}>
           <Text>ARIZA NO</Text>
         </View>
-        <View style={[styles.headerCell, { width: '18%' }]}>
+        <View style={[styles.headerCell, { width: '17%' }]}>
           <Text>ARIZANIN TESPİT</Text>
           <Text>EDİLDİĞİ TARİH / SAAT</Text>
         </View>
-        <View style={[styles.headerCell, { width: '18%' }]}>
+        <View style={[styles.headerCell, { width: '16%' }]}>
           <Text>YÜKLENİCİYE BİLDİRİM</Text>
           <Text>TARİHİ / SAATİ</Text>
         </View>
-        <View style={[styles.headerCell, { width: '37%' }]}>
+        <View style={[styles.headerCell, { width: '35%' }]}>
           <Text>BİLDİRİM ŞEKLİ</Text>
           <Text style={{ fontSize: 6 }}>(Çıktısı / Fotokopisi Forma Eklenecektir)</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
           <Text>OPERASYONEL AKIŞI</Text>
           <Text>ETKİLER</Text>
         </View>
@@ -158,13 +158,13 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
         <View style={[styles.cell, { width: '12%' }]}>
           <Text>{formData.externalCode || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '18%' }]}>
+        <View style={[styles.cell, { width: '17%' }]}>
           <Text>{formatDateTime(formData.detectedDate) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '18%' }]}>
+        <View style={[styles.cell, { width: '16%' }]}>
           <Text>{formatDateTime(formData.detectedContractorNotifiedAt) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '37%' }]}>
+        <View style={[styles.cell, { width: '35%' }]}>
           <Text>
             {formData.ttcomsCode
               ? formData.ttcomsCode
@@ -173,27 +173,23 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
                 : <EmptyCell />}
           </Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
           <Text>{formData.isBlocking ? 'EVET' : 'HAYIR'}</Text>
         </View>
       </View>
 
       {/* 3. row: PARÇA TANIMI / PARÇA NO / SERİ NO / ARIZAYI TESPİT EDEN... */}
       <View style={styles.row}>
-        {/* PARÇA TANIMI spans ARIZA NO (12%) + ARIZANIN TESPİT... (18%) = 30% */}
-        <View style={[styles.headerCell, { width: '30%' }]}>
+        <View style={[styles.headerCell, { width: '29%' }]}>
           <Text>PARÇA TANIMI</Text>
         </View>
-        {/* PARÇA NO aligns with YÜKLENİCİYE BİLDİRİM TARİHİ / SAATİ (18%) */}
-        <View style={[styles.headerCell, { width: '18%' }]}>
+        <View style={[styles.headerCell, { width: '16%' }]}>
           <Text>PARÇA NO</Text>
         </View>
-        {/* SERİ NO aligns with BİLDİRİM ŞEKLİ (37%) */}
-        <View style={[styles.headerCell, { width: '37%' }]}>
+        <View style={[styles.headerCell, { width: '35%' }]}>
           <Text>SERİ NO</Text>
         </View>
-        {/* ARIZAYI TESPİT EDEN ... aligns with OPERASYONEL AKIŞI ETKİLER (15%) */}
-        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
           <Text>ARIZAYI TESPİT EDEN</Text>
           <Text>PERSONEL RÜTBE - ADI SOYADI</Text>
         </View>
@@ -201,26 +197,26 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
 
       {/* 4. row: part values */}
       <View style={styles.row}>
-        <View style={[styles.cell, { width: '30%' }]}>
+        <View style={[styles.cell, { width: '29%' }]}>
           <Text>{formData.itemDescription || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '18%' }]}>
+        <View style={[styles.cell, { width: '16%' }]}>
           <Text>{formData.itemId || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '37%' }]}>
+        <View style={[styles.cell, { width: '35%' }]}>
           <Text>{formData.itemSerialNo || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
           <Text>{ticket?.detectedByUserName || <EmptyCell />}</Text>
         </View>
       </View>
 
       {/* 5. row: TESPİT EDİLEN ARIZA / İMZA */}
       <View style={styles.row}>
-        <View style={[styles.headerCell, { width: '85%' }]}>
+        <View style={[styles.headerCell, { width: '80%' }]}>
           <Text>TESPİT EDİLEN ARIZA</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
           <Text>İMZA</Text>
         </View>
       </View>
@@ -235,7 +231,7 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
         >
           <Text style={styles.leftText}>{formData.description || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '15%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
           <EmptyCell />
         </View>
       </View>
