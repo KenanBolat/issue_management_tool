@@ -53,6 +53,7 @@ namespace Api.Services
                 "Güncellenen Parça No",
                 "Güncellenen Seri No",
                 "Hp No",
+                "Kontrol Teşkilatı Durumu", 
             };
 
             // Apply headers
@@ -135,7 +136,8 @@ namespace Api.Services
 
                 worksheet.Cells[row, 36].Value = ticket.HpNo ?? "";
 
-                
+                worksheet.Cells[row, 37].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
+
                 row++;
             }
 
@@ -201,6 +203,24 @@ namespace Api.Services
                 "REOPENED" => "TEKRAR AÇILDI",
                 "CANCELLED" => "İPTAL",
                 _ => status
+            };
+        }
+
+
+        private string GetControlStatusLabel(Domain.Enums.ControlStatus? status)
+        {
+             if (!status.HasValue)
+                return "";
+
+            return status.Value switch
+            {
+                Domain.Enums.ControlStatus.Submitted => "Teslim Edildi",
+                Domain.Enums.ControlStatus.Approved => "Onaylandı",
+                Domain.Enums.ControlStatus.ApprovedPrinted => "Onaylandı ve Basıldı",
+                Domain.Enums.ControlStatus.Signed => "İmzalandı",
+                Domain.Enums.ControlStatus.ClosedAndPayed => "Kapandı ve Ödendi",
+                Domain.Enums.ControlStatus.Cancelled => "İptal Edildi",
+                _ => status.Value.ToString()
             };
         }
     }

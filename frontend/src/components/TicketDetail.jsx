@@ -49,6 +49,20 @@ export default function TicketDetail({ ticketId, onClose }) {
         'CANCELLED': 'İPTAL'
     };
 
+    const CONTROL_STATUS_OPTIONS = [
+        { value: 0, label: "Teslim Edildi", color: "#ffc107", bg: "#fff3cd" },
+        { value: 1, label: "Onaylandı", color: "#28a745", bg: "#d4edda" },
+        { value: 2, label: "Onaylandı ve Basıldı", color: "#17a2b8", bg: "#d1ecf1" },
+        { value: 3, label: "İmzalandı", color: "#6610f2", bg: "#e7e3fc" },
+        { value: 4, label: "Kapandı ve Ödendi", color: "#20c997", bg: "#d2f4ea" },
+        { value: 5, label: "İptal Edildi", color: "#dc3545", bg: "#f8d7da" },
+    ];
+
+    const getControlStatusConfig = (status) => {
+        if (status === null || status === undefined) return null;
+        return CONTROL_STATUS_OPTIONS.find(opt => opt.value === status);
+    };
+
     const getStatusLabel = (status) => {
         return STATUS_LABELS[status] || status;
     };
@@ -61,7 +75,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         }
 
         try {
-            await generateTicketPDF(ticket, formData,  pdfReportDate);
+            await generateTicketPDF(ticket, formData, pdfReportDate);
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("PDF oluşturulurken hata oluştu");
@@ -84,6 +98,7 @@ export default function TicketDetail({ ticketId, onClose }) {
         itemId: '',
         itemSerialNo: '',
         updatedAt: '',
+
         //Detection Fields
         detectedDate: '',
         detectedContractorNotifiedAt: '',
@@ -99,14 +114,15 @@ export default function TicketDetail({ ticketId, onClose }) {
         activityControlCommanderId: null,  // For İLK. KOM. Rütbe & Adı Soyadı
         activityControlDate: '',
         activityControlResult: '',
+        activityControlStatus: null,
         ttcomsCode: '',
-        
+
         newItemDescription: '',
         newItemId: '',
         newItemSerialNo: '',
 
-        hpNo:'', 
-        tentativeSolutionDate:''
+        hpNo: '',
+        tentativeSolutionDate: ''
 
 
     });
@@ -217,12 +233,13 @@ export default function TicketDetail({ ticketId, onClose }) {
                 activityControlCommanderId: ticketData.activityControlCommanderId || null,
                 activityControlDate: ticketData.activityControlDate ? formatDateTimeLocal(ticketData.activityControlDate) : '',
                 activityControlResult: ticketData.activityControlResult || '',
+                activityControlStatus: ticketData.activityControlStatus ?? null,
                 ttcomsCode: ticketData.ttcomsCode || '',
 
-                newItemDescription: ticketData.newItemDescription || null ,
+                newItemDescription: ticketData.newItemDescription || null,
                 newItemId: ticketData.newItemId || null,
                 newItemSerialNo: ticketData.newItemSerialNo || null,
-                hpNo:ticketData.hpNo || null, 
+                hpNo: ticketData.hpNo || null,
                 tentativeSolutionDate: ticketData.tentativeSolutionDate ? formatDateTimeLocal(ticketData.tentativeSolutionDate) : "",
 
             });
@@ -300,7 +317,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: formData.responseDate ? new Date(formData.responseDate).toISOString() : null,
                 responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null,
                 activityControlDate: formData.activityControlDate ? new Date(formData.activityControlDate).toISOString() : null,
-                tentativeSolutionDate: formData.tentativeSolutionDate ? new Date(formData.tentativeSolutionDate).toISOString(): null,
+                tentativeSolutionDate: formData.tentativeSolutionDate ? new Date(formData.tentativeSolutionDate).toISOString() : null,
 
             }
 
@@ -884,7 +901,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     </div>
 
 
-                    
+
                     {/* Müdahale Detayları */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Arıza Müdahale Detayları</h2>
@@ -974,7 +991,24 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                     {/* Faaliyet Kontrolü */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Faaliyet Kontrolü</h2>
+
+                        <h2 style={styles.sectionTitle}>
+                            Faaliyet Kontrolü
+                            {/* ✅ Display status badge if exists */}
+                            {formData.activityControlStatus !== null && formData.activityControlStatus !== undefined && (
+                                <span style={{
+                                    marginLeft: '1rem',
+                                    padding: '0.4rem 1rem',
+                                    borderRadius: '12px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '600',
+                                    backgroundColor: getControlStatusConfig(formData.activityControlStatus)?.bg || '#f5f5f5',
+                                    color: getControlStatusConfig(formData.activityControlStatus)?.color || '#666',
+                                }}>
+                                    {getControlStatusConfig(formData.activityControlStatus)?.label || '-'}
+                                </span>
+                            )}
+                        </h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
@@ -1010,6 +1044,26 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     style={styles.input}
                                     disabled={isReadOnly}
                                 />
+                            </div>
+
+                                <div style={{ flex: 1 }}>
+                                    <label style={styles.label}>Kontrol Durumu</label>
+                                    <select
+                                        value={formData.activityControlStatus ?? ''}
+                                        onChange={(e) => handleInputChange(
+                                            'activityControlStatus',
+                                            e.target.value === '' ? null : parseInt(e.target.value)
+                                        )}
+                                        style={styles.select}
+                                        disabled={isReadOnly}
+                                    >
+                                        <option value="">Durum seçiniz...</option>
+                                        {CONTROL_STATUS_OPTIONS.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
                             </div>
                         </div>
 

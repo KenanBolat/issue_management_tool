@@ -295,7 +295,8 @@ public class TicketsController : ControllerBase
                 ticket.NewItemId, 
                 ticket.NewItemSerialNo, 
                 ticket.HpNo, 
-                ticket.TentativeSolutionDate
+                ticket.TentativeSolutionDate, 
+                (int?)ticket.ActivityControlStatus
             );
 
         return Ok(detail);
@@ -354,10 +355,19 @@ public class TicketsController : ControllerBase
             ActivityControlCommanderId = request.ActivityControlCommanderId,
             ActivityControlDate = request.ActivityControlDate,
             ActivityControlResult = request.ActivityControlResult,
+            ActivityControlStatus = request.ActivityControlStatus.HasValue 
+                ? (ControlStatus)request.ActivityControlStatus.Value 
+                : null, 
+
             TtcomsCode = request.TtcomsCode,
             ItemDescription = request.ItemDescription,
             ItemId = request.ItemId,
             ItemSerialNo = request.ItemSerialNo,
+            NewItemDescription = request.NewItemDescription, 
+            NewItemId = request.NewItemId, 
+            NewItemSerialNo = request.NewItemSerialNo, 
+            HpNo = request.HpNo, 
+            TentativeSolutionDate = request.TentativeSolutionDate,
 
             IsActive = true,
             IsDeleted = false
@@ -606,11 +616,18 @@ public class TicketsController : ControllerBase
             ticket.ActivityControlDate = request.ActivityControlDate;
             hasChanges = true;
         }
+        
 
         if (request.ActivityControlResult != null && ticket.ActivityControlResult != request.ActivityControlResult)
         {
             ticket.ActivityControlResult = request.ActivityControlResult;
             hasChanges = true;
+        }
+        
+        if (request.ActivityControlStatus.HasValue)
+        {
+            ticket.ActivityControlStatus = (ControlStatus)request.ActivityControlStatus.Value;
+            
         }
 
         if (hasChanges)

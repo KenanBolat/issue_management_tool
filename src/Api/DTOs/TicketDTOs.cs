@@ -33,7 +33,14 @@ public record CreateTicketRequest(
         string? TtcomsCode,
         string? ItemDescription,
         string? ItemId,
-        string? ItemSerialNo
+        string? ItemSerialNo,
+
+        string? NewItemDescription,
+        string? NewItemId,
+        string? NewItemSerialNo, 
+        string? HpNo, 
+        DateTime? TentativeSolutionDate, 
+        int? ActivityControlStatus
         );
 
 // Change Status of the ticket 
@@ -125,7 +132,8 @@ public record TicketDetail(
         string? NewItemId, 
         string? NewItemSerialNo, 
         string? HpNo,
-        DateTime? TentativeSolutionDate
+        DateTime? TentativeSolutionDate, 
+        int? ActivityControlStatus
 
         );
 
@@ -197,7 +205,8 @@ public record UpdateTicketRequest(
         string? NewItemId, 
         string? NewItemSerialNo, 
         string? HpNo, 
-        DateTime? TentativeSolutionDate
+        DateTime? TentativeSolutionDate,
+        int? ActivityControlStatus 
         );
 
 public record SystemOption(

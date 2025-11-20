@@ -143,6 +143,10 @@ namespace Domain.Entities
         public User? ActivityControlPersonnel { get; set; }
         public User? ActivityControlCommander { get; set; }
 
+        // 
+        [Column("activity_control_status")]
+        public ControlStatus? ActivityControlStatus { get; set; }
+
 
         // ============================================
         // Navigation Properties - NO [Column] attributes!
