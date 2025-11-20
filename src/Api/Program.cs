@@ -77,6 +77,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<ExcelExportService>();
+builder.Services.AddScoped<ConfigurationService>();
+
 
 
 var app = builder.Build();

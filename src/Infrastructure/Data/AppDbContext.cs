@@ -22,6 +22,8 @@ namespace Infrastructure.Data
         public DbSet<TicketResponseResolvedPersonnel> TicketResponseResolvedPersonnel { get; set; }
         public DbSet<MilitaryRank> MilitaryRanks { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }
+        public DbSet<Configuration> Configurations { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -250,6 +252,14 @@ namespace Infrastructure.Data
                 entity.Property(e => e.Description).HasMaxLength(500);
                 entity.HasIndex(e => e.Code).IsUnique();
             });
+            modelBuilder.Entity<Configuration>(entity =>
+                {   entity.ToTable("configuration"); 
+                    entity.HasKey(e => e.Id);
+                    entity.HasOne(e => e.UpdatedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.UpdatedById)
+                    .OnDelete(DeleteBehavior.SetNull);  });
+
         }
     }
 }

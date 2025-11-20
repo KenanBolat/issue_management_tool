@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
-import { ticketsAPI, userApi } from "../../services/api";
+import { ticketsAPI, userApi, configurationAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download } from "lucide-react";
@@ -17,6 +17,29 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [availableSubSystems, setAvailableSubSystems] = useState([]);
     const [availableCIs, setAvailableCIs] = useState([]);
     const [availableComponents, setAvailableComponents] = useState([]);
+    const [pdfReportDate, setPdfReportDate] = useState([]);
+
+    useEffect(() => {
+        loadConfiguration();
+    }, []);
+
+    const loadConfiguration = async () => {
+        try {
+            const configResponse = await configurationAPI.get();
+            if (configResponse?.data?.pdfReportDate) {
+                setPdfReportDate(configResponse.data.pdfReportDate);
+            } else {
+                // Fallback to current date if no configuration
+                setPdfReportDate(new Date().toISOString());
+            }
+        } catch (error) {
+            console.error('Error loading configuration:', error);
+            // Fallback to current date on error
+            setPdfReportDate(new Date().toISOString());
+        }
+    };
+
+
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
         'CLOSED': 'KAPANDI',
@@ -31,13 +54,14 @@ export default function TicketDetail({ ticketId, onClose }) {
     };
 
     const handleGeneratePDF = async () => {
+
         if (!ticket) {
             alert("Ticket bilgileri yükleniyor, lütfen bekleyin...");
             return;
         }
 
         try {
-            await generateTicketPDF(ticket, formData);
+            await generateTicketPDF(ticket, formData,  pdfReportDate);
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("PDF oluşturulurken hata oluştu");
@@ -117,7 +141,6 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const loadAvailableData = async () => {
         try {
-            debugger;
 
             //Load personnel for dropdowns 
             const personnelResponse = await ticketsAPI.getAvailablePersonnel();
@@ -148,7 +171,6 @@ export default function TicketDetail({ ticketId, onClose }) {
     const loadTicketDetails = async () => {
         try {
             setLoading(true);
-            debugger;
             const response = await ticketsAPI.getById(ticketId);
             const ticketData = response.data;
             setTicket(ticketData);
@@ -218,7 +240,6 @@ export default function TicketDetail({ ticketId, onClose }) {
     };
 
     const handleNotificationMethodsChange = (e) => {
-        debugger;
         const options = e.target.options;
         const selected = [];
         for (let i = 0; i < options.length; i++) {
@@ -252,7 +273,6 @@ export default function TicketDetail({ ticketId, onClose }) {
             alert("Title is required");
             return;
         }
-        debugger;
         try {
             setSaving(true);
 

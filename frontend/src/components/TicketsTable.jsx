@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ticketsAPI } from "../../services/api";
+import { ticketsAPI,configurationAPI } from "../../services/api";
 import { Edit, Trash2, Eye, Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
 
@@ -29,6 +29,27 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [bulkRestoring, setBulkRestoring] = useState(false);
 
+    const [pdfReportDate, setPdfReportDate] = useState([]);
+
+    useEffect(() => {
+            loadConfiguration();
+        }, []);
+    
+        const loadConfiguration = async () => {
+            try {
+                const configResponse = await configurationAPI.get();
+                if (configResponse?.data?.pdfReportDate) {
+                    setPdfReportDate(configResponse.data.pdfReportDate);
+                } else {
+                    // Fallback to current date if no configuration
+                    setPdfReportDate(new Date().toISOString());
+                }
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                // Fallback to current date on error
+                setPdfReportDate(new Date().toISOString());
+            }
+        };
 
     const STATUS_LABELS = {
         'OPEN': 'AÇIK',
@@ -324,7 +345,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             });
 
             const ticketsData = await Promise.all(ticketDetailsPromises);
-            await generateMultipleTicketsPDF(ticketsData);
+            await generateMultipleTicketsPDF(ticketsData, pdfReportDate);
 
             alert(`${selectedTickets.size} adet sorun raporu PDF olarak oluşturuldu!`);
             setSelectedTickets(new Set());

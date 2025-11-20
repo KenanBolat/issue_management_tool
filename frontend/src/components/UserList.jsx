@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { userApi } from '../../services/api.jsx';
-import { Edit, Trash2, Eye, Shield, RotateCcw,RefreshCw } from 'lucide-react';
+import { userApi, configurationAPI} from '../../services/api.jsx';
+import { Edit, Trash2, Eye, Shield, RotateCcw,RefreshCw, FileText, Save} from 'lucide-react';
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
     const [users, setUsers] = useState([]);
@@ -11,12 +11,19 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const [showInactive, setShowInactive] = useState(false);
     const [showDeleted, setShowDeleted] = useState(false); 
 
+
+    const [configuration, setConfiguration] = useState(null);
+    const [reportDate, setReportDate] = useState('');
+    const [savingConfig, setSavingConfig] = useState(false);
+
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
 
 
     useEffect(() => {
         loadUsers();
+        loadConfiguration();
+
     }, [showInactive]);
 
     const loadUsers = async () => {
@@ -24,13 +31,68 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             setLoading(true);
             const response = await userApi.getAll(showInactive);
             setUsers(response.data || []);
-            debugger;
         } catch (error) {
             console.error('Error loading users:', error);
             alert('Failed to load users. Please try again later.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadConfiguration = async () => {
+        try {
+            const response = await configurationAPI.get();
+            setConfiguration(response.data);
+            
+            // Convert UTC date to local datetime-local format
+            const pdfDate = new Date(response.data.pdfReportDate);
+            const localDateTime = formatDateTimeLocal(pdfDate);
+            setReportDate(localDateTime);
+        } catch (error) {
+            console.error("Failed to load configuration", error);
+            // Fallback to current date
+            setReportDate(formatDateTimeLocal(new Date()));
+        }
+    };
+
+    const formatDateTimeLocal = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+     const handleSaveConfiguration = async () => {
+        if (!window.confirm('Rapor basım tarihini güncellemek istediğinize emin misiniz?')) {
+            return;
+        }
+
+        try {
+            setSavingConfig(true);
+            
+            // Convert local datetime to UTC
+            const pdfDate = new Date(reportDate);
+            
+            const response = await configurationAPI.update({
+                pdfReportDate: pdfDate.toISOString(),
+                expirationDate: configuration?.expirationDate || null
+            });
+            
+            setConfiguration(response.data);
+            alert('Konfigürasyon başarıyla güncellendi!');
+        } catch (error) {
+            console.error('Error saving configuration:', error);
+            alert('Konfigürasyon güncellenirken hata oluştu: ' + error.message);
+        } finally {
+            setSavingConfig(false);
+        }
+    };
+
+    const handleResetReportDate = () => {
+        const now = new Date();
+        setReportDate(formatDateTimeLocal(now));
     };
 
     const handleRestoreUser = async (userId) => {
@@ -40,7 +102,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
         try {
             await userApi.restore(userId);
-            debugger;
             alert('Kullanıcı başarıyla geri yüklendi!');
             loadUsers();
         } catch (error) {
@@ -179,6 +240,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                 </button>
             </div>
 
+
+        
             {loading ? (
                 <div style={styles.loading}>Loading users...</div>
             ) : filteredUsers.length === 0 ? (
@@ -288,6 +351,63 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                     </table>
                 </div>
             )}
+                        <div style={styles.reportSection}>
+                <h3 style={styles.reportTitle}>
+                    <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                    Rapor Basım Tarihi
+                </h3>
+                <div style={styles.reportDateContainer}>
+                    <input
+                        type="datetime-local"
+                        value={reportDate}
+                        onChange={(e) => setReportDate(e.target.value)}
+                        style={styles.dateInput}
+                    />
+                    <button
+                        onClick={handleResetReportDate}
+                        style={styles.resetButton}
+                        title="Şimdiki zamana sıfırla"
+                    >
+                        Şimdi
+                    </button>
+                    <button
+                        onClick={handleSaveConfiguration}
+                        disabled={savingConfig}
+                        style={{ ...styles.button, ...styles.resetButton }}
+                        title="Kaydet"
+                    >
+                        <Save size={18} style={{ marginRight: '8px' }} />
+                        {savingConfig ? 'Kaydediliyor...' : 'Kaydet'}
+                    </button>
+                    <div style={styles.dateInfo}>
+                        <span style={styles.infoLabel}>Seçili Tarih:</span>
+                        <span style={styles.infoValue}>
+                            {new Date(reportDate).toLocaleString('tr-TR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </span>
+                    </div>
+                </div>
+                
+                {/* ✅ Show last updated info */}
+                {configuration && (
+                    <div style={styles.configInfo}>
+                        <p style={styles.configInfoText}>
+                            <strong>Son Güncelleme:</strong>{' '}
+                            {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
+                            {configuration.updatedByName && ` • ${configuration.updatedByName}`}
+                        </p>
+                    </div>
+                )}
+                
+                <p style={styles.reportNote}>
+                    ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
+                </p>
+            </div>
         </div>
     );
 }
@@ -447,4 +567,69 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
+    // ✅ NEW: Report Date Section Styles
+    reportSection: {
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '2rem',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        marginTop: '2rem',
+    },
+    reportTitle: {
+        fontSize: '1.3rem',
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: '1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    reportDateContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        marginBottom: '1rem',
+    },
+    dateInput: {
+        padding: '0.75rem',
+        fontSize: '1rem',
+        border: '2px solid #dee2e6',
+        borderRadius: '6px',
+        minWidth: '250px',
+        cursor: 'pointer',
+    },
+    resetButton: {
+        padding: '0.75rem 1.5rem',
+        backgroundColor: '#667eea',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '1rem',
+        fontWeight: '500',
+        transition: 'background-color 0.2s',
+    },
+    dateInfo: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.25rem',
+    },
+    infoLabel: {
+        fontSize: '0.85rem',
+        color: '#666',
+    },
+    infoValue: {
+        fontSize: '1rem',
+        fontWeight: '600',
+        color: '#333',
+    },
+    reportNote: {
+        margin: '1rem 0 0 0',
+        padding: '1rem',
+        backgroundColor: '#f0f7ff',
+        borderLeft: '4px solid #667eea',
+        color: '#333',
+        fontSize: '0.9rem',
+        borderRadius: '4px',
+    },
+    
 };

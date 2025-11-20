@@ -124,9 +124,18 @@ const formatDateOnly = (date) => {
 };
 
 const EmptyCell = () => <Text style={styles.emptyCell}>.</Text>;
+export const TicketPDFPage = ({ 
+  ticket, 
+  formData, 
+  pageNumber = 1, 
+  totalPages = 1,
+  reportDate = null 
+}) => {
+  // ✅ Use reportDate if provided, otherwise use current date
+  const approvalDate = reportDate ? new Date(reportDate) : new Date();
 
-export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1 }) => (
-  <Page size="A4" orientation="landscape" style={styles.page}>
+  return (
+    <Page size="A4" orientation="landscape" style={styles.page}>
     <Text style={styles.title}>ARIZA KAYIT FORMU</Text>
 
     <View style={styles.table}>
@@ -360,7 +369,7 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
     </View>
     <View style={{ marginTop: 8, textAlign: 'center' }}>
       <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>ONAY</Text>
-      <Text>{formatDateOnly(new Date())}</Text>
+      <Text>{formatDateOnly(approvalDate)}</Text>
     </View>
 
     <Text style={styles.pageNumber}>
@@ -372,9 +381,16 @@ export const TicketPDFPage = ({ ticket, formData, pageNumber = 1, totalPages = 1
     </Text>
   </Page>
 );
+};
 
-export const TicketPDFDocument = ({ ticket, formData }) => (
+export const TicketPDFDocument = ({ ticket, formData, reportDate = null }) => (
   <Document>
-    <TicketPDFPage ticket={ticket} formData={formData} pageNumber={1} totalPages={1} />
+    <TicketPDFPage
+      ticket={ticket}
+      formData={formData}
+      reportDate={reportDate}
+      pageNumber={1}
+      totalPages={1}
+    />
   </Document>
 );

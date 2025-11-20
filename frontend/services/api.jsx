@@ -336,4 +336,48 @@ function createHeaders() {
     return headers;
 }
 
+
+export const configurationAPI = {
+    get: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/configuration`, {
+                method: 'GET',
+                headers: createHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { data };
+        } catch (error) {
+            console.error('Error fetching configuration:', error);
+            throw error;
+        }
+    },
+
+    update: async (configData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/configuration`, {
+                method: 'PUT',
+                headers: createHeaders(),
+                body: JSON.stringify(configData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { success: true, data };
+        } catch (error) {
+            console.error('Error updating configuration:', error);
+            throw error;
+        }
+    },
+};
+
 export default api; 

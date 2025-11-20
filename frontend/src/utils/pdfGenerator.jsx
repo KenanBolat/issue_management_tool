@@ -3,9 +3,12 @@ import { Document } from '@react-pdf/renderer';
 import { TicketPDFDocument, TicketPDFPage } from './TicketPDFDocument';
 
 // Single ticket PDF generation
-export const generateTicketPDF = async (ticket, formData) => {
+export const generateTicketPDF = async (ticket, formData, reportDate = null) => {
     try {
-        const blob = await pdf(<TicketPDFDocument ticket={ticket} formData={formData} />).toBlob();
+        const blob = await pdf(<TicketPDFDocument 
+                                ticket={ticket} 
+                                formData={formData}
+                                reportDate={reportDate} />).toBlob();
         
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -20,7 +23,7 @@ export const generateTicketPDF = async (ticket, formData) => {
 };
 
 // ✅ UPDATED: Multi-ticket PDF generation with page numbers
-export const generateMultipleTicketsPDF = async (ticketsData) => {
+export const generateMultipleTicketsPDF = async (ticketsData,reportDate = null) => {
     if (!ticketsData || ticketsData.length === 0) {
         alert('Seçili sorun bulunamadı!');
         return;
@@ -36,8 +39,9 @@ export const generateMultipleTicketsPDF = async (ticketsData) => {
                         key={`ticket-${ticket.id || index}`} 
                         ticket={ticket} 
                         formData={formData}
-                        pageNumber={index + 1}  // ✅ Current page (1-indexed)
-                        totalPages={totalPages}  // ✅ Total pages
+                        pageNumber={index + 1}  
+                        totalPages={totalPages} 
+                        reportDate={reportDate}
                     />
                 ))}
             </Document>

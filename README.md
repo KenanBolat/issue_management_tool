@@ -39,3 +39,15 @@ dotnet build
 ```bash
 dotnet ef -v  database update   --project ./Infrastructure/Infrastructure.csproj   --startup-project ./Api/Api.csproj   --context AppDbContext
 ```
+
+
+> Start Backend 
+```bash
+cd src/Api
+dotnet run --host 0.0.0.0  
+```
+
+> Start Frontend 
+```bash 
+cd frontend 
+npm run dev -- --host 0.0.0.0
