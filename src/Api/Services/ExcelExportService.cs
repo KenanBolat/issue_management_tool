@@ -46,7 +46,8 @@ namespace Api.Services
                 "Oluşturan",
                 "Oluşturma Tarihi",
                 "Son Güncelleyen",
-                "Güncelleme Tarihi"
+                "Güncelleme Tarihi", 
+                "Teknik Rapor Bilgisi",
             };
 
             // Apply headers
@@ -120,6 +121,8 @@ namespace Api.Services
                 worksheet.Cells[row, 28].Value = ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm");
                 worksheet.Cells[row, 29].Value = FormatUserName(ticket.LastUpdatedBy);
                 worksheet.Cells[row, 30].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 31].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
+
                 
                 row++;
             }
