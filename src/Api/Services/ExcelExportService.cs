@@ -48,7 +48,11 @@ namespace Api.Services
                 "Son Güncelleyen",
                 "Güncelleme Tarihi", 
                 "Teknik Rapor Bilgisi",
-                "Geçici Çözüm Tarihi"
+                "Geçici Çözüm Tarihi", 
+                "Güncellenen Parça Tanımı",
+                "Güncellenen Parça No",
+                "Güncellenen Seri No",
+                "Hp No",
             };
 
             // Apply headers
@@ -124,6 +128,12 @@ namespace Api.Services
                 worksheet.Cells[row, 30].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
                 worksheet.Cells[row, 31].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
                 worksheet.Cells[row, 32].Value = ticket.TentativeSolutionDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                
+                worksheet.Cells[row, 33].Value = ticket.NewItemDescription ?? "";
+                worksheet.Cells[row, 34].Value = ticket.NewItemId ?? "";
+                worksheet.Cells[row, 35].Value = ticket.NewItemSerialNo ?? "";
+
+                worksheet.Cells[row, 36].Value = ticket.HpNo ?? "";
 
                 
                 row++;
