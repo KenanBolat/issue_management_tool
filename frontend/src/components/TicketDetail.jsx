@@ -100,6 +100,14 @@ export default function TicketDetail({ ticketId, onClose }) {
         activityControlDate: '',
         activityControlResult: '',
         ttcomsCode: '',
+        
+        newItemDescription: '',
+        newItemId: '',
+        newItemSerialNo: '',
+
+        hpNo:'', 
+        tentativeSolutionDate:''
+
 
     });
 
@@ -211,6 +219,12 @@ export default function TicketDetail({ ticketId, onClose }) {
                 activityControlResult: ticketData.activityControlResult || '',
                 ttcomsCode: ticketData.ttcomsCode || '',
 
+                newItemDescription: ticketData.newItemDescription || null ,
+                newItemId: ticketData.newItemId || null,
+                newItemSerialNo: ticketData.newItemSerialNo || null,
+                hpNo:ticketData.hpNo || null, 
+                tentativeSolutionDate: ticketData.tentativeSolutionDate ? formatDateTimeLocal(ticketData.tentativeSolutionDate) : "",
+
             });
 
             setComments(ticketData.comments || []);
@@ -286,6 +300,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseDate: formData.responseDate ? new Date(formData.responseDate).toISOString() : null,
                 responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null,
                 activityControlDate: formData.activityControlDate ? new Date(formData.activityControlDate).toISOString() : null,
+                tentativeSolutionDate: formData.tentativeSolutionDate ? new Date(formData.tentativeSolutionDate).toISOString(): null,
 
             }
 
@@ -295,6 +310,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 if (onClose) onClose();
             } else {
                 await ticketsAPI.update(ticketId, apiData);
+                debugger;
                 alert("Ticket updated successfully");
                 loadTicketDetails();
             }
@@ -704,9 +720,9 @@ export default function TicketDetail({ ticketId, onClose }) {
                         </div>
                     </div>
 
-                    {/* Malzeme Detayları */}
+                    {/* Arızalı Malzeme Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Malzeme Detayları</h2>
+                        <h2 style={styles.sectionTitle}>Arızalı Malzeme Detayları</h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>
@@ -757,6 +773,118 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
                     </div>
+
+                    {/* Güncellenen Malzeme Detayları */}
+                    <div style={styles.formSection}>
+                        <h2 style={styles.sectionTitle}>Güncellenen Malzema Detayları</h2>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Parça Tanımı</label>
+                                <input
+                                    type="input"
+                                    value={formData.newItemDescription}
+                                    onChange={(e) => handleInputChange('newItemDescription', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Parça No</label>
+                                <input
+                                    type="input"
+                                    value={formData.newItemId}
+                                    onChange={(e) => handleInputChange('newItemId', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Seri No</label>
+                                <input
+                                    type="input"
+                                    value={formData.newItemSerialNo}
+                                    onChange={(e) => handleInputChange('newItemSerialNo', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                        </div>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+
+
+
+                                <div style={styles.formRow}>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+
+                    </div>
+
+
+                    {/* Güncellenen Malzeme Detayları */}
+                    <div style={styles.formSection}>
+                        <h2 style={styles.sectionTitle}>Ek  Bilgi</h2>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>HP Arıza No</label>
+                                <input
+                                    type="input"
+                                    value={formData.hpNo}
+                                    onChange={(e) => handleInputChange('hpNo', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Geçici Çözüm Tarihi</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.tentativeSolutionDate}
+                                    onChange={(e) => handleInputChange('tentativeSolutionDate', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                            {/* <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Seri No</label>
+                                <input
+                                    type="input"
+                                    value={formData.itemSerialNo}
+                                    onChange={(e) => handleInputChange('itemSerialNo', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div> */}
+                        </div>
+
+                        <div style={styles.inlineGroup}>
+                            <div style={{ flex: 1 }}>
+
+
+
+                                <div style={styles.formRow}>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+
+                    </div>
+
+
+                    
                     {/* Müdahale Detayları */}
                     <div style={styles.formSection}>
                         <h2 style={styles.sectionTitle}>Arıza Müdahale Detayları</h2>

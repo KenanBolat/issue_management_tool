@@ -290,9 +290,12 @@ public class TicketsController : ControllerBase
                 ticket.ItemSerialNo,
 
                 ticket.ActivityControlPersonnel != null ? FormatUserName(ticket.ActivityControlPersonnel) : null,
-                ticket.ActivityControlCommander != null ? FormatUserName(ticket.ActivityControlCommander) : null
-
-
+                ticket.ActivityControlCommander != null ? FormatUserName(ticket.ActivityControlCommander) : null, 
+                ticket.NewItemDescription, 
+                ticket.NewItemId, 
+                ticket.NewItemSerialNo, 
+                ticket.HpNo, 
+                ticket.TentativeSolutionDate
             );
 
         return Ok(detail);
@@ -517,6 +520,33 @@ public class TicketsController : ControllerBase
         }
 
 
+        // New and/or replaced Item Description
+
+        if (request.NewItemDescription != null && ticket.NewItemDescription != request.NewItemDescription)
+        {
+            ticket.NewItemDescription = request.NewItemDescription;
+            hasChanges = true;
+        }
+
+        if (request.NewItemId != null && ticket.NewItemId != request.NewItemId)
+        {
+            ticket.NewItemId = request.NewItemId;
+            hasChanges = true;
+        }
+        if (request.NewItemSerialNo != null && ticket.NewItemSerialNo != request.NewItemSerialNo)
+        {
+            ticket.NewItemSerialNo = request.NewItemSerialNo;
+            hasChanges = true;
+        }
+
+
+        if (request.HpNo != null && ticket.HpNo != request.HpNo)
+        {
+            ticket.HpNo = request.HpNo;
+            hasChanges = true;
+        }
+
+        if (request.TentativeSolutionDate.HasValue) ticket.TentativeSolutionDate = request.TentativeSolutionDate;
 
 
 

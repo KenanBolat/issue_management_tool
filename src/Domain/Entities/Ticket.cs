@@ -53,6 +53,24 @@ namespace Domain.Entities
         [Column("item_serial_no")]
         public string? ItemSerialNo { get; set; }
 
+        // New and/or replaced items
+        [Column("new_item_description")]
+        public string? NewItemDescription { get; set; }
+        
+        [Column("new_item_id")]
+        public string? NewItemId { get; set; }
+        
+        [Column("new_item_serial_no")]
+        public string? NewItemSerialNo { get; set; }
+
+        // 
+        [Column("hp_no")]
+        public string? HpNo {get; set;}        
+
+        [Column("tentative_solution_date")]
+        public DateTime? TentativeSolutionDate { get; set; }
+
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         

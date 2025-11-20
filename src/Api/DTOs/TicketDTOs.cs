@@ -119,7 +119,14 @@ public record TicketDetail(
         string? ItemId,
         string? ItemSerialNo,
         string? ActivityControlPersonnelName,
-        string? ActivityControlCommanderName
+        string? ActivityControlCommanderName, 
+        
+        string? NewItemDescription, 
+        string? NewItemId, 
+        string? NewItemSerialNo, 
+        string? HpNo,
+        DateTime? TentativeSolutionDate
+
         );
 
 // Response personnel item
@@ -185,7 +192,12 @@ public record UpdateTicketRequest(
         string? TtcomsCode,
         string? ItemDescription,
         string? ItemId,
-        string? ItemSerialNo
+        string? ItemSerialNo, 
+        string? NewItemDescription, 
+        string? NewItemId, 
+        string? NewItemSerialNo, 
+        string? HpNo, 
+        DateTime? TentativeSolutionDate
         );
 
 public record SystemOption(
