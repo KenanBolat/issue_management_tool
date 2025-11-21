@@ -122,7 +122,9 @@ export default function TicketDetail({ ticketId, onClose }) {
         newItemSerialNo: '',
 
         hpNo: '',
-        tentativeSolutionDate: ''
+        tentativeSolutionDate: '', 
+        subContractor: '', 
+        subContractorNotifiedAt: ''
 
 
     });
@@ -241,6 +243,8 @@ export default function TicketDetail({ ticketId, onClose }) {
                 newItemSerialNo: ticketData.newItemSerialNo || null,
                 hpNo: ticketData.hpNo || null,
                 tentativeSolutionDate: ticketData.tentativeSolutionDate ? formatDateTimeLocal(ticketData.tentativeSolutionDate) : "",
+                subContractor: ticketData.subContractor || null,
+                subContractorNotifiedAt: ticketData.subContractorNotifiedAt ? formatDateTimeLocal(ticketData.subContractorNotifiedAt) : "",    
 
             });
 
@@ -318,6 +322,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 responseResolvedAt: formData.responseResolvedAt ? new Date(formData.responseResolvedAt).toISOString() : null,
                 activityControlDate: formData.activityControlDate ? new Date(formData.activityControlDate).toISOString() : null,
                 tentativeSolutionDate: formData.tentativeSolutionDate ? new Date(formData.tentativeSolutionDate).toISOString() : null,
+                subContractorNotifiedAt: formData.subContractorNotifiedAt ? new Date(formData.subContractorNotifiedAt).toISOString() : null,
 
             }
 
@@ -740,22 +745,22 @@ export default function TicketDetail({ ticketId, onClose }) {
                         <div style={styles.inlineGroup}>
                             
                             <div style={{ flex: 1 }}>
-                                <label style={styles.label}> Alt Yüklenici (Varsa)</label>
+                                <label style={styles.label}> Alt Yüklenici</label>
                                 <input
                                     type="text"
                                     style={styles.input}
                                     disabled={isReadOnly}
-                                    value={formData.ttcomsCode}
-                                    onChange={(e) => handleInputChange('ttcomsCode', e.target.value)}
-                                    placeholder="TT00001"
+                                    value={formData.subContractor}
+                                    onChange={(e) => handleInputChange('subContractor', e.target.value)}
+                                    placeholder="SDT"
                                 />
                             </div>
                              <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Yükleniciye Bildirildiği Tarih</label>
                                 <input
                                     type="datetime-local"
-                                    value={formData.detectedContractorNotifiedAt}
-                                    onChange={(e) => handleInputChange('detectedContractorNotifiedAt', e.target.value)}
+                                    value={formData.subContractorNotifiedAt}
+                                    onChange={(e) => handleInputChange('subContractorNotifiedAt', e.target.value)}
                                     style={styles.input}
                                     disabled={isReadOnly}
                                 />
