@@ -62,6 +62,8 @@ namespace Api.Services
                 "Yeni Seri No",
                 "Hp No",
                 "Kontrol Teşkilatı Durumu",
+                "Alt Yüklenici", 
+                "Alt Yükleniciye Bildirildiği Tarih", 
             };
 
             // add pause columns at the end (2 columns per pause)
@@ -152,10 +154,11 @@ namespace Api.Services
                 worksheet.Cells[row, 36].Value = ticket.HpNo ?? "";
 
                 worksheet.Cells[row, 37].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
-                
+                worksheet.Cells[row, 38].Value = ticket.SubContractor ?? "";
+                worksheet.Cells[row, 39].Value = ticket.SubContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
-                int col = 38;
+                int col = 40;
 
                 for (int i = 0; i < maxPauseCount; i++)
                 {
