@@ -57,9 +57,9 @@ namespace Api.Services
                 "Güncelleme Tarihi",
                 "Teknik Rapor Bilgisi",
                 "Geçici Çözüm Tarihi",
-                "Güncellenen Parça Tanımı",
-                "Güncellenen Parça No",
-                "Güncellenen Seri No",
+                "Yeni Parça Tanımı",
+                "Yeni Parça No",
+                "Yeni Seri No",
                 "Hp No",
                 "Kontrol Teşkilatı Durumu",
             };
@@ -152,6 +152,7 @@ namespace Api.Services
                 worksheet.Cells[row, 36].Value = ticket.HpNo ?? "";
 
                 worksheet.Cells[row, 37].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
+                
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
                 int col = 38;

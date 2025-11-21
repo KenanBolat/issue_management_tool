@@ -791,9 +791,9 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                     </div>
 
-                    {/* Güncellenen Malzeme Detayları */}
+                    {/* Yeni Malzeme Detayları */}
                     <div style={styles.formSection}>
-                        <h2 style={styles.sectionTitle}>Güncellenen Malzema Detayları</h2>
+                        <h2 style={styles.sectionTitle}>Yeni Malzeme Detayları</h2>
 
                         <div style={styles.inlineGroup}>
                             <div style={{ flex: 1 }}>

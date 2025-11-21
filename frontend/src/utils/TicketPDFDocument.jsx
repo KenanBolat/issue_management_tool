@@ -17,14 +17,14 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 32,
-    paddingBottom: 40,
+    paddingTop: 25,
+    paddingBottom: 25,
     paddingHorizontal: 28,
     fontSize: 8,
     fontFamily: 'Roboto',
   },
   title: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 8,
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     paddingHorizontal: 3,
     textAlign: 'center',
-    justifyContent: 'center',
+    // justifyContent: 'center',
   },
   lastCell: {
     borderRightWidth: 0,
@@ -91,7 +91,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptyCell: {
-    color: 'transparent',
+    padding: 0,
+    margin: 0,
+    lineHeight: 1,       // important
+    fontSize: 1,    
   },
   pageNumber: {
     position: 'absolute',
@@ -152,11 +155,11 @@ export const TicketPDFPage = ({
           <Text>YÜKLENİCİYE BİLDİRİM</Text>
           <Text>TARİHİ / SAATİ</Text>
         </View>
-        <View style={[styles.headerCell, { width: '35%' }]}>
+        <View style={[styles.headerCell, { width: '29%' }]}>
           <Text>BİLDİRİM ŞEKLİ</Text>
           <Text style={{ fontSize: 6 }}>(Çıktısı / Fotokopisi Forma Eklenecektir)</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '26%' }]}>
           <Text>OPERASYONEL AKIŞI</Text>
           <Text>ETKİLER</Text>
         </View>
@@ -173,7 +176,7 @@ export const TicketPDFPage = ({
         <View style={[styles.cell, { width: '16%' }]}>
           <Text>{formatDateTime(formData.detectedContractorNotifiedAt) || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '35%' }]}>
+        <View style={[styles.cell, { width: '29%', }]}>
           <Text>
             {formData.ttcomsCode
               ? formData.ttcomsCode
@@ -182,7 +185,7 @@ export const TicketPDFPage = ({
                 : <EmptyCell />}
           </Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '26%' }]}>
           <Text>{formData.isBlocking ? 'EVET' : 'HAYIR'}</Text>
         </View>
       </View>
@@ -195,12 +198,11 @@ export const TicketPDFPage = ({
         <View style={[styles.headerCell, { width: '16%' }]}>
           <Text>PARÇA NO</Text>
         </View>
-        <View style={[styles.headerCell, { width: '35%' }]}>
+        <View style={[styles.headerCell, { width: '29%' }]}>
           <Text>SERİ NO</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
-          <Text>ARIZAYI TESPİT EDEN</Text>
-          <Text>PERSONEL RÜTBE - ADI SOYADI</Text>
+        <View style={[styles.headerCell, styles.lastCell, { width: '26%' }]}>
+          <Text>ARIZAYI TESPİT EDEN PERSONEL RÜTBE - ADI SOYADI</Text>
         </View>
       </View>
 
@@ -212,20 +214,20 @@ export const TicketPDFPage = ({
         <View style={[styles.cell, { width: '16%' }]}>
           <Text>{formData.itemId || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, { width: '35%' }]}>
+        <View style={[styles.cell, { width: '29%' }]}>
           <Text>{formData.itemSerialNo || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
+        <View style={[styles.cell, styles.lastCell, { width: '26%' }]}>
           <Text>{ticket?.detectedByUserName || <EmptyCell />}</Text>
         </View>
       </View>
 
       {/* 5. row: TESPİT EDİLEN ARIZA / İMZA */}
       <View style={styles.row}>
-        <View style={[styles.headerCell, { width: '80%' }]}>
+        <View style={[styles.headerCell, { width: '74%' }]}>
           <Text>TESPİT EDİLEN ARIZA</Text>
         </View>
-        <View style={[styles.headerCell, styles.lastCell, { width: '20%' }]}>
+        <View style={[styles.headerCell, styles.lastCell, { width: '26%' }]}>
           <Text>İMZA</Text>
         </View>
       </View>
@@ -235,12 +237,12 @@ export const TicketPDFPage = ({
         <View
           style={[
             styles.cell,
-            { width: '85%', alignItems: 'flex-start' },
+            { width: '74%', alignItems: 'flex-start' },
           ]}
         >
           <Text style={styles.leftText}>{formData.description || <EmptyCell />}</Text>
         </View>
-        <View style={[styles.cell, styles.lastCell, { width: '20%' }]}>
+        <View style={[styles.emptyCell, styles.lastCell, { width: '26%',  padding: 0, margin: 0, lineHeight: 1,  fontSize: 1,   }]}>
           <EmptyCell />
         </View>
       </View>
