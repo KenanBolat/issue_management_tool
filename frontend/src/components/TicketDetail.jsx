@@ -735,6 +735,32 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 />
                             </div>
                         </div>
+
+                        <br />
+                        <div style={styles.inlineGroup}>
+                            
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}> Alt Yüklenici (Varsa)</label>
+                                <input
+                                    type="text"
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                    value={formData.ttcomsCode}
+                                    onChange={(e) => handleInputChange('ttcomsCode', e.target.value)}
+                                    placeholder="TT00001"
+                                />
+                            </div>
+                             <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Yükleniciye Bildirildiği Tarih</label>
+                                <input
+                                    type="datetime-local"
+                                    value={formData.detectedContractorNotifiedAt}
+                                    onChange={(e) => handleInputChange('detectedContractorNotifiedAt', e.target.value)}
+                                    style={styles.input}
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Arızalı Malzeme Detayları */}
@@ -1208,11 +1234,11 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
 
                             {/* Comments Tab */}
-                            {activeTab === 'comments' && canViewComments && (
+                            {activeTab === 'comments' && (
                                 <div style={styles.tabContent}>
-                                    {canEdit && (
+                                    {(
                                         <div style={styles.commentInputSection}>
-                                            <textarea
+                                        <textarea
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
                                                 placeholder="Yeni bir işlem adımı ekleyiniz..."

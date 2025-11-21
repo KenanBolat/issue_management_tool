@@ -40,7 +40,9 @@ public record CreateTicketRequest(
         string? NewItemSerialNo, 
         string? HpNo, 
         DateTime? TentativeSolutionDate, 
-        int? ActivityControlStatus
+        int? ActivityControlStatus, 
+        string? SubContractor, 
+        DateTime? SubContractorNotifiedAt 
         );
 
 // Change Status of the ticket 
@@ -133,7 +135,9 @@ public record TicketDetail(
         string? NewItemSerialNo, 
         string? HpNo,
         DateTime? TentativeSolutionDate, 
-        int? ActivityControlStatus
+        int? ActivityControlStatus, 
+        string? SubContractor,
+        DateTime? SubContractorNotifiedAt
 
         );
 
@@ -206,7 +210,9 @@ public record UpdateTicketRequest(
         string? NewItemSerialNo, 
         string? HpNo, 
         DateTime? TentativeSolutionDate,
-        int? ActivityControlStatus 
+        int? ActivityControlStatus, 
+        string? SubContractor,
+        DateTime? SubContractorNotifiedAt
         );
 
 public record SystemOption(

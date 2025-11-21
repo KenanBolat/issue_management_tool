@@ -296,7 +296,9 @@ public class TicketsController : ControllerBase
                 ticket.NewItemSerialNo, 
                 ticket.HpNo, 
                 ticket.TentativeSolutionDate, 
-                (int?)ticket.ActivityControlStatus
+                (int?)ticket.ActivityControlStatus, 
+                ticket.SubContractor, 
+                ticket.SubContractorNotifiedAt
             );
 
         return Ok(detail);
@@ -368,6 +370,8 @@ public class TicketsController : ControllerBase
             NewItemSerialNo = request.NewItemSerialNo, 
             HpNo = request.HpNo, 
             TentativeSolutionDate = request.TentativeSolutionDate,
+            SubContractor = request.SubContractor, 
+            SubContractorNotifiedAt = request.SubContractorNotifiedAt, 
 
             IsActive = true,
             IsDeleted = false
@@ -526,6 +530,19 @@ public class TicketsController : ControllerBase
         if (request.ItemSerialNo != null && ticket.ItemSerialNo != request.ItemSerialNo)
         {
             ticket.ItemSerialNo = request.ItemSerialNo;
+            hasChanges = true;
+        }
+
+
+
+         if (request.SubContractor != null && ticket.SubContractor != request.SubContractor)
+        {
+            ticket.SubContractor = request.SubContractor;
+            hasChanges = true;
+        }
+        if (request.SubContractorNotifiedAt != null && ticket.SubContractorNotifiedAt != request.SubContractorNotifiedAt)
+        {
+            ticket.SubContractorNotifiedAt = request.SubContractorNotifiedAt;
             hasChanges = true;
         }
 

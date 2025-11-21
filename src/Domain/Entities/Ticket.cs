@@ -155,8 +155,11 @@ namespace Domain.Entities
         public User? LastUpdatedBy { get; set; }
         public User? DetectedByUser { get; set; }
 
-
-        
+        // Sub-contractor notification 
+        [Column("sub_contractor")]
+        public string? SubContractor { get; set; }
+        [Column("sub_contractor_notified_at")]
+        public DateTime? SubContractorNotifiedAt { get; set; }
 
         public ConfigurationItem? CI { get; set; }
         public Component? Component { get; set; }
