@@ -80,7 +80,6 @@ builder.Services.AddScoped<ExcelExportService>();
 builder.Services.AddScoped<ConfigurationService>();
 
 
-
 var app = builder.Build();
 
 Console.WriteLine("Application built, starting database initialization...");

@@ -2,11 +2,14 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using Domain.Entities;
 using System.Drawing;
+using Domain.Enums;
+
 
 namespace Api.Services
 {
     public class ExcelExportService
     {
+
         public async Task<byte[]> GenerateTicketsExcelAsync(List<Ticket> tickets)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -15,7 +18,12 @@ namespace Api.Services
             var worksheet = package.Workbook.Worksheets.Add("Arıza Kayıtları");
 
             // ===== HEADER SETUP =====
-            var headers = new[]
+
+            var pauseIntervalsByTicket = tickets.ToDictionary(t => t.Id, t => GetPauseIntervals(t));
+            var maxPauseCount = pauseIntervalsByTicket.Values.Any()
+                ? pauseIntervalsByTicket.Values.Max(list => list.Count)
+                : 0;
+            var headers = new List<string>
             {
                 "Arıza No",
                 "Başlık",
@@ -46,18 +54,25 @@ namespace Api.Services
                 "Oluşturan",
                 "Oluşturma Tarihi",
                 "Son Güncelleyen",
-                "Güncelleme Tarihi", 
+                "Güncelleme Tarihi",
                 "Teknik Rapor Bilgisi",
-                "Geçici Çözüm Tarihi", 
+                "Geçici Çözüm Tarihi",
                 "Güncellenen Parça Tanımı",
                 "Güncellenen Parça No",
                 "Güncellenen Seri No",
                 "Hp No",
-                "Kontrol Teşkilatı Durumu", 
+                "Kontrol Teşkilatı Durumu",
             };
 
+            // add pause columns at the end (2 columns per pause)
+            for (int i = 1; i <= maxPauseCount; i++)
+            {
+                headers.Add($"Duraklatma {i} Başlangıç");
+                headers.Add($"Duraklatma {i} Bitiş");
+            }
+
             // Apply headers
-            for (int i = 0; i < headers.Length; i++)
+            for (int i = 0; i < headers.Count; i++)
             {
                 var cell = worksheet.Cells[1, i + 1];
                 cell.Value = headers[i];
@@ -86,11 +101,11 @@ namespace Api.Services
                 worksheet.Cells[row, 11].Value = ticket.ItemDescription ?? "";
                 worksheet.Cells[row, 12].Value = ticket.ItemId ?? "";
                 worksheet.Cells[row, 13].Value = ticket.ItemSerialNo ?? "";
-                
+
                 // Dates
                 worksheet.Cells[row, 14].Value = ticket.DetectedDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
                 worksheet.Cells[row, 15].Value = ticket.DetectedContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                
+
                 // Notification methods
                 var notificationMethods = ticket.DetectedNotificationMethods != null && ticket.DetectedNotificationMethods.Length > 0
                     ? string.Join(", ", ticket.DetectedNotificationMethods.Select(m => m.ToString()))
@@ -100,24 +115,24 @@ namespace Api.Services
                     notificationMethods = $"TTCOMS ({ticket.TtcomsCode})";
                 }
                 worksheet.Cells[row, 16].Value = notificationMethods;
-                
+
                 // Personnel - formatted
                 worksheet.Cells[row, 17].Value = FormatUserName(ticket.DetectedByUser);
                 worksheet.Cells[row, 18].Value = ticket.ResponseDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
                 worksheet.Cells[row, 19].Value = ticket.ResponseResolvedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                
+
                 // Response personnel - multiple
                 var responsePersonnel = ticket.ResponseByUser != null && ticket.ResponseByUser.Any()
                     ? string.Join(", ", ticket.ResponseByUser.Select(rp => FormatUserName(rp.User)))
                     : "";
                 worksheet.Cells[row, 20].Value = responsePersonnel;
-                
+
                 // Resolved personnel - multiple
                 var resolvedPersonnel = ticket.ResponseResolvedByUser != null && ticket.ResponseResolvedByUser.Any()
                     ? string.Join(", ", ticket.ResponseResolvedByUser.Select(rp => FormatUserName(rp.User)))
                     : "";
                 worksheet.Cells[row, 21].Value = resolvedPersonnel;
-                
+
                 worksheet.Cells[row, 22].Value = ticket.ResponseActions ?? "";
                 worksheet.Cells[row, 23].Value = ticket.ActivityControlDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
                 worksheet.Cells[row, 24].Value = FormatUserName(ticket.ActivityControlPersonnel);
@@ -129,7 +144,7 @@ namespace Api.Services
                 worksheet.Cells[row, 30].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
                 worksheet.Cells[row, 31].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
                 worksheet.Cells[row, 32].Value = ticket.TentativeSolutionDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                
+
                 worksheet.Cells[row, 33].Value = ticket.NewItemDescription ?? "";
                 worksheet.Cells[row, 34].Value = ticket.NewItemId ?? "";
                 worksheet.Cells[row, 35].Value = ticket.NewItemSerialNo ?? "";
@@ -138,15 +153,36 @@ namespace Api.Services
 
                 worksheet.Cells[row, 37].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
 
+                var pauses = pauseIntervalsByTicket[ticket.Id];
+                int col = 38;
+
+                for (int i = 0; i < maxPauseCount; i++)
+                {
+                    if (i < pauses.Count)
+                    {
+                        var p = pauses[i];
+                        worksheet.Cells[row, col].Value = p.Start.ToString("dd.MM.yyyy HH:mm");
+                        worksheet.Cells[row, col + 1].Value = p.End.ToString("dd.MM.yyyy HH:mm");
+                    }
+                    else
+                    {
+                        // ticket has fewer pauses than max; leave cells empty
+                        worksheet.Cells[row, col].Value = "";
+                        worksheet.Cells[row, col + 1].Value = "";
+                    }
+
+                    col += 2;
+                }
+
                 row++;
             }
 
             // ===== FORMATTING =====
             // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-            
+
             // Set minimum column widths
-            for (int col = 1; col <= headers.Length; col++)
+            for (int col = 1; col <= headers.Count; col++)
             {
                 if (worksheet.Column(col).Width < 12)
                     worksheet.Column(col).Width = 12;
@@ -160,7 +196,7 @@ namespace Api.Services
             worksheet.Column(26).Style.WrapText = true; // Activity Control Result
 
             // Add borders to all cells
-            var allCells = worksheet.Cells[1, 1, row - 1, headers.Length];
+            var allCells = worksheet.Cells[1, 1, row - 1, headers.Count];
             allCells.Style.Border.Top.Style = ExcelBorderStyle.Thin;
             allCells.Style.Border.Left.Style = ExcelBorderStyle.Thin;
             allCells.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -170,6 +206,49 @@ namespace Api.Services
             worksheet.View.FreezePanes(2, 1);
 
             return await package.GetAsByteArrayAsync();
+        }
+
+        private record PauseInterval(DateTime Start, DateTime End);
+
+        private List<PauseInterval> GetPauseIntervals(Ticket ticket)
+        {
+            var result = new List<PauseInterval>();
+
+            // Only StatusChange actions are relevant for status transitions
+            var statusChanges = ticket.Actions
+                .Where(a => a.ActionType == ActionType.StatusChange)
+                .OrderBy(a => a.PerformedAt)
+                .ToList();
+
+            if (!statusChanges.Any())
+                return result;
+
+            for (int i = 0; i < statusChanges.Count; i++)
+            {
+                var current = statusChanges[i];
+
+                // We only care about transitions TO PAUSED
+                if (current.ToStatus == TicketStatus.PAUSED)
+                {
+                    var start = current.PerformedAt;
+
+                    // Find next transition that LEAVES PAUSED
+                    var next = statusChanges
+                        .Skip(i + 1)
+                        .FirstOrDefault(a => a.FromStatus == TicketStatus.PAUSED);
+
+                    // If we never leave PAUSED, we ignore this incomplete interval
+                    if (next != null)
+                    {
+                        result.Add(new PauseInterval(start, next.PerformedAt));
+
+                        // Jump index to the exit action so we don't reuse it
+                        i = statusChanges.IndexOf(next);
+                    }
+                }
+            }
+
+            return result;
         }
 
         private string FormatUserName(User? user)
@@ -209,7 +288,7 @@ namespace Api.Services
 
         private string GetControlStatusLabel(Domain.Enums.ControlStatus? status)
         {
-             if (!status.HasValue)
+            if (!status.HasValue)
                 return "";
 
             return status.Value switch
@@ -223,5 +302,7 @@ namespace Api.Services
                 _ => status.Value.ToString()
             };
         }
+
+        
     }
 }

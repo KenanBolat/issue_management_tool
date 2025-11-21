@@ -849,6 +849,7 @@ public class TicketsController : ControllerBase
                         .ThenInclude(u => u.MilitaryRank)
                 .Include(t => t.ActivityControlPersonnel)
                     .ThenInclude(u => u.MilitaryRank)
+                .Include(t => t.Actions)   
                 .Include(t => t.ActivityControlCommander)
                     .ThenInclude(u => u.MilitaryRank)
                 .Where(t => t.IsActive && !t.IsDeleted)
