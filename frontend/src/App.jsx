@@ -6,6 +6,8 @@ import Navigation from "./components/Navigation.jsx";
 import TicketDetail from "./components/TicketDetail.jsx";
 import UserList from "./components/UserList.jsx";
 import UserForm from "./components/UserForm.jsx";
+import ProfilePage from './components/ProfilePage';
+
 
 function App() {
 
@@ -124,6 +126,8 @@ function App() {
                         onManagePermissions={handleManagePermissions}
                     />
                 )}
+                      {currentPage === 'profile' && <ProfilePage />}
+
 
                  {currentPage === 'user-form' && (
                     <UserForm 

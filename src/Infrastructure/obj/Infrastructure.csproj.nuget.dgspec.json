@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Infrastructure\\Infrastructure.csproj": {}
+    "/home/knn/Desktop/issue_management_tool/src/Infrastructure/Infrastructure.csproj": {}
   },
   "projects": {
-    "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\Domain.csproj": {
+    "/home/knn/Desktop/issue_management_tool/src/Domain/Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\Domain.csproj",
+        "projectUniqueName": "/home/knn/Desktop/issue_management_tool/src/Domain/Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\Domain.csproj",
-        "packagesPath": "C:\\Users\\knn\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\obj\\",
+        "projectPath": "/home/knn/Desktop/issue_management_tool/src/Domain/Domain.csproj",
+        "packagesPath": "/home/knn/.nuget/packages/",
+        "outputPath": "/home/knn/Desktop/issue_management_tool/src/Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\knn\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/knn/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,11 +32,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -58,21 +53,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.121/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Infrastructure\\Infrastructure.csproj": {
+    "/home/knn/Desktop/issue_management_tool/src/Infrastructure/Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Infrastructure\\Infrastructure.csproj",
+        "projectUniqueName": "/home/knn/Desktop/issue_management_tool/src/Infrastructure/Infrastructure.csproj",
         "projectName": "Infrastructure",
-        "projectPath": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Infrastructure\\Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\knn\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Infrastructure\\obj\\",
+        "projectPath": "/home/knn/Desktop/issue_management_tool/src/Infrastructure/Infrastructure.csproj",
+        "packagesPath": "/home/knn/.nuget/packages/",
+        "outputPath": "/home/knn/Desktop/issue_management_tool/src/Infrastructure/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\knn\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/knn/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -84,8 +79,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\Domain.csproj": {
-                "projectPath": "C:\\Users\\knn\\Desktop\\issue_management_tool\\src\\Domain\\Domain.csproj"
+              "/home/knn/Desktop/issue_management_tool/src/Domain/Domain.csproj": {
+                "projectPath": "/home/knn/Desktop/issue_management_tool/src/Domain/Domain.csproj"
               }
             }
           }
@@ -94,11 +89,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -148,7 +138,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.121/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

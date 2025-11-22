@@ -1,4 +1,5 @@
-import { LayoutDashboard, List, LogOut } from "lucide-react";
+import { LayoutDashboard, List, LogOut, User } from "lucide-react";
+
 
 export default function Navigation({ currentPage, onNavigate }) {
 
@@ -46,12 +47,24 @@ export default function Navigation({ currentPage, onNavigate }) {
                     <div style={styles.userName}>{userName}</div>
                     <div style={styles.userRole}>{userRole}</div>
                 </div>
+
+                 {/* NEW: Profile link – visible to everyone */}
+        <button
+          onClick={() => onNavigate('profile')}
+          style={{
+            ...styles.menuItem,
+            ...(currentPage === 'profile' ? styles.activeMenuItem : {}),
+          }}
+        >
+          <User size={18} />
+          Profilim
+        </button>
                 <button
                     onClick={() => {
                         localStorage.clear();
                         window.location.reload();
                     }}
-                    style={styles.logoutButton}
+                    style={styles.logoutBtn}
                     title="Logout"
                 >
                     <LogOut size={18} />

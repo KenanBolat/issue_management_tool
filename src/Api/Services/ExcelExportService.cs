@@ -24,7 +24,8 @@ namespace Api.Services
                 ? pauseIntervalsByTicket.Values.Max(list => list.Count)
                 : 0;
             var headers = new List<string>
-            {
+            {   
+                "ID",
                 "Arıza No",
                 "Başlık",
                 "Açıklama",
@@ -90,23 +91,24 @@ namespace Api.Services
             int row = 2;
             foreach (var ticket in tickets)
             {
-                worksheet.Cells[row, 1].Value = ticket.ExternalCode;
-                worksheet.Cells[row, 2].Value = ticket.Title;
-                worksheet.Cells[row, 3].Value = ticket.Description;
-                worksheet.Cells[row, 4].Value = ticket.IsBlocking ? "EVET" : "HAYIR";
-                worksheet.Cells[row, 5].Value = GetStatusLabel(ticket.Status.ToString());
-                worksheet.Cells[row, 6].Value = ticket.TtcomsCode ?? "";
-                worksheet.Cells[row, 7].Value = ticket.System?.Name ?? "";
-                worksheet.Cells[row, 8].Value = ticket.Subsystem?.Name ?? "";
-                worksheet.Cells[row, 9].Value = ticket.Component?.Name ?? "";
-                worksheet.Cells[row, 10].Value = ticket.CI?.Name ?? "";
-                worksheet.Cells[row, 11].Value = ticket.ItemDescription ?? "";
-                worksheet.Cells[row, 12].Value = ticket.ItemId ?? "";
-                worksheet.Cells[row, 13].Value = ticket.ItemSerialNo ?? "";
+                worksheet.Cells[row, 1].Value = ticket.Id;
+                worksheet.Cells[row, 2].Value = ticket.ExternalCode;
+                worksheet.Cells[row, 3].Value = ticket.Title;
+                worksheet.Cells[row, 4].Value = ticket.Description;
+                worksheet.Cells[row, 5].Value = ticket.IsBlocking ? "EVET" : "HAYIR";
+                worksheet.Cells[row, 6].Value = GetStatusLabel(ticket.Status.ToString());
+                worksheet.Cells[row, 7].Value = ticket.TtcomsCode ?? "";
+                worksheet.Cells[row, 8].Value = ticket.System?.Name ?? "";
+                worksheet.Cells[row, 9].Value = ticket.Subsystem?.Name ?? "";
+                worksheet.Cells[row, 10].Value = ticket.Component?.Name ?? "";
+                worksheet.Cells[row, 11].Value = ticket.CI?.Name ?? "";
+                worksheet.Cells[row, 12].Value = ticket.ItemDescription ?? "";
+                worksheet.Cells[row, 13].Value = ticket.ItemId ?? "";
+                worksheet.Cells[row, 14].Value = ticket.ItemSerialNo ?? "";
 
                 // Dates
-                worksheet.Cells[row, 14].Value = ticket.DetectedDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 15].Value = ticket.DetectedContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 15].Value = ticket.DetectedDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 16].Value = ticket.DetectedContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
 
                 // Notification methods
                 var notificationMethods = ticket.DetectedNotificationMethods != null && ticket.DetectedNotificationMethods.Length > 0
@@ -116,49 +118,49 @@ namespace Api.Services
                 {
                     notificationMethods = $"TTCOMS ({ticket.TtcomsCode})";
                 }
-                worksheet.Cells[row, 16].Value = notificationMethods;
+                worksheet.Cells[row, 17].Value = notificationMethods;
 
                 // Personnel - formatted
-                worksheet.Cells[row, 17].Value = FormatUserName(ticket.DetectedByUser);
-                worksheet.Cells[row, 18].Value = ticket.ResponseDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 19].Value = ticket.ResponseResolvedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 18].Value = FormatUserName(ticket.DetectedByUser);
+                worksheet.Cells[row, 19].Value = ticket.ResponseDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 20].Value = ticket.ResponseResolvedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
 
                 // Response personnel - multiple
                 var responsePersonnel = ticket.ResponseByUser != null && ticket.ResponseByUser.Any()
                     ? string.Join(", ", ticket.ResponseByUser.Select(rp => FormatUserName(rp.User)))
                     : "";
-                worksheet.Cells[row, 20].Value = responsePersonnel;
+                worksheet.Cells[row, 21].Value = responsePersonnel;
 
                 // Resolved personnel - multiple
                 var resolvedPersonnel = ticket.ResponseResolvedByUser != null && ticket.ResponseResolvedByUser.Any()
                     ? string.Join(", ", ticket.ResponseResolvedByUser.Select(rp => FormatUserName(rp.User)))
                     : "";
-                worksheet.Cells[row, 21].Value = resolvedPersonnel;
+                worksheet.Cells[row, 22].Value = resolvedPersonnel;
 
-                worksheet.Cells[row, 22].Value = ticket.ResponseActions ?? "";
-                worksheet.Cells[row, 23].Value = ticket.ActivityControlDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 24].Value = FormatUserName(ticket.ActivityControlPersonnel);
-                worksheet.Cells[row, 25].Value = FormatUserName(ticket.ActivityControlCommander);
-                worksheet.Cells[row, 26].Value = ticket.ActivityControlResult ?? "";
-                worksheet.Cells[row, 27].Value = FormatUserName(ticket.CreatedBy);
-                worksheet.Cells[row, 28].Value = ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm");
-                worksheet.Cells[row, 29].Value = FormatUserName(ticket.LastUpdatedBy);
-                worksheet.Cells[row, 30].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 31].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
-                worksheet.Cells[row, 32].Value = ticket.TentativeSolutionDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 23].Value = ticket.ResponseActions ?? "";
+                worksheet.Cells[row, 24].Value = ticket.ActivityControlDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 25].Value = FormatUserName(ticket.ActivityControlPersonnel);
+                worksheet.Cells[row, 26].Value = FormatUserName(ticket.ActivityControlCommander);
+                worksheet.Cells[row, 27].Value = ticket.ActivityControlResult ?? "";
+                worksheet.Cells[row, 28].Value = FormatUserName(ticket.CreatedBy);
+                worksheet.Cells[row, 29].Value = ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm");
+                worksheet.Cells[row, 30].Value = FormatUserName(ticket.LastUpdatedBy);
+                worksheet.Cells[row, 31].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 32].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
+                worksheet.Cells[row, 33].Value = ticket.TentativeSolutionDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
 
-                worksheet.Cells[row, 33].Value = ticket.NewItemDescription ?? "";
-                worksheet.Cells[row, 34].Value = ticket.NewItemId ?? "";
-                worksheet.Cells[row, 35].Value = ticket.NewItemSerialNo ?? "";
+                worksheet.Cells[row, 34].Value = ticket.NewItemDescription ?? "";
+                worksheet.Cells[row, 35].Value = ticket.NewItemId ?? "";
+                worksheet.Cells[row, 36].Value = ticket.NewItemSerialNo ?? "";
 
-                worksheet.Cells[row, 36].Value = ticket.HpNo ?? "";
+                worksheet.Cells[row, 37].Value = ticket.HpNo ?? "";
 
-                worksheet.Cells[row, 37].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
-                worksheet.Cells[row, 38].Value = ticket.SubContractor ?? "";
-                worksheet.Cells[row, 39].Value = ticket.SubContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 38].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
+                worksheet.Cells[row, 39].Value = ticket.SubContractor ?? "";
+                worksheet.Cells[row, 40].Value = ticket.SubContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
-                int col = 40;
+                int col = 41;
 
                 for (int i = 0; i < maxPauseCount; i++)
                 {
@@ -195,9 +197,9 @@ namespace Api.Services
             }
 
             // Wrap text for description and action columns
-            worksheet.Column(3).Style.WrapText = true; // Description
-            worksheet.Column(22).Style.WrapText = true; // Response Actions
-            worksheet.Column(26).Style.WrapText = true; // Activity Control Result
+            worksheet.Column(4).Style.WrapText = true; // Description
+            worksheet.Column(23).Style.WrapText = true; // Response Actions
+            worksheet.Column(27).Style.WrapText = true; // Activity Control Result
 
             // Add borders to all cells
             var allCells = worksheet.Cells[1, 1, row - 1, headers.Count];
