@@ -356,7 +356,7 @@ public class TicketsController : ControllerBase
                 ticket.SubContractor,
                 ticket.SubContractorNotifiedAt
             );
-        await _cache.SetAsync(cacheKey, detail, TimeSpan.FromSeconds(60));
+        await _cache.SetAsync(cacheKey, detail, TimeSpan.FromDays(100));
         return Ok(detail);
     }
 
