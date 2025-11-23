@@ -51,3 +51,14 @@ dotnet run --host 0.0.0.0
 ```bash 
 cd frontend 
 npm run dev -- --host 0.0.0.0
+
+
+
+> For caching install additional package 
+dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0.0
+
+> REDIS checks 
+  - redis-cli
+  - PING 
+  - KEYS * 
+  - HGETALL <KEYNAME>

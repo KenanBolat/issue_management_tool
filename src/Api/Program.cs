@@ -8,6 +8,9 @@ using Infrastructure.Auth;
 using Infrastructure.Data;
 using Api.Data;
 using Api.Services;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using StackExchange.Redis;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,10 +41,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Redis IDistributedCache
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = "tickettracker:";
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<SummaryBuilder>();
+builder.Services.AddScoped<ICacheService, RedisCacheService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

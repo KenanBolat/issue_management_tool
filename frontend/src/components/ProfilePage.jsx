@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { userApi } from '../../services/api';
-import { Save, Key } from 'lucide-react';
+import { Save, Key, Eye, EyeOff } from 'lucide-react';
+
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [savingProfile, setSavingProfile] = useState(false);
     const [savingPassword, setSavingPassword] = useState(false);
     const [militaryRanks, setMilitaryRanks] = useState([]);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+
 
     const [user, setUser] = useState(null);
 
@@ -214,28 +217,39 @@ export default function ProfilePage() {
                                 </div>
                                 <div style={styles.formRow}>
                                     <label style={styles.label}>Yeni Şifre</label>
-                                    <input
-                                        type="password"
-                                        value={passwordForm.newPassword}
-                                        onChange={(e) =>
-                                            handlePasswordChange('newPassword', e.target.value)
-                                        }
-                                        style={styles.input}
-                                    />
+                                    <div style={styles.passwordInputWrapper}>
+                                        <input
+                                            type={showNewPassword ? 'text' : 'password'}
+                                            value={passwordForm.newPassword}
+                                            onChange={(e) =>
+                                                handlePasswordChange('newPassword', e.target.value)
+                                            }
+                                            style={{ ...styles.input, paddingRight: '2.5rem' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowNewPassword((prev) => !prev)}
+                                            style={styles.passwordToggleButton}
+                                            aria-label={showNewPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                                        >
+                                            {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
                                 </div>
+
                                 <div style={styles.formRow}>
                                     <label style={styles.label}>Yeni Şifre (Tekrar)</label>
-                                    <input
-                                        type="password"
-                                        value={passwordForm.confirmNewPassword}
-                                        onChange={(e) =>
-                                            handlePasswordChange(
-                                                'confirmNewPassword',
-                                                e.target.value
-                                            )
-                                        }
-                                        style={styles.input}
-                                    />
+                                    <div style={styles.passwordInputWrapper}>
+                                        <input
+                                            type={showNewPassword ? 'text' : 'password'}
+                                            value={passwordForm.confirmNewPassword}
+                                            onChange={(e) =>
+                                                handlePasswordChange('confirmNewPassword', e.target.value)
+                                            }
+                                            style={{ ...styles.input, paddingRight: '2.5rem' }}
+                                        />
+                                      
+                                    </div>
                                 </div>
 
                                 <div style={styles.formActions}>
@@ -443,6 +457,23 @@ const styles = {
         textAlign: 'center',
         padding: '3rem',
         fontSize: '1.2rem',
+        color: '#666',
+    },
+    passwordInputWrapper: {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    passwordToggleButton: {
+        position: 'absolute',
+        right: '0.5rem',
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0.25rem',
         color: '#666',
     },
 };

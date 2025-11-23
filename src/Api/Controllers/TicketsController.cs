@@ -21,13 +21,19 @@ public class TicketsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly TicketService _ticketService;
     private readonly ExcelExportService _excelExportService;
+    private readonly ICacheService _cache;
 
 
-    public TicketsController(AppDbContext context, TicketService ticketService, ExcelExportService excelExportService)
+
+    public TicketsController(AppDbContext context,
+                            TicketService ticketService,
+                            ExcelExportService excelExportService,
+                            ICacheService cache)
     {
         _context = context;
         _ticketService = ticketService;
         _excelExportService = excelExportService;
+        _cache = cache;
 
     }
 
@@ -39,7 +45,13 @@ public class TicketsController : ControllerBase
     [HttpGet("system")]
     public async Task<ActionResult<List<SystemOption>>> GetAvailableSystems()
     {
+        const string cacheKey = "tickets:dropdown:systems";
+        var cached = await _cache.GetAsync<List<SystemOption>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
+
         var systems = await _context.Systems
+            .AsNoTracking()
             .OrderBy(s => s.Name)
             .Select(s => new SystemOption(
                 s.Id,
@@ -56,6 +68,14 @@ public class TicketsController : ControllerBase
     [HttpGet("subsystem")]
     public async Task<ActionResult<List<SubsystemOption>>> GetAvailableSubsystems([FromQuery] long? systemId = null)
     {
+
+        var cacheKey = $"tickets:dropdown:subsystems:{systemId?.ToString() ?? "all"}";
+
+        var cached = await _cache.GetAsync<List<SubsystemOption>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
+
+
         IQueryable<Subsystem> query = _context.Subsystems.AsNoTracking();
 
         if (systemId.HasValue)
@@ -71,6 +91,7 @@ public class TicketsController : ControllerBase
                 s.SystemId
             ))
             .ToListAsync();
+        await _cache.SetAsync(cacheKey, subsystems, TimeSpan.FromHours(1));
 
         return Ok(subsystems);
     }
@@ -80,7 +101,15 @@ public class TicketsController : ControllerBase
     [HttpGet("ci")]
     public async Task<ActionResult<List<CIOption>>> GetAvailableCIs([FromQuery] long? subsystemId = null)
     {
+        var cacheKey = $"tickets:dropdown:cis:{subsystemId?.ToString() ?? "all"}";
+
+        var cached = await _cache.GetAsync<List<CIOption>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
+
         var query = _context.ConfigurationItems;
+
+
 
         var cis = await query
             .OrderBy(ci => ci.Name)
@@ -89,6 +118,9 @@ public class TicketsController : ControllerBase
                 ci.Name
                ))
             .ToListAsync();
+
+        await _cache.SetAsync(cacheKey, cis, TimeSpan.FromHours(1));
+
 
         return Ok(cis);
     }
@@ -100,6 +132,12 @@ public class TicketsController : ControllerBase
     [HttpGet("component")]
     public async Task<ActionResult<List<ComponentOption>>> GetAvailableComponents([FromQuery] long? subsystemID = null)
     {
+        var cacheKey = $"tickets:dropdown:components:{subsystemID?.ToString() ?? "all"}";
+
+        var cached = await _cache.GetAsync<List<ComponentOption>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
+
         // var query = _context.Components;
         IQueryable<Component> query = _context.Components.AsNoTracking();
 
@@ -117,13 +155,22 @@ public class TicketsController : ControllerBase
             ))
             .ToListAsync();
 
+        await _cache.SetAsync(cacheKey, components, TimeSpan.FromHours(1));
+
+
         return Ok(components);
     }
 
 
     [HttpGet]
     public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null, [FromQuery] bool includeDeleted = false)
+
     {
+        var cacheKey = $"tickets:list:{status ?? "all"}:{includeDeleted}";
+
+        var cached = await _cache.GetAsync<List<TicketListItem>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
         var query = _context.Tickets
         .Include(t => t.CreatedBy)
         .Include(t => t.CIJobs)
@@ -171,6 +218,7 @@ public class TicketsController : ControllerBase
     ))
     .ToListAsync();
 
+        await _cache.SetAsync(cacheKey, items, TimeSpan.FromMinutes(15));
 
         return Ok(items);
     }
@@ -290,14 +338,14 @@ public class TicketsController : ControllerBase
                 ticket.ItemSerialNo,
 
                 ticket.ActivityControlPersonnel != null ? FormatUserName(ticket.ActivityControlPersonnel) : null,
-                ticket.ActivityControlCommander != null ? FormatUserName(ticket.ActivityControlCommander) : null, 
-                ticket.NewItemDescription, 
-                ticket.NewItemId, 
-                ticket.NewItemSerialNo, 
-                ticket.HpNo, 
-                ticket.TentativeSolutionDate, 
-                (int?)ticket.ActivityControlStatus, 
-                ticket.SubContractor, 
+                ticket.ActivityControlCommander != null ? FormatUserName(ticket.ActivityControlCommander) : null,
+                ticket.NewItemDescription,
+                ticket.NewItemId,
+                ticket.NewItemSerialNo,
+                ticket.HpNo,
+                ticket.TentativeSolutionDate,
+                (int?)ticket.ActivityControlStatus,
+                ticket.SubContractor,
                 ticket.SubContractorNotifiedAt
             );
 
@@ -357,21 +405,21 @@ public class TicketsController : ControllerBase
             ActivityControlCommanderId = request.ActivityControlCommanderId,
             ActivityControlDate = request.ActivityControlDate,
             ActivityControlResult = request.ActivityControlResult,
-            ActivityControlStatus = request.ActivityControlStatus.HasValue 
-                ? (ControlStatus)request.ActivityControlStatus.Value 
-                : null, 
+            ActivityControlStatus = request.ActivityControlStatus.HasValue
+                ? (ControlStatus)request.ActivityControlStatus.Value
+                : null,
 
             TtcomsCode = request.TtcomsCode,
             ItemDescription = request.ItemDescription,
             ItemId = request.ItemId,
             ItemSerialNo = request.ItemSerialNo,
-            NewItemDescription = request.NewItemDescription, 
-            NewItemId = request.NewItemId, 
-            NewItemSerialNo = request.NewItemSerialNo, 
-            HpNo = request.HpNo, 
+            NewItemDescription = request.NewItemDescription,
+            NewItemId = request.NewItemId,
+            NewItemSerialNo = request.NewItemSerialNo,
+            HpNo = request.HpNo,
             TentativeSolutionDate = request.TentativeSolutionDate,
-            SubContractor = request.SubContractor, 
-            SubContractorNotifiedAt = request.SubContractorNotifiedAt, 
+            SubContractor = request.SubContractor,
+            SubContractorNotifiedAt = request.SubContractorNotifiedAt,
 
             IsActive = true,
             IsDeleted = false
@@ -535,7 +583,7 @@ public class TicketsController : ControllerBase
 
 
 
-         if (request.SubContractor != null && ticket.SubContractor != request.SubContractor)
+        if (request.SubContractor != null && ticket.SubContractor != request.SubContractor)
         {
             ticket.SubContractor = request.SubContractor;
             hasChanges = true;
@@ -633,18 +681,18 @@ public class TicketsController : ControllerBase
             ticket.ActivityControlDate = request.ActivityControlDate;
             hasChanges = true;
         }
-        
+
 
         if (request.ActivityControlResult != null && ticket.ActivityControlResult != request.ActivityControlResult)
         {
             ticket.ActivityControlResult = request.ActivityControlResult;
             hasChanges = true;
         }
-        
+
         if (request.ActivityControlStatus.HasValue)
         {
             ticket.ActivityControlStatus = (ControlStatus)request.ActivityControlStatus.Value;
-            
+
         }
 
         if (hasChanges)
@@ -756,7 +804,12 @@ public class TicketsController : ControllerBase
     [HttpGet("available-personnel")]
     public async Task<ActionResult<List<PersonnelOption>>> GetAvailablePersonnel()
     {
-        // Step 1: Query database with anonymous type (EF Core can translate this)
+        const string cacheKey = "tickets:dropdown:available-personnel";
+
+        var cached = await _cache.GetAsync<List<PersonnelOption>>(cacheKey);
+        if (cached != null)
+            return Ok(cached);
+
         var users = await _context.Users
             .Where(u => u.IsActive)
             .OrderBy(u => u.DisplayName)
@@ -778,6 +831,9 @@ public class TicketsController : ControllerBase
             u.RankCode,
             u.Role
         )).ToList();
+
+        await _cache.SetAsync(cacheKey, personnelOptions, TimeSpan.FromMinutes(30));
+
 
         return Ok(personnelOptions);
     }
@@ -866,7 +922,7 @@ public class TicketsController : ControllerBase
                         .ThenInclude(u => u.MilitaryRank)
                 .Include(t => t.ActivityControlPersonnel)
                     .ThenInclude(u => u.MilitaryRank)
-                .Include(t => t.Actions)   
+                .Include(t => t.Actions)
                 .Include(t => t.ActivityControlCommander)
                     .ThenInclude(u => u.MilitaryRank)
                 .Where(t => t.IsActive && !t.IsDeleted)
