@@ -166,7 +166,7 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<List<TicketListItem>>> GetTickets([FromQuery] string? status = null, [FromQuery] bool includeDeleted = false)
 
     {
-        var cacheKey = $"tickets:list:{status ?? "all"}:{includeDeleted}";
+        var cacheKey = $"tickettracker:list:{status ?? "all"}:{includeDeleted}";
 
         var cached = await _cache.GetAsync<List<TicketListItem>>(cacheKey);
         if (cached != null)
@@ -226,6 +226,14 @@ public class TicketsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TicketDetail>> GetTicket(long id)
     {
+        var cacheKey = $"tickettracker:tickets:detail:{id}";
+
+        var cached = await _cache.GetAsync<TicketDetail>(cacheKey);
+        if (cached != null)
+        {
+            return Ok(cached);
+        }
+
         var isAdmin = User.IsInRole("Admin");
         IQueryable<Ticket> query = _context.Tickets
        .Include(t => t.CreatedBy)
@@ -348,7 +356,7 @@ public class TicketsController : ControllerBase
                 ticket.SubContractor,
                 ticket.SubContractorNotifiedAt
             );
-
+        await _cache.SetAsync(cacheKey, detail, TimeSpan.FromSeconds(60));
         return Ok(detail);
     }
 
@@ -711,6 +719,7 @@ public class TicketsController : ControllerBase
 
             await _context.SaveChangesAsync();
         }
+        await InvalidateTicketDetailCacheAsync(id);
 
         return NoContent();
     }
@@ -980,6 +989,26 @@ public class TicketsController : ControllerBase
 
         return NoContent();
     }
+
+    //Helper functions for cache invalidation 
+    private Task InvalidateTicketDetailCacheAsync(long id)
+    => _cache.RemoveAsync($"tickettracker:tickets:detail:{id}");
+    private async Task InvalidateTicketListCacheAsync()
+    {
+        // all tickets, with/without deleted
+        await _cache.RemoveAsync("tickettracker:tickets:list:all:False");
+        await _cache.RemoveAsync("tickettracker:tickets:list:all:True");
+
+        // each status
+        foreach (var statusName in Enum.GetNames<TicketStatus>())
+        {
+            await _cache.RemoveAsync($"tickettracker:tickets:list:{statusName}:false");
+            await _cache.RemoveAsync($"tickettracker:tickets:list:{statusName}:true");
+        }
+    }
+
+
+
 
 }
 
