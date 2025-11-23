@@ -62,3 +62,4 @@ dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0
   - PING 
   - KEYS * 
   - HGETALL <KEYNAME>
+  - FLUSHALL 
