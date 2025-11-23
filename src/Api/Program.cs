@@ -90,6 +90,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<ExcelExportService>();
 builder.Services.AddScoped<ConfigurationService>();
+builder.Services.AddScoped<NotificationService>();
 
 
 var app = builder.Build();

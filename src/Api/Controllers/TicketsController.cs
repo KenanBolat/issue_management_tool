@@ -22,18 +22,21 @@ public class TicketsController : ControllerBase
     private readonly TicketService _ticketService;
     private readonly ExcelExportService _excelExportService;
     private readonly ICacheService _cache;
+    private readonly NotificationService _notificationService;
 
 
 
     public TicketsController(AppDbContext context,
                             TicketService ticketService,
                             ExcelExportService excelExportService,
-                            ICacheService cache)
+                            ICacheService cache, 
+                            NotificationService notificationService)
     {
         _context = context;
         _ticketService = ticketService;
         _excelExportService = excelExportService;
         _cache = cache;
+        _notificationService = notificationService;
 
     }
 
@@ -463,7 +466,11 @@ public class TicketsController : ControllerBase
             await _context.SaveChangesAsync();
         }
 
-        // invalidate the cahce 
+        var notificationService = HttpContext.RequestServices.GetRequiredService<NotificationService>();
+            await notificationService.CreateNewTicketNotification(ticket, GetCurrentUserId());
+
+
+        // invalidate the cache 
         await InvalidateTicketListCacheAsync();
         return CreatedAtAction(nameof(GetTicket), new { id = created.Id }, await GetTicket(created.Id));
 

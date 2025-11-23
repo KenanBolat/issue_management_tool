@@ -24,6 +24,10 @@ namespace Infrastructure.Data
         public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<Configuration> Configurations { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationRead> NotificationReads { get; set; }
+        public DbSet<NotificationAction> NotificationActions { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -253,12 +257,90 @@ namespace Infrastructure.Data
                 entity.HasIndex(e => e.Code).IsUnique();
             });
             modelBuilder.Entity<Configuration>(entity =>
-                {   entity.ToTable("configuration"); 
+                {
+                    entity.ToTable("configuration");
                     entity.HasKey(e => e.Id);
                     entity.HasOne(e => e.UpdatedBy)
                     .WithMany()
                     .HasForeignKey(e => e.UpdatedById)
-                    .OnDelete(DeleteBehavior.SetNull);  });
+                    .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Message)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            entity.HasOne(e => e.Ticket)
+                .WithMany()
+                .HasForeignKey(e => e.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.TargetUser)
+                .WithMany()
+                .HasForeignKey(e => e.TargetUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ResolvedBy)
+                .WithMany()
+                .HasForeignKey(e => e.ResolvedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.TicketId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.Type, e.IsResolved });
+        });
+
+            // NotificationRead configuration
+            modelBuilder.Entity<NotificationRead>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Notification)
+                    .WithMany(n => n.NotificationReads)
+                    .HasForeignKey(e => e.NotificationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.NotificationId, e.UserId })
+                    .IsUnique();
+            });
+
+            // NotificationAction configuration
+            modelBuilder.Entity<NotificationAction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.ActionType)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.HasOne(e => e.Notification)
+                    .WithMany(n => n.NotificationActions)
+                    .HasForeignKey(e => e.NotificationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
         }
     }
