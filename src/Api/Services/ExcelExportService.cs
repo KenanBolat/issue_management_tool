@@ -46,7 +46,7 @@ namespace Api.Services
                 "Müdahale Tarihi",
                 "Giderilme Tarihi",
                 "Müdahale Eden Personel",
-                "Gidiren Personel",
+                "Gideren Personel",
                 "Yapılan İşlemler",
                 "Faaliyet Kontrolü Tarihi",
                 "Faaliyet Kontrolü Personeli",
