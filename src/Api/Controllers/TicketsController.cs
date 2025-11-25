@@ -816,6 +816,8 @@ public class TicketsController : ControllerBase
             PerformedAt = DateTime.UtcNow
         });
         await _context.SaveChangesAsync();
+        await InvalidateTicketListCacheAsync();
+
         return NoContent();
     }
 

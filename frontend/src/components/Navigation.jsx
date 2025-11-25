@@ -1,78 +1,166 @@
-import { LayoutDashboard, List, LogOut, User } from "lucide-react";
+
+import { useState, useEffect } from 'react';
+
+import { LayoutDashboard, List, LogOut, User, Bell, Clock } from "lucide-react";
+import NotificationsPanel from './NotificationsPanel';
+import { notificationsAPI } from '../../services/api';
+import signalRService from '../../services/signalrService';
+
+
+
 
 
 export default function Navigation({ currentPage, onNavigate }) {
 
     const userName = localStorage.getItem("displayName") || "DisplayName";
     const userRole = localStorage.getItem("role") || "UserRole";
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    useEffect(() => {
+        loadUnreadCount();
+
+        // Connect to SignalR
+        const token = localStorage.getItem('token');
+        if (token) {
+            signalRService.connect(token);
+        }
+
+        // Request browser notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Listen for new notifications
+        const handleNewNotification = () => {
+            loadUnreadCount();
+        };
+
+        signalRService.on('NewNotification', handleNewNotification);
+
+        return () => {
+            signalRService.off('NewNotification');
+        };
+    }, []);
+
+    const loadUnreadCount = async () => {
+        try {
+            const response = await notificationsAPI.getUnreadCount();
+            setUnreadCount(response.data);
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    };
+
+    const handleNotificationClick = (notification) => {
+        // Navigate to the ticket
+        if (notification.ticketId) {
+            onNavigate('tickets', { ticketId: notification.ticketId });
+        }
+    };
 
 
     return (
-        <nav style={styles.nav}>
-            <div style={styles.brand}>
-                <span style={styles.brandIcon}>🛰️</span>
-                <span style={styles.brandText}>Satellite Ticket Tracker  </span>
-            </div>
-            <div style={styles.menu}>
-                <button
-                    onClick={() => onNavigate('dashboard')}
-                    style={{
-                        ...styles.menuItem,
-                        ...(currentPage === 'dashboard' ? styles.activeMenuItem : {})
-                    }}
-                >
-                    <LayoutDashboard size={18} />
-                    Gösterge Paneli </button>
-                <button
-                    onClick={() => onNavigate('tickets')}
-                    style={{
-                        ...styles.menuItem,
-                        ...(currentPage === 'tickets' ? styles.activeMenuItem : {})
-                    }}
-                >
-                    <List size={18} />
-                    Sorunlar </button>
-
-                {userRole === 'Admin' && (
-                    <button 
-                    onClick={() => onNavigate('users')}
-                    style={{...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem: {})}}
+        <>
+            <nav style={styles.nav}>
+                <div style={styles.brand}>
+                    <span style={styles.brandIcon}>🛰️</span>
+                    <span style={styles.brandText}>Satellite Ticket Tracker  </span>
+                </div>
+                <div style={styles.menu}>
+                    <button
+                        onClick={() => onNavigate('dashboard')}
+                        style={{
+                            ...styles.menuItem,
+                            ...(currentPage === 'dashboard' ? styles.activeMenuItem : {})
+                        }}
                     >
-                        Kontrol Paneli
+                        <LayoutDashboard size={18} />
+                        Gösterge Paneli </button>
+                    <button
+                        onClick={() => onNavigate('tickets')}
+                        style={{
+                            ...styles.menuItem,
+                            ...(currentPage === 'tickets' ? styles.activeMenuItem : {})
+                        }}
+                    >
+                        <List size={18} />
+                        Sorunlar </button>
+
+                    {userRole === 'Admin' && (
+                        <button
+                            onClick={() => onNavigate('users')}
+                            style={{ ...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem : {}) }}
+                        >
+                            Kontrol Paneli
+                        </button>
+                    )}
+                    <button
+                        onClick={() => onNavigate('progress-requests')}
+                        style={{
+                            ...styles.menuItem,
+                            ...(currentPage === 'progress-requests' ? styles.activeMenuItem : {})
+                        }}
+                    >
+                        <Clock size={18} />
+                        İlerleme Talepleri
                     </button>
-                )}
-            </div>
-            <div style={styles.userSection}>
-                <div style={styles.userInfo}>
-                    <div style={styles.userName}>{userName}</div>
-                    <div style={styles.userRole}>{userRole}</div>
                 </div>
 
-                 {/* NEW: Profile link – visible to everyone */}
-        <button
-          onClick={() => onNavigate('profile')}
-          style={{
-            ...styles.menuItem,
-            ...(currentPage === 'profile' ? styles.activeMenuItem : {}),
-          }}
-        >
-          <User size={18} />
-          Profilim
-        </button>
-                <button
-                    onClick={() => {
-                        localStorage.clear();
-                        window.location.reload();
-                    }}
-                    style={styles.logoutBtn}
-                    title="Logout"
-                >
-                    <LogOut size={18} />
-                </button>
-            </div>
-        </nav>
+
+                <div style={styles.userSection}>
+                    <button
+                        onClick={() => setShowNotifications(true)}
+                        style={styles.notificationBtn}
+                        title="Bildirimler"
+                    >
+                        <Bell size={20} />
+                        {unreadCount > 0 && (
+                            <span style={styles.notificationBadge}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
+                    </button>
+                    <div style={styles.userInfo}>
+                        <div style={styles.userName}>{userName}</div>
+                        <div style={styles.userRole}>{userRole}</div>
+                    </div>
+
+                    <button
+                        onClick={() => onNavigate('profile')}
+                        style={{
+                            ...styles.menuItem,
+                            ...(currentPage === 'profile' ? styles.activeMenuItem : {}),
+                        }}
+                    >
+                        <User size={18} />
+                        Profilim
+                    </button>
+                    <button
+                        onClick={() => {
+                            localStorage.clear();
+                            window.location.reload();
+                        }}
+                        style={styles.logoutBtn}
+                        title="Logout"
+                    >
+                        <LogOut size={18} />
+                    </button>
+                </div>
+            </nav>
+
+            <NotificationsPanel
+                isOpen={showNotifications}
+                onClose={() => {
+                    setShowNotifications(false);
+                    loadUnreadCount();
+                }}
+                onNotificationClick={handleNotificationClick}
+            />
+        </>
     );
 }
+
 
 const styles = {
     nav: {

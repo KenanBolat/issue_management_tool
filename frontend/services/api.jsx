@@ -19,6 +19,26 @@ export const authAPI = {
 
 };
 
+
+export const progressRequestsAPI = {
+    getAll: (params) => api.get('/ProgressRequests', { params }),
+    getById: (id) => api.get(`/ProgressRequests/${id}`),
+    respond: (id, data) => api.post(`/ProgressRequests/${id}/respond`, data),
+    cancel: (id) => api.post(`/ProgressRequests/${id}/cancel`),
+    getStats: () => api.get('/ProgressRequests/stats'),
+};
+
+export const notificationsAPI = {
+    getAll: (params) => api.get('/Notifications', { params }),
+    getById: (id) => api.get(`/Notifications/${id}`),
+    getUnreadCount: () => api.get('/Notifications/unread-count'),
+    getStats: () => api.get('/Notifications/stats'),
+    createProgressRequest: (data) => api.post('/Notifications/progress-request', data),
+    markAsRead: (id, readFrom = null) => api.post(`/Notifications/${id}/mark-read`, null, { params: { readFrom } }),
+    markMultipleAsRead: (data) => api.post('/Notifications/mark-read', data),
+    resolve: (id, data) => api.post(`/Notifications/${id}/resolve`, data),
+};
+
 export const ticketsAPI = {
 
     getAll: (status = null, includeDeleted = false) => {

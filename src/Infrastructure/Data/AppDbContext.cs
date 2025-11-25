@@ -27,6 +27,7 @@ namespace Infrastructure.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationRead> NotificationReads { get; set; }
         public DbSet<NotificationAction> NotificationActions { get; set; }
+        public DbSet<ProgressRequest> ProgressRequests { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -341,6 +342,51 @@ namespace Infrastructure.Data
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            //ProgressRequest configuration
+
+            modelBuilder.Entity<ProgressRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasOne(e => e.Ticket)
+                .WithMany()
+                .HasForeignKey(e => e.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.RequestedBy)
+                .WithMany()
+                .HasForeignKey(e => e.RequestedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.TargetUser)
+                .WithMany()
+                .HasForeignKey(e => e.TargetUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.RespondedBy)
+                .WithMany()
+                .HasForeignKey(e => e.RespondedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ResponseAction)
+                .WithMany()
+                .HasForeignKey(e => e.ResponseActionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Notification)
+                .WithMany()
+                .HasForeignKey(e => e.NotificationId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.TicketId);
+            entity.HasIndex(e => e.TargetUserId);
+            entity.HasIndex(e => e.Status);
+        });
 
         }
     }

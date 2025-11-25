@@ -63,3 +63,10 @@ dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0
   - KEYS * 
   - HGETALL <KEYNAME>
   - FLUSHALL 
+
+
+
+> For caching install additional package 
+dotnet add package Microsoft.AspNetCore.SignalR --version 8.0.0
+
+> npm install @microsoft/signalr

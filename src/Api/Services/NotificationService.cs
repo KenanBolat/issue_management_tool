@@ -2,6 +2,9 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using Api.Hubs;
+
 
 namespace Api.Services
 {
@@ -9,11 +12,13 @@ namespace Api.Services
     {
         private readonly AppDbContext _context;
         private readonly ILogger<NotificationService> _logger;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationService(AppDbContext context, ILogger<NotificationService> logger)
+        public NotificationService(AppDbContext context, ILogger<NotificationService> logger, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         /// <summary>
@@ -23,6 +28,7 @@ namespace Api.Services
         {
 
             var userExists = await _context.Users.AnyAsync(u => u.Id == createdByUserId);
+
             if (!userExists)
             {
                 _logger.LogError($"Cannot create notification: User with ID {createdByUserId} does not exist");
@@ -48,6 +54,20 @@ namespace Api.Services
 
             _logger.LogInformation($"Created new ticket notification for ticket #{ticket.ExternalCode}");
 
+            await _hubContext.Clients.All.SendAsync("NewNotification", new
+            {
+                id = notification.Id,
+                type = notification.Type.ToString(),
+                priority = notification.Priority.ToString(),
+                ticketId = notification.TicketId,
+                ticketCode = ticket.ExternalCode,
+                title = notification.Title,
+                message = notification.Message,
+                actionUrl = notification.ActionUrl,
+                createdAt = notification.CreatedAt,
+                isGlobal = notification.IsGlobal
+            });
+
             return notification;
         }
 
@@ -67,6 +87,22 @@ namespace Api.Services
             if (ticket == null)
                 throw new Exception("Ticket not found");
 
+
+            var progressRequest = new ProgressRequest
+            {
+                TicketId = ticketId,
+                RequestedByUserId = requestedByUserId,
+                TargetUserId = targetUserId ?? ticket.CreatedById,
+                RequestMessage = message,
+                RequestedAt = DateTime.UtcNow,
+                DueDate = DateTime.UtcNow.AddDays(7),
+                IsResponded = false,
+                Status = "Pending"
+            };
+            _context.ProgressRequests.Add(progressRequest);
+            await _context.SaveChangesAsync();
+
+
             var notification = new Notification
             {
                 Type = NotificationType.ProgressRequest,
@@ -83,10 +119,34 @@ namespace Api.Services
                 ExpiresAt = DateTime.UtcNow.AddDays(7) // Expires in 7 days
             };
 
+
+
+
             _context.Notifications.Add(notification);
+            await _context.SaveChangesAsync();
+            
+            progressRequest.NotificationId = notification.Id;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation($"Created progress request for ticket #{ticket.ExternalCode}");
+
+
+            var targetUser = targetUserId ?? ticket.CreatedById;
+            await _hubContext.Clients.Group($"user_{targetUser}").SendAsync("NewNotification", new
+            {
+                id = notification.Id,
+                type = notification.Type.ToString(),
+                priority = notification.Priority.ToString(),
+                ticketId = notification.TicketId,
+                ticketCode = ticket.ExternalCode,
+                title = notification.Title,
+                message = notification.Message,
+                actionUrl = notification.ActionUrl,
+                createdAt = notification.CreatedAt,
+                requiresAction = notification.RequiresAction,
+                targetUserId = notification.TargetUserId
+            });
+
 
             return notification;
         }

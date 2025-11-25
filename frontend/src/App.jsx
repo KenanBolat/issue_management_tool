@@ -7,6 +7,7 @@ import TicketDetail from "./components/TicketDetail.jsx";
 import UserList from "./components/UserList.jsx";
 import UserForm from "./components/UserForm.jsx";
 import ProfilePage from './components/ProfilePage';
+import ProgressRequestsTable from "./components/ProgressRequestsTable.jsx";
 
 
 function App() {
@@ -25,7 +26,7 @@ function App() {
         }
     }, []);
 
-    const handleLogin = () => { 
+    const handleLogin = () => {
         setIsAuthenticated(true);
     };
 
@@ -49,7 +50,7 @@ function App() {
         console.log("Creating new ticket");
         setSelectedTicketId('new');
         setCurrentPage('ticket-detail');
-    }   
+    }
 
     const handleCloseTicketDetail = () => {
         setSelectedTicketId(null);
@@ -81,14 +82,14 @@ function App() {
         setCurrentPage('user-permissions');
     };
 
-     const handleCloseUserForm = () => {
+    const handleCloseUserForm = () => {
         setSelectedUserId(null);
         setCurrentPage('users');
     };
 
     const handleDeleteUser = (userID) => {
-        console.log("handleDeleteUser"); 
-        console.log(userID); 
+        console.log("handleDeleteUser");
+        console.log(userID);
     }
 
 
@@ -103,9 +104,9 @@ function App() {
 
 
             <main>
-                {currentPage === 'dashboard' && <Dashboard 
-                            onCreateTicket={handleCreateTicket} 
-                            onNavigate={handleNavigate}/>}
+                {currentPage === 'dashboard' && <Dashboard
+                    onCreateTicket={handleCreateTicket}
+                    onNavigate={handleNavigate} />}
                 {currentPage === 'tickets' && (
                     <TicketsTable
                         onViewTicket={handleViewTicket}
@@ -113,12 +114,16 @@ function App() {
                         onCreateTicket={handleCreateTicket}
                         refreshTrigger={refreshTickets}
                     />)}
-                {currentPage === 'ticket-detail' && (<TicketDetail 
-                ticketId={selectedTicketId}
-                onClose={handleCloseTicketDetail} />)}
+                {currentPage === 'ticket-detail' && (<TicketDetail
+                    ticketId={selectedTicketId}
+                    onClose={handleCloseTicketDetail} />)}
+
+                {currentPage === 'progress-requests' && (
+                    <ProgressRequestsTable onNavigate={handleNavigate} />
+                )}
 
                 {currentPage === 'users' && (
-                    <UserList 
+                    <UserList
                         onViewUser={handleViewUser}
                         onEditUser={handleEditUser}
                         onCreateUser={handleCreateUser}
@@ -126,11 +131,11 @@ function App() {
                         onManagePermissions={handleManagePermissions}
                     />
                 )}
-                      {currentPage === 'profile' && <ProfilePage />}
+                {currentPage === 'profile' && <ProfilePage />}
 
 
-                 {currentPage === 'user-form' && (
-                    <UserForm 
+                {currentPage === 'user-form' && (
+                    <UserForm
                         userId={selectedUserId}
                         onClose={handleCloseUserForm}
                         onSave={() => {
