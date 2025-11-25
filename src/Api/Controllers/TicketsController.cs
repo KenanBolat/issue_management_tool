@@ -938,7 +938,8 @@ public class TicketsController : ControllerBase
                 .Include(t => t.ActivityControlCommander)
                     .ThenInclude(u => u.MilitaryRank)
                 .Where(t => t.IsActive && !t.IsDeleted)
-                .OrderByDescending(t => t.CreatedAt)
+                // .OrderByDescending(t => t.CreatedAt)
+                .OrderBy(t => t.CreatedAt) 
                 .ToListAsync();
 
             var excelData = await _excelExportService.GenerateTicketsExcelAsync(tickets);
