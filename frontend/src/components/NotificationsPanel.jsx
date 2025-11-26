@@ -161,7 +161,7 @@ export default function NotificationsPanel({ isOpen, onClose, onNotificationClic
     const getTypeLabel = (type) => {
         const labels = {
             'NewTicket': 'Yeni Sorun',
-            'ProgressRequest': 'İlerleme Talebi',
+            'ProgressRequest': 'Bilgi Talebi',
             'StatusChanged': 'Durum Değişikliği',
             'TicketClosed': 'Sorun Kapatıldı',
             'CommentAdded': 'Yeni Yorum',
@@ -220,7 +220,7 @@ export default function NotificationsPanel({ isOpen, onClose, onNotificationClic
                         <span style={styles.statValue}>{stats.newTickets}</span>
                     </div>
                     <div style={styles.statItem}>
-                        <span style={styles.statLabel}>İlerleme Talepleri</span>
+                        <span style={styles.statLabel}>Bilgi Talepleri</span>
                         <span style={styles.statValue}>{stats.progressRequests}</span>
                     </div>
                     <div style={styles.statItem}>
@@ -256,7 +256,7 @@ export default function NotificationsPanel({ isOpen, onClose, onNotificationClic
                             ...(filter === 'progressRequest' ? styles.filterBtnActive : {})
                         }}
                     >
-                        İlerleme Talepleri
+                        Bilgi Talepleri
                     </button>
                 </div>
 

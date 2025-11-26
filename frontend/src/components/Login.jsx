@@ -56,12 +56,7 @@ export default function Login({ onLogin }) {
           </button>
         </form>
         
-        <div style={styles.hint}>
-          <p><strong>Test Accounts:</strong></p>
-          <p>Admin: admin@example.com / adminpasswd</p>
-          <p>Editor: editor@example.com / editorpasswd</p>
-          <p>Viewer: viewer@example.com / viewerpasswd</p>
-        </div>
+
       </div>
     </div>
   );

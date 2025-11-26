@@ -84,19 +84,19 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
     const handleRequestProgress = async () => {
-        if (!window.confirm('İlerleme raporu talep etmek istediğinize emin misiniz?')) return;
+        if (!window.confirm('Bilgi raporu talep etmek istediğinize emin misiniz?')) return;
 
         try {
             await notificationsAPI.createProgressRequest({
                 ticketId: ticket.id,
                 targetUserId: ticket.createdByUserId, // or null for automatic
-                message: `${ticket.externalCode} numaralı sorun için ilerleme raporu bekleniyor`
+                message: `${ticket.externalCode} numaralı sorun için bilgi raporu bekleniyor`
             });
 
-            alert('İlerleme talebi gönderildi');
+            alert('Bilgi talebi gönderildi');
         } catch (error) {
             console.error('Error requesting progress:', error);
-            alert('İlerleme talebi gönderilemedi');
+            alert('Bilgi talebi gönderilemedi');
         }
     };
     // Form state
@@ -397,7 +397,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 description: formData.description,
                 isBlocking: formData.isBlocking,
                 technicalReportRequired: formData.technicalReportRequired,
-                status: newStatus,  // ✅ Use the newStatus parameter directly
+                status: newStatus,
 
                 ciId: formData.ciId || null,
                 componentId: formData.componentId || null,
@@ -1043,7 +1043,6 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         <h2 style={styles.sectionTitle}>
                             Faaliyet Kontrolü
-                            {/* ✅ Display status badge if exists */}
                             {formData.activityControlStatus !== null && formData.activityControlStatus !== undefined && (
                                 <span style={{
                                     marginLeft: '1rem',
@@ -1258,13 +1257,13 @@ export default function TicketDetail({ ticketId, onClose }) {
                             </div>
                             {canEdit && ticket && (
                                 <div style={styles.formSection}>
-                                    <h3 style={styles.panelTitle}>İlerleme Talebi</h3>
+                                    <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
                                     <button
                                         onClick={() => handleRequestProgress()}
                                         style={{ ...styles.button, ...styles.progressRequestButton }}
                                     >
                                         <Clock size={16} />
-                                        İlerleme Raporu Talep Et
+                                        Bilgi Raporu Talep Et
                                     </button>
                                 </div>
                             )}

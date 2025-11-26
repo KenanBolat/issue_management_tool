@@ -53,6 +53,9 @@ namespace Domain.Entities
         [Column("preferred_language")]
         public string? PreferredLanguage { get; set; } = "tr-TR";
 
+        [Column("position")]
+        public UserPosition? Position { get; set; }
+
 
         [Column("created_by_id")]
         public long? CreatedById { get; set; }

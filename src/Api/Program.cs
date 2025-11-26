@@ -127,10 +127,10 @@ builder.Services.AddCors(options =>
 
         Console.WriteLine($"CORS: Allowing origins: {string.Join(", ", allowedOrigins)}");
 
-        policy.WithOrigins(allowedOrigins)  // ✅ SPECIFIC ORIGINS (not AllowAnyOrigin)
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();  // ✅ REQUIRED FOR SIGNALR
+              .AllowCredentials(); 
     });
 });
 builder.Services.AddScoped<ExcelExportService>();

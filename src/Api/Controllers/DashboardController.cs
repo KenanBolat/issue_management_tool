@@ -29,7 +29,6 @@ public class DashboardController : ControllerBase
             .Select(t => t.Status)
             .ToListAsync();
 
-        // ✅ Initialize dictionary with all possible statuses
         var statusCounts = Enum.GetValues<TicketStatus>()
             .ToDictionary(s => s.ToString(), s => 0);
 
@@ -46,16 +45,7 @@ public class DashboardController : ControllerBase
                 statusCounts[key] = 1;
             }
         }
-        // // ✅ FIX 1: Get status counts in memory to avoid duplicate key issues
-        // var tickets = await _context.Tickets
-        //     .Where(t => t.IsActive && !t.IsDeleted)  // Only count active tickets
-        //     .Select(t => t.Status)
-        //     .ToListAsync();
 
-        // // Group in memory to ensure no duplicate keys
-        // var statusCounts = tickets
-        //     .GroupBy(s => s.ToString())
-        //     .ToDictionary(g => g.Key, g => g.Count());
 
         var ongoingTickets = await _context.Tickets
             .Include(t => t.CreatedBy)

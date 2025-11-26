@@ -8,6 +8,7 @@ export default function UserForm({ userId, onClose, onSave }) {
     const [saving, setSaving] = useState(false);
     const [militaryRanks, setMilitaryRanks] = useState([]);
     const [showPassword, setShowPassword] = useState(false);
+    const [positions, setPositions] = useState([]);
 
 
     const [formData, setFormData] = useState({
@@ -15,12 +16,23 @@ export default function UserForm({ userId, onClose, onSave }) {
         password: '',
         displayName: '',
         role: 'Viewer',
-        affiliation: '',   // ✅ default
+        affiliation: '', 
         department: '',
         militaryRankId: null,
         phoneNumber: '',
+        position: '',
     });
+                debugger; 
 
+
+    const loadPositions = async () => {
+        try {
+            const response = await userApi.getPositions();
+            setPositions(response.data);
+        } catch (error) {
+            console.error('Error loading positions:', error);
+        }
+    };
 
     const currentUserRole = localStorage.getItem('role'); // Assuming role is stored in localStorage
 
@@ -31,6 +43,7 @@ export default function UserForm({ userId, onClose, onSave }) {
 
     useEffect(() => {
         loadMilitaryRanks();
+        loadPositions();
         if (!isNewUser) {
             loadUserData();
         }
@@ -59,6 +72,7 @@ export default function UserForm({ userId, onClose, onSave }) {
                 department: user.department || '',
                 militaryRankId: user.militaryRankId || null,
                 phoneNumber: user.phoneNumber || '',
+                position: user.position || '',
             });
         } catch (error) {
             console.error('Failed to load user data', error);
@@ -274,6 +288,22 @@ export default function UserForm({ userId, onClose, onSave }) {
                                 style={styles.input}
                                 placeholder="e.g., Ağ Alt Yapısı, Görüntü İşleme Zinciri"
                             />
+                        </div>
+
+                        <div style={styles.formRow}>
+                            <label style={styles.label}>Pozisyon/Görev</label>
+                            <select
+                                value={formData.position}
+                                onChange={(e) => handleInputChange('position', e.target.value)}
+                                style={styles.select}
+                            >
+                                <option value="">Seçiniz</option>
+                                {positions.map((pos) => (
+                                    <option key={pos.value} value={pos.value}>
+                                        {pos.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div style={styles.formRow}>

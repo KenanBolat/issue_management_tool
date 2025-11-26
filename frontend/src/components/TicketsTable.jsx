@@ -7,28 +7,20 @@ import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
 export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
-
-
-
-    // ✅ Search & Filter
     const [searchText, setSearchText] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
-
     const [showDeleted, setShowDeleted] = useState(false);
 
-
-    // ✅ Sorting
+    // Sorting
     const [sortField, setSortField] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
 
-    // ✅ Selection (for bulk PDF)
+    // Selection (for bulk PDF)
     const [selectedTickets, setSelectedTickets] = useState(new Set());
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [exportingExcel, setExportingExcel] = useState(false);
-
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [bulkRestoring, setBulkRestoring] = useState(false);
-
     const [pdfReportDate, setPdfReportDate] = useState([]);
 
     useEffect(() => {
@@ -118,7 +110,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         );
     };
 
-    // ✅ Sorting function
     const handleSort = (field) => {
         if (sortField === field) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -141,7 +132,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
-    // ✅ Delete function
     const handleDelete = async (ticketId) => {
         if (!window.confirm('Bu sorun kaydını silmek istediğinize emin misiniz?')) return;
 
@@ -211,7 +201,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     };
 
 
-    // ✅ Restore function
     const handleRestore = async (ticketId) => {
         if (!window.confirm('Bu sorun kaydını geri almak istediğinize emin misiniz?')) return;
 
@@ -286,7 +275,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     };
 
 
-    // ✅ Toggle individual ticket selection
     const handleToggleTicket = (ticketId) => {
         setSelectedTickets(prev => {
             const newSet = new Set(prev);
@@ -299,7 +287,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         });
     };
 
-    // ✅ Toggle all tickets selection
     const handleToggleAll = () => {
         if (selectedTickets.size === filteredTickets.length) {
             setSelectedTickets(new Set());
@@ -308,7 +295,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
-    // ✅ Generate bulk PDF
     const handleGenerateBulkPDF = async () => {
         if (selectedTickets.size === 0) {
             alert("Lütfen en az bir sorun seçiniz!");
@@ -358,7 +344,6 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
     };
 
-    // ✅ Search, Filter & Sort
     const filteredTickets = tickets
         .filter(ticket => {
             // Search filter

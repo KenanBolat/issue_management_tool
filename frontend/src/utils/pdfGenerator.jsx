@@ -22,7 +22,6 @@ export const generateTicketPDF = async (ticket, formData, reportDate = null) => 
     }
 };
 
-// ✅ UPDATED: Multi-ticket PDF generation with page numbers
 export const generateMultipleTicketsPDF = async (ticketsData,reportDate = null) => {
     if (!ticketsData || ticketsData.length === 0) {
         alert('Seçili sorun bulunamadı!');

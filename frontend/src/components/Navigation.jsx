@@ -103,7 +103,7 @@ export default function Navigation({ currentPage, onNavigate }) {
                         }}
                     >
                         <Clock size={18} />
-                        İlerleme Talepleri
+                        Bilgi Talepleri
                     </button>
                 </div>
 

@@ -108,13 +108,14 @@ namespace Api.Services
                 Type = NotificationType.ProgressRequest,
                 Priority = NotificationPriority.Normal,
                 TicketId = ticketId,
-                Title = "İlerleme Raporu Talep Edildi",
-                Message = message ?? $"#{ticket.ExternalCode} için ilerleme raporu talep edildi",
+                Title = "Bilgi Raporu Talep Edildi",
+                Message = message ?? $"#{ticket.ExternalCode} için bilgi raporu talep edildi",
                 ActionUrl = $"/tickets/{ticketId}",
                 CreatedByUserId = requestedByUserId,
                 TargetUserId = targetUserId ?? ticket.CreatedById, // Target ticket owner by default
                 RequiresAction = true,
                 IsResolved = false,
+                IsGlobal = true,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(7) // Expires in 7 days
             };
@@ -124,7 +125,7 @@ namespace Api.Services
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
-            
+
             progressRequest.NotificationId = notification.Id;
             await _context.SaveChangesAsync();
 
@@ -207,7 +208,7 @@ namespace Api.Services
         {
             return await _context.Notifications
                 .Where(n => !n.IsResolved)
-                .Where(n => n.IsGlobal || n.TargetUserId == userId)
+                .Where(n => n.IsGlobal || n.TargetUserId == userId || n.CreatedByUserId == userId)
                 .Where(n => !n.NotificationReads.Any(nr => nr.UserId == userId))
                 .CountAsync();
         }
@@ -227,8 +228,8 @@ namespace Api.Services
                 .Include(n => n.CreatedBy)
                 .Include(n => n.NotificationReads)
                 .Include(n => n.NotificationActions)
-                .Where(n => n.IsGlobal || n.TargetUserId == userId)
-                .Where(n => !n.IsResolved || n.ResolvedAt > DateTime.UtcNow.AddDays(-7)) // Show resolved from last 7 days
+                .Where(n => n.IsGlobal || n.TargetUserId == userId || n.CreatedByUserId == userId)
+                .Where(n => !n.IsResolved || n.ResolvedAt > DateTime.UtcNow.AddDays(-7))
                 .AsQueryable();
 
             // Filter by type
@@ -288,7 +289,7 @@ namespace Api.Services
         {
             var allNotifications = await _context.Notifications
                 .Include(n => n.NotificationReads)
-                .Where(n => n.IsGlobal || n.TargetUserId == userId)
+                .Where(n => n.IsGlobal || n.TargetUserId == userId || n.CreatedByUserId == userId)
                 .Where(n => !n.IsResolved)
                 .ToListAsync();
 

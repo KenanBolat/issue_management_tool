@@ -51,14 +51,14 @@ export default function ProgressRequestsTable({ onNavigate }) {
 
         try {
             await progressRequestsAPI.respond(selectedRequest.id, { responseText });
-            alert('İlerleme raporu gönderildi');
+            alert('Bilgi raporu gönderildi');
             setSelectedRequest(null);
             setResponseText('');
             loadProgressRequests();
             loadStats();
         } catch (error) {
             console.error('Error responding:', error);
-            alert('İlerleme raporu gönderilemedi');
+            alert('Bilgi raporu gönderilemedi');
         }
     };
 
@@ -121,7 +121,7 @@ export default function ProgressRequestsTable({ onNavigate }) {
                         <ArrowLeft size={20} />
                         Geri
                     </button>
-                    <h1 style={styles.title}>İlerleme Talebi Yanıtla</h1>
+                    <h1 style={styles.title}>Bilgi Talebi Yanıtla</h1>
                 </div>
 
                 <div style={styles.detailCard}>
@@ -146,11 +146,11 @@ export default function ProgressRequestsTable({ onNavigate }) {
                 </div>
 
                 <div style={styles.responseSection}>
-                    <label style={styles.label}>İlerleme Raporu</label>
+                    <label style={styles.label}>Bilgi Raporu</label>
                     <textarea
                         value={responseText}
                         onChange={(e) => setResponseText(e.target.value)}
-                        placeholder="Lütfen sorunla ilgili ilerleme durumunu açıklayın..."
+                        placeholder="Lütfen sorunla ilgili bilgi durumunu açıklayın..."
                         style={styles.textarea}
                         rows={8}
                     />
@@ -163,7 +163,7 @@ export default function ProgressRequestsTable({ onNavigate }) {
                         }}
                     >
                         <MessageSquare size={16} />
-                        İlerleme Raporunu Gönder
+                        Bilgi Raporunu Gönder
                     </button>
                 </div>
             </div>
@@ -173,7 +173,7 @@ export default function ProgressRequestsTable({ onNavigate }) {
     return (
         <div style={styles.container}>
             <div style={styles.header}>
-                <h1 style={styles.title}>İlerleme Talepleri</h1>
+                <h1 style={styles.title}>Bilgi Talepleri</h1>
             </div>
 
             {stats && (

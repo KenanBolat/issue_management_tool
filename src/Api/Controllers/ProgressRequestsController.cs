@@ -170,7 +170,7 @@ namespace Api.Controllers
                 ActionType = ActionType.Edit,
                 PerformedById = userId,
                 PerformedAt = DateTime.UtcNow,
-                Notes = $"[İlerleme Raporu] {dto.ResponseText}"
+                Notes = $"[Bilgi Raporu] {dto.ResponseText}"
             };
 
             _context.TicketActions.Add(ticketAction);
@@ -195,7 +195,7 @@ namespace Api.Controllers
 
             _logger.LogInformation($"User {userId} responded to progress request {id}");
 
-            return Ok(new { message = "İlerleme raporu gönderildi", actionId = ticketAction.Id });
+            return Ok(new { message = "Bilgi raporu gönderildi", actionId = ticketAction.Id });
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "İlerleme talebi iptal edildi" });
+            return Ok(new { message = "Bilgi talebi iptal edildi" });
         }
 
         /// <summary>

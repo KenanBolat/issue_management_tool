@@ -161,6 +161,26 @@ export const userApi = {
             throw error;
         }
     },
+    getPositions:  async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/Users/positions`, {
+                method: 'GET',
+                headers: createHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { data };
+        } catch (error) {
+            console.error(`Error fetching user ${id}:`, error);
+            throw error;
+        }
+    }, 
+
+
 
     // Get current user profile
     getMyProfile: async () => {
@@ -398,6 +418,16 @@ export const configurationAPI = {
             throw error;
         }
     },
+};
+
+export const militaryRanksAPI = {
+    getAll: (includeInactive = false) => api.get('/MilitaryRanks'),
+    getById: (id) => api.get(`/MilitaryRanks/${id}`),
+    create: (data) => api.post('/MilitaryRanks', data),
+    update: (id, data) => api.put(`/MilitaryRanks/${id}`, data),
+    delete: (id) => api.delete(`/MilitaryRanks/${id}`),
+    activate: (id) => api.post(`/MilitaryRanks/${id}/activate`),
+    deactivate: (id) => api.post(`/MilitaryRanks/${id}`),
 };
 
 export default api; 
