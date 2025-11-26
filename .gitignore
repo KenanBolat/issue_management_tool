@@ -483,6 +483,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+#Database backups 
+*.sql.gz 
 
 # Logs
 logs
