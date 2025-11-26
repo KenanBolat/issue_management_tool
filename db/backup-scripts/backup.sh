@@ -32,4 +32,4 @@ echo "Daily backups: $(ls -1 $DAILY_DIR | wc -l)"
 echo "Total disk usage: $(du -sh $BACKUP_DIR | cut -f1)"
 echo "=========================================="
 echo "Backup Completed: $(date)"
-echo "=========================================="Q
+echo "=========================================="
