@@ -134,7 +134,6 @@ export const TicketPDFPage = ({
   totalPages = 1,
   reportDate = null 
 }) => {
-  // ✅ Use reportDate if provided, otherwise use current date
   const approvalDate = reportDate ? new Date(reportDate) : new Date();
 
   return (

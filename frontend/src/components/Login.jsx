@@ -56,9 +56,6 @@ export default function Login({ onLogin }) {
           </button>
         </form>
         
-        <div style={styles.hint}>
-       
-        </div>
       </div>
     </div>
   );

@@ -15,12 +15,10 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
     const [recentTickets, setRecentTickets] = useState([]);
     const [loading, setLoading] = useState([]);
 
-    // ✅ NEW: Additional hierarchy stats
     const [systemStats, setSystemStats] = useState([]);
     const [subsystemStats, setSubsystemStats] = useState([]);
     const [ciStats, setCiStats] = useState([]);
 
-    // ✅ Turkish status labels
     const STATUS_LABELS = {
         'OPEN': 'Açık',
         'PAUSED': 'Duduruldu',
@@ -208,7 +206,6 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                 </div>
             </div>
 
-             {/* ✅ NEW: Hierarchy Stats Row */}
             {(systemStats.length > 0 || subsystemStats.length > 0 || ciStats.length > 0) && (
                 <div style={styles.hierarchyStatsRow}>
                     {/* Systems Stats */}

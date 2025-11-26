@@ -7,6 +7,7 @@ using Domain.Entities;
 using Domain.Enums;
 using System.Security.Claims;
 using Api.Services;
+using Api.DTOs;
 
 namespace Api.Controllers
 {
@@ -32,6 +33,34 @@ namespace Api.Controllers
         private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
 
+        private static string GetPositionDisplayName(UserPosition position)
+        {
+            return position switch
+            {
+                UserPosition.MissionPlanningEngineer => "Görev Planlama Mühendisi",
+                UserPosition.ImageProcessingEngineer => "Görüntü İşleme Mühendisi",
+                UserPosition.NetworkInfrastructureEngineer => "Ağ Altyapı Mühendisi",
+                UserPosition.AntennaSystemResponsible => "Anten Sistem Sorumlusu",
+                UserPosition.FieldCoordinator => "Saha Koordinatörü",
+                UserPosition.FlightCommandControlEngineer => "U. Komuta Kntrl. Mühendisi",
+                UserPosition.FlightDynamicsEngineer => "Uçuş Dinamikleri Mühendisi",
+                UserPosition.SatellitePayloadEngineer => "Uydu Faydalı Yük Mühendisi",
+                UserPosition.SatellitePlatformEngineer => "Uydu Platform Mühendisi",
+                UserPosition.SDTSystemResponsible => "SDT Sistem Sorumlusu",
+                UserPosition.AselsanSystemResponsible => "Aselsan Sistem Sorumlusu",
+                UserPosition.TubitakSystemResponsible => "Tübitak Sistem Sorumlusu",
+                UserPosition.CryptoBSystemResponsible => "Kripto-B Sistem Sorumlusu",
+                UserPosition.TPZSystemResponsible => "TPZ Sistem Sorumlusu",
+                UserPosition.GKTInformationSystems => "GKT Bilgi Sistemleri",
+                UserPosition.GKTSatelliteOperations => "GKT Uydu Operasyonları",
+                UserPosition.GKTDataProcessing => "GKT Veri İşleme",
+                UserPosition.GKTMissionPlanning => "GKT Görev Planlama",
+                UserPosition.GKTAntenna => "GKT Anten",
+                _ => position.ToString()
+            };
+        }
+
+
         // GET: api/Users
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -55,7 +84,9 @@ namespace Api.Controllers
                     u.MilitaryRank != null ? u.MilitaryRank.DisplayName : null,
                     u.PhoneNumber,
                     u.IsActive,
-                     u.CreatedAt))
+                    u.CreatedAt,
+                    u.Position.HasValue ? GetPositionDisplayName(u.Position.Value) : null
+                    ))
                 .ToListAsync();
             _logger.LogInformation("Retrieved {UserCount} users", users.Count);
             return Ok(users);
@@ -113,7 +144,9 @@ namespace Api.Controllers
                 user.IsActive,
                 user.CreatedAt,
                 user.UpdatedAt,
-                permissions
+                permissions,
+                // user.Position.HasValue ? GetPositionDisplayName(user.Position.Value) : null
+                user.Position?.ToString()
                 );
             return Ok(detail);
         }
@@ -167,7 +200,8 @@ namespace Api.Controllers
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                CreatedById = GetCurrentUserId()
+                CreatedById = GetCurrentUserId(),
+                Position = string.IsNullOrEmpty(request.Position) ? null : Enum.Parse<UserPosition>(request.Position)
             };
 
             user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
@@ -179,98 +213,7 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, await GetUser(user.Id));
         }
 
-        // //PUT: api/users/{id} (Update user)
-        // [HttpPut("{id}")]
-        // public async Task<ActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest request)
-        // {
-        //     var currentUserId = GetCurrentUserId();
-        //     var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
 
-        //     _logger.LogInformation("Updating user profile for ID: {RequestedUserId} by CurrentUserId: {CurrentUserId} with Role: {CurrentUserRole}",
-        //     id,
-        //     currentUserId,
-        //     currentUserRole);
-
-        //     if (id != currentUserId && currentUserRole != "Admin")
-        //     {
-        //         _logger.LogWarning("Unauthorized update attempt by UserId: {CurrentUserId} to access UserId: {RequestedUserId}", currentUserId, id);
-        //         return Forbid();
-        //     }
-
-        //     var user = await _context.Users.FindAsync(id);
-        //     if (user == null)
-        //     {
-        //         _logger.LogWarning("User with ID: {RequestedUserId} not found", id);
-        //         return NotFound();
-        //     }
-
-        //     //Update fields
-
-        //     if (!string.IsNullOrEmpty(request.DisplayName)) user.DisplayName = request.DisplayName;
-        //     if (!string.IsNullOrEmpty(request.PhoneNumber)) user.PhoneNumber = request.PhoneNumber;
-        //     if (!string.IsNullOrEmpty(request.Department)) user.Department = request.Department;
-
-
-        //     if (request.MilitaryRankId.HasValue)
-        //     {
-        //         var rank = await _context.MilitaryRanks.FindAsync(request.MilitaryRankId.Value);
-        //         if (rank != null)
-        //         {
-        //             user.MilitaryRankId = request.MilitaryRankId;
-        //             _logger.LogInformation("MilitaryRankId updated to {MilitaryRankId} for UserId: {UserId}", request.MilitaryRankId.Value, user.Id);
-        //         }
-        //         else
-        //         {
-        //             _logger.LogWarning("Invalid MilitaryRankId provided: {MilitaryRankId}", request.MilitaryRankId.Value);
-
-        //         }
-
-        //     }
-
-
-        //     // Only Admin can change role and affiliation
-        //     if (currentUserRole == "Admin")
-        //     {
-        //         if (!string.IsNullOrEmpty(request.Role))
-        //         {
-        //             if (Enum.TryParse<UserRole>(request.Role, true, out var newRole))
-        //             {
-        //                 user.Role = newRole;
-        //                 _logger.LogInformation("Role updated to {Role} for UserId: {UserId}", newRole, user.Id);
-        //             }
-        //             else
-        //             {
-        //                 _logger.LogWarning("Invalid role provided: {Role}", request.Role);
-        //             }
-        //         }
-
-        //         if (!string.IsNullOrEmpty(request.Affiliation))
-        //         {
-        //             if (Enum.TryParse<Affiliation>(request.Affiliation, true, out var newAffiliation))
-        //             {
-        //                 user.Affiliation = newAffiliation;
-        //                 _logger.LogInformation("Affiliation updated to {Affiliation} for UserId: {UserId}", newAffiliation, user.Id);
-        //             }
-        //             else
-        //             {
-        //                 _logger.LogWarning("Invalid affiliation provided: {Affiliation}", request.Affiliation);
-        //             }
-        //         }
-        //     }
-
-
-
-
-
-        //     user.UpdatedAt = DateTime.UtcNow;
-        //     user.LastUpdatedById = currentUserId;
-        //     await _context.SaveChangesAsync();
-
-
-        //     _logger.LogInformation("User with ID: {UserId} updated successfully", user.Id);
-
-        //     return NoContent();
-        // }
         /// <summary>
         /// PUT: api/users/{id} (Update user)
         /// </summary>
@@ -303,13 +246,13 @@ namespace Api.Controllers
                 .Include(u => u.MilitaryRank)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
+
             if (user == null)
             {
                 _logger.LogWarning("User with ID: {RequestedUserId} not found", id);
                 return NotFound();
             }
 
-            // ✅ TRACK OLD AFFILIATION for comparison
             var oldAffiliation = user.Affiliation;
 
             // Update basic fields
@@ -322,7 +265,12 @@ namespace Api.Controllers
             if (!string.IsNullOrEmpty(request.Department))
                 user.Department = request.Department;
 
-            // ✅ Only Admin can change role and affiliation
+            if (!string.IsNullOrEmpty(request.Position))
+            {
+                if (Enum.TryParse<UserPosition>(request.Position, out var position))
+                    user.Position = position;
+            }
+
             if (currentUserRole == "Admin")
             {
                 // Update Role
@@ -352,7 +300,6 @@ namespace Api.Controllers
                             user.Id
                         );
 
-                        // ✅ FIX: Clear military rank when changing FROM Military TO non-Military
                         if (oldAffiliation == Affiliation.Airforce && newAffiliation != Affiliation.Airforce)
                         {
                             user.MilitaryRankId = null;
@@ -370,7 +317,6 @@ namespace Api.Controllers
                 }
             }
 
-            // ✅ UPDATE MILITARY RANK LOGIC
             // Only process military rank if current affiliation is Military (after potential update above)
             if (user.Affiliation == Affiliation.Airforce)
             {
@@ -397,7 +343,6 @@ namespace Api.Controllers
             }
             else
             {
-                // ✅ IMPORTANT: Ensure military rank is always null for non-military users
                 if (user.MilitaryRankId != null)
                 {
                     user.MilitaryRankId = null;
@@ -418,6 +363,21 @@ namespace Api.Controllers
             _logger.LogInformation("User with ID: {UserId} updated successfully", user.Id);
 
             return NoContent();
+        }
+
+        [HttpGet("positions")]
+        public ActionResult<List<object>> GetPositions()
+        {
+            var positions = Enum.GetValues<UserPosition>()
+                .Select(p => new
+                {
+                    value = p.ToString(),
+                    label = GetPositionDisplayName(p)
+                })
+                .OrderBy(p => p.label)
+                .ToList();
+
+            return Ok(positions);
         }
 
         // PUT : api/users/{id}/password (Change password)
@@ -661,71 +621,3 @@ namespace Api.Controllers
 
     }
 }
-
-public record UserListItem(
-        long Id,
-        string Email,
-        string DisplayName,
-        string Role,
-        string Affiliation,
-        string? Department,
-        string? MilitaryRank,
-        string? PhoneNumber,
-        bool IsActive,
-        DateTime CreatedAt);
-
-
-public record UserDetail(
-        long Id,
-        string Email,
-        string DisplayName,
-        string Role,
-        string Affiliation,
-        string? Department,
-        int? MilitaryRankId,
-        string? RankCode,
-        string? PhoneNumber,
-        string? PreferredLanguage,
-        bool IsActive,
-        DateTime CreatedAt,
-        DateTime UpdatedAt,
-        List<UserPermissionItem> Permission);
-
-public record UserPermissionItem(
-    string PermissionType,
-    bool CanView,
-    bool CanCreate,
-    bool CanEdit,
-    bool CanDelete);
-
-public record MilitaryRankItem(int Id, string Code, string DisplayName);
-
-public record CreateUserRequest(
-    string Email,
-    string Password,
-    string DisplayName,
-    string Role,
-    string Affiliation,
-    string? Department,
-    int? MilitaryRankId,
-    string? PhoneNumber);
-
-public record UpdateUserRequest(
-    string? DisplayName,
-    string? Role,
-    string? Affiliation,
-    string? Department,
-    int? MilitaryRankId,
-    string? PhoneNumber,
-    bool? IsActive);
-
-public record ChangePasswordRequest(
-    string CurrentPassword,
-    string NewPassword);
-
-public record GrantPermissionRequest(
-    string PermissionType,
-    bool CanView,
-    bool CanCreate,
-    bool CanEdit,
-    bool CanDelete);

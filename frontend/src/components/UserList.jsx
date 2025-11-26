@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { userApi, configurationAPI} from '../../services/api.jsx';
-import { Edit, Trash2, Eye, Shield, RotateCcw,RefreshCw, FileText, Save} from 'lucide-react';
+import { userApi, configurationAPI, militaryRanksAPI } from '../../services/api.jsx';
+import { UserPlus, Edit2, Trash2, Save, X, Download, Shield, ShieldOff, Plus, MinusCircle, FileText, Edit } from 'lucide-react';
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
     const [users, setUsers] = useState([]);
@@ -9,12 +9,24 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const [affiliationFilter, setAffiliationFilter] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [showInactive, setShowInactive] = useState(false);
-    const [showDeleted, setShowDeleted] = useState(false); 
+    const [showDeleted, setShowDeleted] = useState(false);
 
 
     const [configuration, setConfiguration] = useState(null);
     const [reportDate, setReportDate] = useState('');
     const [savingConfig, setSavingConfig] = useState(false);
+
+    const [militaryRanks, setMilitaryRanks] = useState([]);
+    const [showRankForm, setShowRankForm] = useState(false);
+    const [editingRank, setEditingRank] = useState(null);
+    const [rankFormData, setRankFormData] = useState({
+        code: '',
+        displayName: '',
+        description: '',
+        sortOrder: ''
+    });
+
+
 
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
@@ -23,8 +35,20 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     useEffect(() => {
         loadUsers();
         loadConfiguration();
+        loadMilitaryRanks();
+
 
     }, [showInactive]);
+
+
+    const loadMilitaryRanks = async () => {
+        try {
+            const response = await militaryRanksAPI.getAll();
+            setMilitaryRanks(response.data);
+        } catch (error) {
+            console.error('Error loading military ranks:', error);
+        }
+    };
 
     const loadUsers = async () => {
         try {
@@ -43,7 +67,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         try {
             const response = await configurationAPI.get();
             setConfiguration(response.data);
-            
+
             // Convert UTC date to local datetime-local format
             const pdfDate = new Date(response.data.pdfReportDate);
             const localDateTime = formatDateTimeLocal(pdfDate);
@@ -64,22 +88,96 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
-     const handleSaveConfiguration = async () => {
+
+    const handleAddRank = () => {
+        setEditingRank(null);
+        setRankFormData({
+            code: '',
+            displayName: '',
+            description: '',
+            sortOrder: ''
+        });
+        setShowRankForm(true);
+    };
+
+    const handleEditRank = (rank) => {
+        setEditingRank(rank);
+        setRankFormData({
+            code: rank.code,
+            displayName: rank.displayName,
+            description: rank.description || '',
+            sortOrder: rank.sortOrder.toString()
+        });
+        setShowRankForm(true);
+    };
+
+    const handleSaveRank = async () => {
+        try {
+            const data = {
+                code: rankFormData.code,
+                displayName: rankFormData.displayName,
+                description: rankFormData.description || null,
+                sortOrder: rankFormData.sortOrder ? parseInt(rankFormData.sortOrder) : null
+            };
+
+            if (editingRank) {
+                await militaryRanksAPI.update(editingRank.id, data);
+            } else {
+                await militaryRanksAPI.create(data);
+            }
+
+            setShowRankForm(false);
+            loadMilitaryRanks();
+            alert(editingRank ? 'Rütbe güncellendi' : 'Rütbe eklendi');
+        } catch (error) {
+            console.error('Error saving rank:', error);
+            alert('Rütbe kaydedilemedi: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleDeleteRank = async (id) => {
+        if (!window.confirm('Bu rütbeyi silmek istediğinize emin misiniz?')) return;
+
+        try {
+            await militaryRanksAPI.delete(id);
+            loadMilitaryRanks();
+            alert('Rütbe silindi');
+        } catch (error) {
+            console.error('Error deleting rank:', error);
+            alert('Rütbe silinemedi: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleToggleRankActive = async (id, isActive) => {
+        try {
+            if (isActive) {
+                await militaryRanksAPI.deactivate(id);
+            } else {
+                await militaryRanksAPI.activate(id);
+            }
+            loadMilitaryRanks();
+        } catch (error) {
+            console.error('Error toggling rank:', error);
+        }
+    };
+
+
+    const handleSaveConfiguration = async () => {
         if (!window.confirm('Rapor basım tarihini güncellemek istediğinize emin misiniz?')) {
             return;
         }
 
         try {
             setSavingConfig(true);
-            
+
             // Convert local datetime to UTC
             const pdfDate = new Date(reportDate);
-            
+
             const response = await configurationAPI.update({
                 pdfReportDate: pdfDate.toISOString(),
                 expirationDate: configuration?.expirationDate || null
             });
-            
+
             setConfiguration(response.data);
             alert('Konfigürasyon başarıyla güncellendi!');
         } catch (error) {
@@ -183,7 +281,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                 <div>
                     <h1 style={styles.title}>Kullanıcı Kontrol Paneli</h1>
                     <p style={styles.subtitle}>
-                       {filteredUsers.length} / {users.length}  kullanıcı gösterilmektedir.
+                        {filteredUsers.length} / {users.length}  kullanıcı gösterilmektedir.
                     </p>
                 </div>
             </div>
@@ -241,7 +339,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             </div>
 
 
-        
+
             {loading ? (
                 <div style={styles.loading}>Loading users...</div>
             ) : filteredUsers.length === 0 ? (
@@ -326,14 +424,14 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                             </button> */}
 
                                             {!user.isActive ? (
-                                    <button
-                                        onClick={() => handleRestoreUser(user.id)}
-                                        style={{ ...styles.actionBtn, color: '#d32f2f' }}
-                                        title="Geri Yükle"
-                                    >
-                                        <RotateCcw size={18} />
-                                    </button>
-                                ) : ( <> </>)}
+                                                <button
+                                                    onClick={() => handleRestoreUser(user.id)}
+                                                    style={{ ...styles.actionBtn, color: '#d32f2f' }}
+                                                    title="Geri Yükle"
+                                                >
+                                                    <RotateCcw size={18} />
+                                                </button>
+                                            ) : (<> </>)}
                                             <button
                                                 style={{ ...styles.actionBtn, color: '#d32f2f' }}
                                                 title="Delete User"
@@ -342,7 +440,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                                 <Trash2 size={16} />
                                             </button>
 
-                                          
+
                                         </div>
                                     </td>
                                 </tr>
@@ -351,7 +449,9 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                     </table>
                 </div>
             )}
-                        <div style={styles.reportSection}>
+
+
+            <div style={styles.reportSection}>
                 <h3 style={styles.reportTitle}>
                     <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
                     Rapor Basım Tarihi
@@ -392,8 +492,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                         </span>
                     </div>
                 </div>
-                
-                {/* ✅ Show last updated info */}
+
                 {configuration && (
                     <div style={styles.configInfo}>
                         <p style={styles.configInfoText}>
@@ -403,12 +502,145 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                         </p>
                     </div>
                 )}
-                
+
                 <p style={styles.reportNote}>
                     ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
                 </p>
             </div>
+
+            <div style={styles.rankSection}>
+                <div style={styles.rankHeader}>
+                    <h2 style={styles.reportTitle}>
+                        Rütbe Yönetimi
+                    </h2>
+                    <button onClick={handleAddRank} style={styles.addBtn}>
+                        + Yeni Rütbe Ekle
+                    </button>
+                </div>
+                {showRankForm && (
+                    <div style={styles.rankForm}>
+                        <div style={styles.rankFormGrid}>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Kod *</label>
+                                <input
+                                    type="text"
+                                    value={rankFormData.code}
+                                    onChange={(e) => setRankFormData({ ...rankFormData, code: e.target.value })}
+                                    placeholder="Örn: ALBAY"
+                                    style={styles.input}
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Görünen İsim *</label>
+                                <input
+                                    type="text"
+                                    value={rankFormData.displayName}
+                                    onChange={(e) => setRankFormData({ ...rankFormData, displayName: e.target.value })}
+                                    placeholder="Örn: Albay"
+                                    style={styles.input}
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Açıklama</label>
+                                <input
+                                    type="text"
+                                    value={rankFormData.description}
+                                    onChange={(e) => setRankFormData({ ...rankFormData, description: e.target.value })}
+                                    placeholder="Opsiyonel açıklama"
+                                    style={styles.input}
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Sıralama</label>
+                                <input
+                                    type="number"
+                                    value={rankFormData.sortOrder}
+                                    onChange={(e) => setRankFormData({ ...rankFormData, sortOrder: e.target.value })}
+                                    placeholder="Boş bırakılırsa otomatik"
+                                    style={styles.input}
+                                />
+                            </div>
+                        </div>
+                        <div style={styles.rankFormActions}>
+                            <button
+                                onClick={() => setShowRankForm(false)}
+                                style={styles.cancelButton}
+                            >
+                                <X size={16} />
+                                İptal
+                            </button>
+                            <button
+                                onClick={handleSaveRank}
+                                disabled={!rankFormData.code || !rankFormData.displayName}
+                                style={{
+                                    ...styles.saveButton,
+                                    ...(!rankFormData.code || !rankFormData.displayName ? styles.saveButtonDisabled : {})
+                                }}
+                            >
+                                <Save size={16} />
+                                {editingRank ? 'Güncelle' : 'Ekle'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div style={styles.rankTable}>
+                    <table style={styles.table}>
+                        <thead>
+                            <tr>
+                                <th style={styles.th}>Kod</th>
+                                <th style={styles.th}>Görünen İsim</th>
+                                <th style={styles.th}>Açıklama</th>
+                                <th style={styles.th}>Sıralama</th>
+                                <th style={styles.th}>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {militaryRanks.map((rank) => (
+                                <tr key={rank.id} style={{
+                                    ...styles.tr,
+                                    ...(rank.isActive ? {} : styles.inactiveRow)
+                                }}>
+                                    <td style={styles.td}>{rank.code}</td>
+                                    <td style={styles.td}>{rank.displayName}</td>
+                                    <td style={styles.td}>{rank.description || '-'}</td>
+                                    <td style={styles.td}>{rank.sortOrder}</td>
+
+                                    <td style={styles.td}>
+                                        <div style={styles.actions}>
+                                            <button
+                                                onClick={() => handleEditRank(rank)}
+                                                style={styles.iconButton}
+                                                title="Düzenle"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleDeleteRank(rank.id)}
+                                                style={styles.deleteButton}
+                                                title="Sil"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
         </div>
+
+
+
+
+
+
+
     );
 }
 
@@ -567,7 +799,6 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
-    // ✅ NEW: Report Date Section Styles
     reportSection: {
         backgroundColor: 'white',
         borderRadius: '8px',
@@ -631,5 +862,172 @@ const styles = {
         fontSize: '0.9rem',
         borderRadius: '4px',
     },
-    
+    rankSection: {
+        marginTop: '2rem',
+        background: 'white',
+        borderRadius: '8px',
+        padding: '1.5rem',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+    rankHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1.5rem',
+    },
+    addRankButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.75rem 1.5rem',
+        background: '#667eea',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        transition: 'all 0.2s',
+    },
+    rankForm: {
+        background: '#f0f2ff',
+        padding: '1.5rem',
+        borderRadius: '8px',
+        marginBottom: '1.5rem',
+        border: '2px solid #667eea',
+    },
+    rankFormGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '1rem',
+        marginBottom: '1rem',
+    },
+    formGroup: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+    },
+    label: {
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        color: '#333',
+    },
+    input: {
+        padding: '0.75rem',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        fontSize: '1rem',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+    },
+    rankFormActions: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: '1rem',
+    },
+    cancelButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.75rem 1.5rem',
+        background: 'white',
+        color: '#666',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        transition: 'all 0.2s',
+    },
+    saveButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.75rem 1.5rem',
+        background: '#667eea',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        transition: 'all 0.2s',
+    },
+    saveButtonDisabled: {
+        background: '#ccc',
+        cursor: 'not-allowed',
+    },
+    rankTable: {
+        overflowX: 'auto',
+    },
+    table: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        backgroundColor: 'white',
+    },
+    th: {
+        padding: '1rem',
+        textAlign: 'left',
+        fontWeight: '600',
+        color: '#333',
+        borderBottom: '2px solid #eee',
+        backgroundColor: '#f8f9fa',
+    },
+    tr: {
+        borderBottom: '1px solid #eee',
+        transition: 'background-color 0.2s',
+    },
+    td: {
+        padding: '1rem',
+        color: '#666',
+    },
+    inactiveRow: {
+        backgroundColor: '#f8f9fa',
+        opacity: 0.6,
+    },
+    statusBadge: {
+        padding: '0.35rem 0.85rem',
+        borderRadius: '12px',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        display: 'inline-block',
+    },
+    activeStatus: {
+        backgroundColor: '#e8f5e9',
+        color: '#2e7d32',
+    },
+    inactiveStatus: {
+        backgroundColor: '#ffebee',
+        color: '#c62828',
+    },
+    actions: {
+        display: 'flex',
+        gap: '0.5rem',
+    },
+    iconButton: {
+        padding: '0.5rem',
+        background: '#e3f2fd',
+        color: '#1976d2',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.2s',
+    },
+    deleteButton: {
+        padding: '0.5rem',
+        background: '#ffebee',
+        color: '#c62828',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.2s',
+    },
+
 };

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
-import { ticketsAPI, userApi, configurationAPI } from "../../services/api";
+import { ticketsAPI, userApi, configurationAPI, notificationsAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
 
-import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download } from "lucide-react";
+import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
 
 export default function TicketDetail({ ticketId, onClose }) {
     const [ticket, setTicket] = useState(null);
@@ -81,6 +81,24 @@ export default function TicketDetail({ ticketId, onClose }) {
             alert("PDF oluşturulurken hata oluştu");
         }
     };
+
+
+    const handleRequestProgress = async () => {
+        if (!window.confirm('Bilgi raporu talep etmek istediğinize emin misiniz?')) return;
+
+        try {
+            await notificationsAPI.createProgressRequest({
+                ticketId: ticket.id,
+                targetUserId: ticket.createdByUserId, // or null for automatic
+                message: `${ticket.externalCode} numaralı sorun için bilgi raporu bekleniyor`
+            });
+
+            alert('Bilgi talebi gönderildi');
+        } catch (error) {
+            console.error('Error requesting progress:', error);
+            alert('Bilgi talebi gönderilemedi');
+        }
+    };
     // Form state
     const [formData, setFormData] = useState({
         externalCode: '',
@@ -122,8 +140,8 @@ export default function TicketDetail({ ticketId, onClose }) {
         newItemSerialNo: '',
 
         hpNo: '',
-        tentativeSolutionDate: '', 
-        subContractor: '', 
+        tentativeSolutionDate: '',
+        subContractor: '',
         subContractorNotifiedAt: ''
 
 
@@ -244,7 +262,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 hpNo: ticketData.hpNo || null,
                 tentativeSolutionDate: ticketData.tentativeSolutionDate ? formatDateTimeLocal(ticketData.tentativeSolutionDate) : "",
                 subContractor: ticketData.subContractor || null,
-                subContractorNotifiedAt: ticketData.subContractorNotifiedAt ? formatDateTimeLocal(ticketData.subContractorNotifiedAt) : "",    
+                subContractorNotifiedAt: ticketData.subContractorNotifiedAt ? formatDateTimeLocal(ticketData.subContractorNotifiedAt) : "",
 
             });
 
@@ -379,7 +397,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 description: formData.description,
                 isBlocking: formData.isBlocking,
                 technicalReportRequired: formData.technicalReportRequired,
-                status: newStatus,  // ✅ Use the newStatus parameter directly
+                status: newStatus,
 
                 ciId: formData.ciId || null,
                 componentId: formData.componentId || null,
@@ -743,7 +761,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         <br />
                         <div style={styles.inlineGroup}>
-                            
+
                             <div style={{ flex: 1 }}>
                                 <label style={styles.label}> Alt Yüklenici</label>
                                 <input
@@ -755,7 +773,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     placeholder="SDT"
                                 />
                             </div>
-                             <div style={{ flex: 1 }}>
+                            <div style={{ flex: 1 }}>
                                 <label style={styles.label}>Yükleniciye Bildirildiği Tarih</label>
                                 <input
                                     type="datetime-local"
@@ -1025,7 +1043,6 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         <h2 style={styles.sectionTitle}>
                             Faaliyet Kontrolü
-                            {/* ✅ Display status badge if exists */}
                             {formData.activityControlStatus !== null && formData.activityControlStatus !== undefined && (
                                 <span style={{
                                     marginLeft: '1rem',
@@ -1077,24 +1094,24 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 />
                             </div>
 
-                                <div style={{ flex: 1 }}>
-                                    <label style={styles.label}>Kontrol Durumu</label>
-                                    <select
-                                        value={formData.activityControlStatus ?? ''}
-                                        onChange={(e) => handleInputChange(
-                                            'activityControlStatus',
-                                            e.target.value === '' ? null : parseInt(e.target.value)
-                                        )}
-                                        style={styles.select}
-                                        disabled={isReadOnly}
-                                    >
-                                        <option value="">Durum seçiniz...</option>
-                                        {CONTROL_STATUS_OPTIONS.map(option => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                            <div style={{ flex: 1 }}>
+                                <label style={styles.label}>Kontrol Durumu</label>
+                                <select
+                                    value={formData.activityControlStatus ?? ''}
+                                    onChange={(e) => handleInputChange(
+                                        'activityControlStatus',
+                                        e.target.value === '' ? null : parseInt(e.target.value)
+                                    )}
+                                    style={styles.select}
+                                    disabled={isReadOnly}
+                                >
+                                    <option value="">Durum seçiniz...</option>
+                                    {CONTROL_STATUS_OPTIONS.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -1236,14 +1253,27 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     <History size={16} />
                                     Tarihçe ({actions.length})
                                 </button>
+
                             </div>
+                            {canEdit && ticket && (
+                                <div style={styles.formSection}>
+                                    <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
+                                    <button
+                                        onClick={() => handleRequestProgress()}
+                                        style={{ ...styles.button, ...styles.progressRequestButton }}
+                                    >
+                                        <Clock size={16} />
+                                        Bilgi Raporu Talep Et
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Comments Tab */}
                             {activeTab === 'comments' && (
                                 <div style={styles.tabContent}>
                                     {(
                                         <div style={styles.commentInputSection}>
-                                        <textarea
+                                            <textarea
                                                 value={newComment}
                                                 onChange={(e) => setNewComment(e.target.value)}
                                                 placeholder="Yeni bir işlem adımı ekleyiniz..."
@@ -1769,6 +1799,10 @@ const styles = {
     },
     pdfButton: {
         backgroundColor: '#2196f3',
+        color: 'white',
+    },
+    progressRequestButton: {
+        backgroundColor: '#f57c00',
         color: 'white',
     },
 };

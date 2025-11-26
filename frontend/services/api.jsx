@@ -19,6 +19,26 @@ export const authAPI = {
 
 };
 
+
+export const progressRequestsAPI = {
+    getAll: (params) => api.get('/ProgressRequests', { params }),
+    getById: (id) => api.get(`/ProgressRequests/${id}`),
+    respond: (id, data) => api.post(`/ProgressRequests/${id}/respond`, data),
+    cancel: (id) => api.post(`/ProgressRequests/${id}/cancel`),
+    getStats: () => api.get('/ProgressRequests/stats'),
+};
+
+export const notificationsAPI = {
+    getAll: (params) => api.get('/Notifications', { params }),
+    getById: (id) => api.get(`/Notifications/${id}`),
+    getUnreadCount: () => api.get('/Notifications/unread-count'),
+    getStats: () => api.get('/Notifications/stats'),
+    createProgressRequest: (data) => api.post('/Notifications/progress-request', data),
+    markAsRead: (id, readFrom = null) => api.post(`/Notifications/${id}/mark-read`, null, { params: { readFrom } }),
+    markMultipleAsRead: (data) => api.post('/Notifications/mark-read', data),
+    resolve: (id, data) => api.post(`/Notifications/${id}/resolve`, data),
+};
+
 export const ticketsAPI = {
 
     getAll: (status = null, includeDeleted = false) => {
@@ -141,6 +161,26 @@ export const userApi = {
             throw error;
         }
     },
+    getPositions:  async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/Users/positions`, {
+                method: 'GET',
+                headers: createHeaders(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { data };
+        } catch (error) {
+            console.error(`Error fetching user ${id}:`, error);
+            throw error;
+        }
+    }, 
+
+
 
     // Get current user profile
     getMyProfile: async () => {
@@ -378,6 +418,16 @@ export const configurationAPI = {
             throw error;
         }
     },
+};
+
+export const militaryRanksAPI = {
+    getAll: (includeInactive = false) => api.get('/MilitaryRanks'),
+    getById: (id) => api.get(`/MilitaryRanks/${id}`),
+    create: (data) => api.post('/MilitaryRanks', data),
+    update: (id, data) => api.put(`/MilitaryRanks/${id}`, data),
+    delete: (id) => api.delete(`/MilitaryRanks/${id}`),
+    activate: (id) => api.post(`/MilitaryRanks/${id}/activate`),
+    deactivate: (id) => api.post(`/MilitaryRanks/${id}`),
 };
 
 export default api; 

@@ -10,6 +10,8 @@ using Api.Data;
 using Api.Services;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using StackExchange.Redis;
+using Api.Hubs;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +41,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                
+                return Task.CompletedTask;
+            }
+        };
     });
 
 // Redis IDistributedCache
@@ -53,10 +71,10 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<SummaryBuilder>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
-
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Satellite Ticket Tracker API", Version = "v1" });
@@ -84,12 +102,42 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        // Get allowed origins from configuration
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        
+        // If no origins configured, try environment variable
+        if (allowedOrigins == null || allowedOrigins.Length == 0)
+        {
+            var originsEnv = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
+            if (!string.IsNullOrEmpty(originsEnv))
+            {
+                // Split by comma or semicolon
+                allowedOrigins = originsEnv.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(o => o.Trim())
+                    .ToArray();
+            }
+        }
+
+        // Fallback to localhost if nothing configured
+        if (allowedOrigins == null || allowedOrigins.Length == 0)
+        {
+            allowedOrigins = new[] { "http://localhost:3000", "http://localhost:5173" };
+            Console.WriteLine("WARNING: No CORS origins configured, using localhost defaults");
+        }
+
+        Console.WriteLine($"CORS: Allowing origins: {string.Join(", ", allowedOrigins)}");
+
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); 
     });
 });
-
 builder.Services.AddScoped<ExcelExportService>();
 builder.Services.AddScoped<ConfigurationService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddSignalR();
+
 
 
 var app = builder.Build();
@@ -147,6 +195,8 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 
 Console.WriteLine("Application configured successfully!");
 Console.WriteLine("Starting web server...");

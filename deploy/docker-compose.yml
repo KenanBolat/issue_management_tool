@@ -26,6 +26,23 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
+  backup:
+    image: postgres:16-alpine
+    container_name: satellite_tickets_backup
+    restart: always
+    depends_on:
+      - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: satellite_tickets
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: Europe/Istanbul  # Set your timezone
+    volumes:
+      - ../db/backups:/backups  # Backups stored on host
+      - ../db/backup-scripts:/scripts  # Backup scripts
+    entrypoint: /scripts/backup-entrypoint.sh
+  
 
 volumes:
   redis-data:
