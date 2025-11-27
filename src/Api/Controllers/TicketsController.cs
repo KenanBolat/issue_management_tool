@@ -29,7 +29,7 @@ public class TicketsController : ControllerBase
     public TicketsController(AppDbContext context,
                             TicketService ticketService,
                             ExcelExportService excelExportService,
-                            ICacheService cache, 
+                            ICacheService cache,
                             NotificationService notificationService)
     {
         _context = context;
@@ -41,6 +41,8 @@ public class TicketsController : ControllerBase
     }
 
     private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+
 
     /// <summary>
     /// Get available systems for dropdown
@@ -467,7 +469,7 @@ public class TicketsController : ControllerBase
         }
 
         var notificationService = HttpContext.RequestServices.GetRequiredService<NotificationService>();
-            await notificationService.CreateNewTicketNotification(ticket, GetCurrentUserId());
+        await notificationService.CreateNewTicketNotification(ticket, GetCurrentUserId());
 
 
         // invalidate the cache 
@@ -710,8 +712,10 @@ public class TicketsController : ControllerBase
         if (request.ActivityControlStatus.HasValue)
         {
             ticket.ActivityControlStatus = (ControlStatus)request.ActivityControlStatus.Value;
- 
-        } else {
+
+        }
+        else
+        {
             ticket.ActivityControlStatus = null;
         }
 
@@ -750,6 +754,59 @@ public class TicketsController : ControllerBase
                 return BadRequest(new { message = "Invalid confirmation status" });
             confirmationStatus = cs;
         }
+        var ticket = await _context.Tickets.FindAsync(id);
+
+        if (ticket == null)
+            return NotFound();
+
+
+        var oldStatus = ticket.Status;
+        var userId = GetCurrentUserId();
+
+        if (toStatus == TicketStatus.PAUSED)
+        {
+            if (string.IsNullOrWhiteSpace(request.PauseReason))
+                return BadRequest(new { message = "Duraklama sebebi zorunludur" });
+
+            var pause = new TicketPause
+            {
+                TicketId = id,
+                PauseReason = request.PauseReason,
+                PausedAt = DateTime.UtcNow
+            };
+            _context.TicketPauses.Add(pause);
+        }
+
+
+        if (oldStatus == TicketStatus.PAUSED && toStatus != TicketStatus.PAUSED)
+        {
+            var activePause = await _context.TicketPauses
+                .Where(tp => tp.TicketId == id && tp.ResumedAt == null)
+                .OrderByDescending(tp => tp.PausedAt)
+                .FirstOrDefaultAsync();
+
+            if (activePause != null)
+            {
+                activePause.ResumedAt = DateTime.UtcNow;
+                activePause.ResumedByUserId = userId;
+            }
+        }
+
+        ticket.Status = toStatus;
+        ticket.UpdatedAt = DateTime.UtcNow;
+        ticket.LastUpdatedById = userId;
+
+
+        var action = new TicketAction
+        {
+            TicketId = id,
+            ActionType = ActionType.StatusChange,
+            FromStatus = oldStatus,
+            ToStatus = toStatus,
+            Notes = toStatus == TicketStatus.PAUSED ? $"Sebep: {request.PauseReason}" : null,
+            PerformedById = userId,
+            PerformedAt = DateTime.UtcNow
+        };
 
         try
         {

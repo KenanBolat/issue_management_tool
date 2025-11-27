@@ -49,7 +49,9 @@ public record CreateTicketRequest(
 public record ChangeStatusRequest(
     string ToStatus,
     string? Notes,
-    string? ConfirmationStatus);
+    string? ConfirmationStatus, 
+    string? PauseReason
+    );
 
 // Add comment and/or progress     
 public record AddCommentRequest(

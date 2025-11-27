@@ -28,6 +28,8 @@ namespace Infrastructure.Data
         public DbSet<NotificationRead> NotificationReads { get; set; }
         public DbSet<NotificationAction> NotificationActions { get; set; }
         public DbSet<ProgressRequest> ProgressRequests { get; set; }
+        public DbSet<TicketPause> TicketPauses { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -387,6 +389,38 @@ namespace Infrastructure.Data
             entity.HasIndex(e => e.TargetUserId);
             entity.HasIndex(e => e.Status);
         });
+
+            modelBuilder.Entity<TicketPause>(entity =>
+       {
+           entity.HasKey(e => e.Id);
+
+           entity.Property(e => e.PauseReason)
+               .IsRequired()
+               .HasMaxLength(1000);
+
+           entity.Property(e => e.ResumeNotes)
+               .HasMaxLength(1000);
+
+           entity.HasOne(tp => tp.Ticket)
+               .WithMany(t => t.Pauses)
+               .HasForeignKey(tp => tp.TicketId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+           entity.HasOne(tp => tp.PausedByUser)
+               .WithMany()
+               .HasForeignKey(tp => tp.PausedByUserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+           entity.HasOne(tp => tp.ResumedByUser)
+               .WithMany()
+               .HasForeignKey(tp => tp.ResumedByUserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+           // Indexes for performance
+           entity.HasIndex(tp => tp.TicketId);
+           entity.HasIndex(tp => tp.PausedAt);
+           entity.HasIndex(tp => new { tp.TicketId, tp.ResumedAt });
+       });
 
         }
     }
