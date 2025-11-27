@@ -24,7 +24,7 @@ namespace Api.Services
                 ? pauseIntervalsByTicket.Values.Max(list => list.Count)
                 : 0;
             var headers = new List<string>
-            {   
+            {
                 "ID",
                 "Arıza No",
                 "Başlık",
@@ -39,32 +39,32 @@ namespace Api.Services
                 "Parça Tanımı",
                 "Parça No",
                 "Seri No",
-                "Tespit Tarihi",
-                "Yükleniciye Bildirim Tarihi",
+                "Tespit Tarihi (UTC)",
+                "Yükleniciye Bildirim Tarihi (UTC)",
                 "Bildirim Şekli",
                 "Tespit Eden",
-                "Müdahale Tarihi",
-                "Giderilme Tarihi",
+                "Müdahale Tarihi (UTC)",
+                "Giderilme Tarihi (UTC)",
                 "Müdahale Eden Personel",
                 "Gideren Personel",
                 "Yapılan İşlemler",
-                "Faaliyet Kontrolü Tarihi",
+                "Faaliyet Kontrolü Tarihi (UTC)",
                 "Faaliyet Kontrolü Personeli",
                 "Faaliyet Kontrolü Komutanı",
                 "Faaliyet Kontrolü Sonucu",
                 "Oluşturan",
-                "Oluşturma Tarihi",
+                "Oluşturma Tarihi (UTC)",
                 "Son Güncelleyen",
-                "Güncelleme Tarihi",
+                "Güncelleme Tarihi (UTC)",
                 "Teknik Rapor Bilgisi",
-                "Geçici Çözüm Tarihi",
+                "Geçici Çözüm Tarihi (UTC)",
                 "Yeni Parça Tanımı",
                 "Yeni Parça No",
                 "Yeni Seri No",
                 "Hp No",
                 "Kontrol Teşkilatı Durumu",
-                "Alt Yüklenici", 
-                "Alt Yükleniciye Bildirildiği Tarih", 
+                "Alt Yüklenici",
+                "Alt Yükleniciye Bildirildiği Tarih (UTC)",
             };
 
             // add pause columns at the end (2 columns per pause)
@@ -107,8 +107,8 @@ namespace Api.Services
                 worksheet.Cells[row, 14].Value = ticket.ItemSerialNo ?? "";
 
                 // Dates
-                worksheet.Cells[row, 15].Value = ticket.DetectedDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 16].Value = ticket.DetectedContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 15].Value = FormatDateUtc(ticket.DetectedDate);
+                worksheet.Cells[row, 16].Value = FormatDateUtc(ticket.DetectedContractorNotifiedAt);
 
                 // Notification methods
                 var notificationMethods = ticket.DetectedNotificationMethods != null && ticket.DetectedNotificationMethods.Length > 0
@@ -122,8 +122,8 @@ namespace Api.Services
 
                 // Personnel - formatted
                 worksheet.Cells[row, 18].Value = FormatUserName(ticket.DetectedByUser);
-                worksheet.Cells[row, 19].Value = ticket.ResponseDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
-                worksheet.Cells[row, 20].Value = ticket.ResponseResolvedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 19].Value = FormatDateUtc(ticket.ResponseDate);
+                worksheet.Cells[row, 20].Value = FormatDateUtc(ticket.ResponseResolvedAt);
 
                 // Response personnel - multiple
                 var responsePersonnel = ticket.ResponseByUser != null && ticket.ResponseByUser.Any()
@@ -138,16 +138,16 @@ namespace Api.Services
                 worksheet.Cells[row, 22].Value = resolvedPersonnel;
 
                 worksheet.Cells[row, 23].Value = ticket.ResponseActions ?? "";
-                worksheet.Cells[row, 24].Value = ticket.ActivityControlDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 24].Value = FormatDateUtc(ticket.ActivityControlDate);
                 worksheet.Cells[row, 25].Value = FormatUserName(ticket.ActivityControlPersonnel);
                 worksheet.Cells[row, 26].Value = FormatUserName(ticket.ActivityControlCommander);
                 worksheet.Cells[row, 27].Value = ticket.ActivityControlResult ?? "";
                 worksheet.Cells[row, 28].Value = FormatUserName(ticket.CreatedBy);
-                worksheet.Cells[row, 29].Value = ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm");
+                worksheet.Cells[row, 29].Value = FormatDateUtc(ticket.CreatedAt);
                 worksheet.Cells[row, 30].Value = FormatUserName(ticket.LastUpdatedBy);
-                worksheet.Cells[row, 31].Value = ticket.UpdatedAt.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 31].Value = FormatDateUtc(ticket.UpdatedAt) ?? "";
                 worksheet.Cells[row, 32].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
-                worksheet.Cells[row, 33].Value = ticket.TentativeSolutionDate?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 33].Value = FormatDateUtc(ticket.TentativeSolutionDate);
 
                 worksheet.Cells[row, 34].Value = ticket.NewItemDescription ?? "";
                 worksheet.Cells[row, 35].Value = ticket.NewItemId ?? "";
@@ -157,7 +157,7 @@ namespace Api.Services
 
                 worksheet.Cells[row, 38].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
                 worksheet.Cells[row, 39].Value = ticket.SubContractor ?? "";
-                worksheet.Cells[row, 40].Value = ticket.SubContractorNotifiedAt?.ToString("dd.MM.yyyy HH:mm") ?? "";
+                worksheet.Cells[row, 40].Value = FormatDateUtc(ticket.SubContractorNotifiedAt);
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
                 int col = 41;
@@ -167,8 +167,8 @@ namespace Api.Services
                     if (i < pauses.Count)
                     {
                         var p = pauses[i];
-                        worksheet.Cells[row, col].Value = p.Start.ToString("dd.MM.yyyy HH:mm");
-                        worksheet.Cells[row, col + 1].Value = p.End.ToString("dd.MM.yyyy HH:mm");
+                        worksheet.Cells[row, col].Value = FormatDateUtc(p.Start);
+                        worksheet.Cells[row, col + 1].Value = FormatDateUtc(p.End);
                     }
                     else
                     {
@@ -216,6 +216,18 @@ namespace Api.Services
 
         private record PauseInterval(DateTime Start, DateTime End);
 
+        private string FormatDateUtc(DateTime? dateTime)
+        {
+            if (!dateTime.HasValue)
+                return "";
+
+            // Ensure the date is in UTC
+            var utcDate = dateTime.Value.Kind == DateTimeKind.Utc
+                ? dateTime.Value
+                : dateTime.Value.ToUniversalTime();
+
+            return utcDate.ToString("dd.MM.yyyy HH:mm");
+        }
         private List<PauseInterval> GetPauseIntervals(Ticket ticket)
         {
             var result = new List<PauseInterval>();
@@ -309,6 +321,6 @@ namespace Api.Services
             };
         }
 
-        
+
     }
 }
