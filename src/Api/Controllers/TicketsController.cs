@@ -710,7 +710,9 @@ public class TicketsController : ControllerBase
         if (request.ActivityControlStatus.HasValue)
         {
             ticket.ActivityControlStatus = (ControlStatus)request.ActivityControlStatus.Value;
-
+ 
+        } else {
+            ticket.ActivityControlStatus = null;
         }
 
         if (hasChanges)
