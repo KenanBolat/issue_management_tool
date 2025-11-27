@@ -52,6 +52,7 @@ namespace Api.Services
                 "Faaliyet Kontrolü Personeli",
                 "Faaliyet Kontrolü Komutanı",
                 "Faaliyet Kontrolü Sonucu",
+                "Oluşturan Kullanici Grubu",
                 "Oluşturan",
                 "Oluşturma Tarihi (UTC)",
                 "Son Güncelleyen",
@@ -70,8 +71,8 @@ namespace Api.Services
             // add pause columns at the end (2 columns per pause)
             for (int i = 1; i <= maxPauseCount; i++)
             {
-                headers.Add($"Duraklatma {i} Başlangıç");
-                headers.Add($"Duraklatma {i} Bitiş");
+                headers.Add($"Duraklatma {i} Başlangıç (UTC)");
+                headers.Add($"Duraklatma {i} Bitiş (UTC)");
             }
 
             // Apply headers
@@ -142,25 +143,31 @@ namespace Api.Services
                 worksheet.Cells[row, 25].Value = FormatUserName(ticket.ActivityControlPersonnel);
                 worksheet.Cells[row, 26].Value = FormatUserName(ticket.ActivityControlCommander);
                 worksheet.Cells[row, 27].Value = ticket.ActivityControlResult ?? "";
-                worksheet.Cells[row, 28].Value = FormatUserName(ticket.CreatedBy);
-                worksheet.Cells[row, 29].Value = FormatDateUtc(ticket.CreatedAt);
-                worksheet.Cells[row, 30].Value = FormatUserName(ticket.LastUpdatedBy);
-                worksheet.Cells[row, 31].Value = FormatDateUtc(ticket.UpdatedAt) ?? "";
-                worksheet.Cells[row, 32].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
-                worksheet.Cells[row, 33].Value = FormatDateUtc(ticket.TentativeSolutionDate);
+                worksheet.Cells[row, 28].Value = GetUserPositionLabel(ticket.CreatedBy?.Position);
+                worksheet.Cells[row, 29].Value = FormatUserName(ticket.CreatedBy);
+                worksheet.Cells[row, 30].Value = FormatDateUtc(ticket.CreatedAt);
 
-                worksheet.Cells[row, 34].Value = ticket.NewItemDescription ?? "";
-                worksheet.Cells[row, 35].Value = ticket.NewItemId ?? "";
-                worksheet.Cells[row, 36].Value = ticket.NewItemSerialNo ?? "";
 
-                worksheet.Cells[row, 37].Value = ticket.HpNo ?? "";
 
-                worksheet.Cells[row, 38].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
-                worksheet.Cells[row, 39].Value = ticket.SubContractor ?? "";
-                worksheet.Cells[row, 40].Value = FormatDateUtc(ticket.SubContractorNotifiedAt);
+                worksheet.Cells[row, 31].Value = FormatUserName(ticket.LastUpdatedBy);
+                worksheet.Cells[row, 32].Value = FormatDateUtc(ticket.UpdatedAt) ?? "";
+                worksheet.Cells[row, 33].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
+                worksheet.Cells[row, 34].Value = FormatDateUtc(ticket.TentativeSolutionDate);
+
+                worksheet.Cells[row, 35].Value = ticket.NewItemDescription ?? "";
+                worksheet.Cells[row, 36].Value = ticket.NewItemId ?? "";
+                worksheet.Cells[row, 37].Value = ticket.NewItemSerialNo ?? "";
+
+                worksheet.Cells[row, 38].Value = ticket.HpNo ?? "";
+
+                worksheet.Cells[row, 39].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
+                worksheet.Cells[row, 40].Value = ticket.SubContractor ?? "";
+                worksheet.Cells[row, 41].Value = FormatDateUtc(ticket.SubContractorNotifiedAt);
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
-                int col = 41;
+                int col = 42;
+
+
 
                 for (int i = 0; i < maxPauseCount; i++)
                 {
@@ -214,8 +221,6 @@ namespace Api.Services
             return await package.GetAsByteArrayAsync();
         }
 
-        private record PauseInterval(DateTime Start, DateTime End);
-
         private string FormatDateUtc(DateTime? dateTime)
         {
             if (!dateTime.HasValue)
@@ -228,6 +233,10 @@ namespace Api.Services
 
             return utcDate.ToString("dd.MM.yyyy HH:mm");
         }
+
+        private record PauseInterval(DateTime Start, DateTime? End);
+
+
         private List<PauseInterval> GetPauseIntervals(Ticket ticket)
         {
             var result = new List<PauseInterval>();
@@ -262,6 +271,10 @@ namespace Api.Services
 
                         // Jump index to the exit action so we don't reuse it
                         i = statusChanges.IndexOf(next);
+                    }
+                    else
+                    {
+                         result.Add(new PauseInterval(start, null));
                     }
                 }
             }
@@ -318,6 +331,42 @@ namespace Api.Services
                 Domain.Enums.ControlStatus.ClosedAndPayed => "Kapandı ve Ödendi",
                 Domain.Enums.ControlStatus.Cancelled => "İptal Edildi",
                 _ => status.Value.ToString()
+            };
+        }
+
+        private string GetUserPositionLabel(UserPosition? position)
+        {
+            if (!position.HasValue)
+                return "";
+
+            return position.Value switch
+            {
+                // Engineering Positions (0-8)
+                UserPosition.MissionPlanningEngineer => "Görev Planlama Mühendisi",
+                UserPosition.ImageProcessingEngineer => "Görüntü İşleme Mühendisi",
+                UserPosition.NetworkInfrastructureEngineer => "Ağ Altyapı Mühendisi",
+                UserPosition.AntennaSystemResponsible => "Anten Sistem Sorumlusu",
+                UserPosition.FieldCoordinator => "Saha Koordinatörü",
+                UserPosition.FlightCommandControlEngineer => "U. Komuta Kntrl. Mühendisi",
+                UserPosition.FlightDynamicsEngineer => "Uçuş Dinamikleri Mühendisi",
+                UserPosition.SatellitePayloadEngineer => "Uydu Faydalı Yük Mühendisi",
+                UserPosition.SatellitePlatformEngineer => "Uydu Platform Mühendisi",
+
+                // System Responsible Positions (10-14)
+                UserPosition.SDTSystemResponsible => "SDT Sistem Sorumlusu",
+                UserPosition.AselsanSystemResponsible => "Aselsan Sistem Sorumlusu",
+                UserPosition.TubitakSystemResponsible => "Tübitak Sistem Sorumlusu",
+                UserPosition.CryptoBSystemResponsible => "Kripto-B Sistem Sorumlusu",
+                UserPosition.TPZSystemResponsible => "TPZ Sistem Sorumlusu",
+
+                // GKT Positions (20-24)
+                UserPosition.GKTInformationSystems => "GKT Bilgi Sistemleri",
+                UserPosition.GKTSatelliteOperations => "GKT Uydu Operasyonları",
+                UserPosition.GKTDataProcessing => "GKT Veri İşleme",
+                UserPosition.GKTMissionPlanning => "GKT Görev Planlama",
+                UserPosition.GKTAntenna => "GKT Anten",
+
+                _ => position.Value.ToString()
             };
         }
 
