@@ -1255,18 +1255,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 </button>
 
                             </div>
-                            {canEdit && ticket && (
-                                <div style={styles.formSection}>
-                                    <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
-                                    <button
-                                        onClick={() => handleRequestProgress()}
-                                        style={{ ...styles.button, ...styles.progressRequestButton }}
-                                    >
-                                        <Clock size={16} />
-                                        Bilgi Raporu Talep Et
-                                    </button>
-                                </div>
-                            )}
+                           
 
                             {/* Comments Tab */}
                             {activeTab === 'comments' && (
@@ -1345,6 +1334,18 @@ export default function TicketDetail({ ticketId, onClose }) {
                                             ))
                                         )}
                                     </div>
+                                </div>
+                            )}
+                             {canEdit && ticket && (
+                                <div style={styles.formSection}>
+                                    <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
+                                    <button
+                                        onClick={() => handleRequestProgress()}
+                                        style={{ ...styles.button, ...styles.progressRequestButton }}
+                                    >
+                                        <Clock size={16} />
+                                        Bilgi Talep Et ! 
+                                    </button>
                                 </div>
                             )}
                         </>
