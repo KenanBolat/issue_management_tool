@@ -8,6 +8,8 @@ using Domain.Enums;
 using Infrastructure.Data;
 using System.Security.Claims;
 using Api.Services;
+using Api.Helpers;
+
 
 
 
@@ -23,6 +25,7 @@ public class TicketsController : ControllerBase
     private readonly ExcelExportService _excelExportService;
     private readonly ICacheService _cache;
     private readonly NotificationService _notificationService;
+    private readonly ILogger<TicketsController> _logger;
 
 
 
@@ -30,17 +33,28 @@ public class TicketsController : ControllerBase
                             TicketService ticketService,
                             ExcelExportService excelExportService,
                             ICacheService cache,
-                            NotificationService notificationService)
+                            NotificationService notificationService,
+                            ILogger<TicketsController> logger)
     {
         _context = context;
         _ticketService = ticketService;
         _excelExportService = excelExportService;
         _cache = cache;
         _notificationService = notificationService;
+        _logger = logger;
 
     }
 
     private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+
+    private async Task InvalidateTicketCacheAsync(long ticketId)
+    {
+        await _cache.RemoveAsync(CacheKeys.Tickets.Detail(ticketId));
+        await _cache.RemoveByPatternAsync(CacheKeys.Tickets.List());
+        await _cache.RemoveByPatternAsync(CacheKeys.TicketPauses.ByTicket(ticketId));
+        _logger.LogDebug($"Invalidated cache for ticket {ticketId}");
+    }
 
 
 
@@ -737,6 +751,7 @@ public class TicketsController : ControllerBase
         }
         await InvalidateTicketDetailCacheAsync(id);
 
+
         return NoContent();
     }
 
@@ -763,7 +778,7 @@ public class TicketsController : ControllerBase
         var oldStatus = ticket.Status;
         var userId = GetCurrentUserId();
 
-        if (toStatus == TicketStatus.PAUSED)
+        if (toStatus == TicketStatus.PAUSED && oldStatus != TicketStatus.PAUSED)
         {
             if (string.IsNullOrWhiteSpace(request.PauseReason))
                 return BadRequest(new { message = "Duraklama sebebi zorunludur" });
@@ -808,17 +823,21 @@ public class TicketsController : ControllerBase
             PerformedAt = DateTime.UtcNow
         };
 
+        _context.TicketActions.Add(action);
+
         try
         {
-            var success = await _ticketService.ChangeStatusAsync(
-                id, toStatus, request.Notes, confirmationStatus, GetCurrentUserId());
-
-            if (!success) return NotFound();
-            return NoContent();
+            // var success = await _ticketService.ChangeStatusAsync(
+            //     id, toStatus, request.Notes, confirmationStatus, GetCurrentUserId());
+            await _context.SaveChangesAsync();
+            await InvalidateTicketCacheAsync(id);
+            _logger.LogInformation($"Status changed for ticket {id}: {oldStatus} -> {toStatus}");
+            return Ok(new { message = $"Durum değiştirildi: {toStatus}" });
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            _logger.LogError(ex, $"Error changing status for ticket {id}");
+            return BadRequest(new { message = "Durum değiştirilemedi" });
         }
     }
 
@@ -849,6 +868,8 @@ public class TicketsController : ControllerBase
 
         ticket.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        await InvalidateTicketCacheAsync(id);
+
 
         return Ok(new { id = comment.Id });
     }
@@ -875,7 +896,9 @@ public class TicketsController : ControllerBase
             PerformedAt = DateTime.UtcNow
         });
         await _context.SaveChangesAsync();
-        await InvalidateTicketListCacheAsync();
+        // await InvalidateTicketListCacheAsync();
+        await InvalidateTicketCacheAsync(id);
+
 
         return NoContent();
     }

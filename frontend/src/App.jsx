@@ -8,6 +8,7 @@ import UserList from "./components/UserList.jsx";
 import UserForm from "./components/UserForm.jsx";
 import ProfilePage from './components/ProfilePage';
 import ProgressRequestsTable from "./components/ProgressRequestsTable.jsx";
+import PauseManagement from "./components/PauseManagement.jsx";
 
 
 function App() {
@@ -132,6 +133,8 @@ function App() {
                     />
                 )}
                 {currentPage === 'profile' && <ProfilePage />}
+
+                {currentPage === 'pause-management' && <PauseManagement />}
 
 
                 {currentPage === 'user-form' && (

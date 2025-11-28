@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Api.Services;
+using Api.Helpers;
 
 namespace Api.Controllers
 {
@@ -17,17 +19,42 @@ namespace Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<TicketPausesController> _logger;
+        private readonly ICacheService _cache;
 
-        public TicketPausesController(AppDbContext context, ILogger<TicketPausesController> logger)
+        public TicketPausesController(AppDbContext context, 
+                                        ILogger<TicketPausesController> logger,
+                                        ICacheService cache)
         {
             _context = context;
             _logger = logger;
+            _cache = cache;
         }
 
         private long GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return long.Parse(userIdClaim!);
+        }
+
+        private async Task InvalidatePauseCacheAsync(long ticketId, long? pauseId = null)
+        {
+            // Invalidate pause list
+            await _cache.RemoveByPatternAsync(CacheKeys.TicketPauses.List());
+            
+            // Invalidate specific pause if provided
+            if (pauseId.HasValue)
+            {
+                await _cache.RemoveAsync(CacheKeys.TicketPauses.Detail(pauseId.Value));
+            }
+            
+            // Invalidate pauses for this ticket
+            await _cache.RemoveAsync(CacheKeys.TicketPauses.ByTicket(ticketId));
+            
+            // Invalidate ticket cache (pause affects ticket)
+            await _cache.RemoveAsync(CacheKeys.Tickets.Detail(ticketId));
+            await _cache.RemoveByPatternAsync(CacheKeys.Tickets.List());
+            
+            _logger.LogDebug($"Invalidated pause cache for ticket {ticketId}");
         }
 
         // GET: /api/TicketPauses
@@ -178,11 +205,17 @@ namespace Api.Controllers
 
             await _context.SaveChangesAsync();
 
+            await InvalidatePauseCacheAsync(request.TicketId, pause.Id);
+
+
+
+
             _logger.LogInformation($"Ticket {request.TicketId} paused by user {userId}");
 
             // Return created pause
             var createdPause = await GetPause(pause.Id);
             return CreatedAtAction(nameof(GetPause), new { id = pause.Id }, createdPause.Value);
+
         }
 
         // POST: /api/TicketPauses/{id}/resume
@@ -208,7 +241,7 @@ namespace Api.Controllers
             pause.ResumeNotes = request.ResumeNotes;
 
             // Update ticket status back to OPEN
-            pause.Ticket.Status = TicketStatus.OPEN;
+            pause.Ticket.Status = TicketStatus.REOPENED;
             pause.Ticket.UpdatedAt = DateTime.UtcNow;
             pause.Ticket.LastUpdatedById = userId;
 
@@ -227,6 +260,8 @@ namespace Api.Controllers
             _context.TicketActions.Add(action);
 
             await _context.SaveChangesAsync();
+            await InvalidatePauseCacheAsync(pause.TicketId, id);
+
 
             _logger.LogInformation($"Pause {id} resumed by user {userId}");
 
@@ -247,6 +282,8 @@ namespace Api.Controllers
             pause.ResumeNotes = request.ResumeNotes;
 
             await _context.SaveChangesAsync();
+            await InvalidatePauseCacheAsync(pause.TicketId, id);
+
 
             return Ok(new { message = "Pause bilgileri güncellendi" });
         }
@@ -261,8 +298,13 @@ namespace Api.Controllers
             if (pause == null)
                 return NotFound();
 
+            var ticketId = pause.TicketId;
+
+
             _context.TicketPauses.Remove(pause);
             await _context.SaveChangesAsync();
+            await InvalidatePauseCacheAsync(ticketId, id);
+
 
             return Ok(new { message = "Pause kaydı silindi" });
         }

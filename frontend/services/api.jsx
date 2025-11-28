@@ -54,7 +54,11 @@ export const ticketsAPI = {
     delete: (id) => api.delete(`/tickets/${id}`),
     restore: (id) => api.post(`/tickets/${id}/restore`),
 
-    changeStatus: (id, data) => api.put(`/tickets/${id}/status`, data),
+    // Change ticket status with optional pause reason
+    changeStatus: (id, data, pauseReason) => api.put(`/tickets/${id}/status`, {data, pauseReason}),
+
+     
+    
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
     getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
 
@@ -429,5 +433,17 @@ export const militaryRanksAPI = {
     activate: (id) => api.post(`/MilitaryRanks/${id}/activate`),
     deactivate: (id) => api.post(`/MilitaryRanks/${id}`),
 };
+
+
+export const ticketPausesAPI = {
+    getAll: (activeOnly) => api.get('/TicketPauses', { params: { activeOnly } }),
+    getByTicket: (ticketId) => api.get(`/TicketPauses/ticket/${ticketId}`),
+    getById: (id) => api.get(`/TicketPauses/${id}`),
+    create: (data) => api.post('/TicketPauses', data),
+    resume: (id, data) => api.post(`/TicketPauses/${id}/resume`, data),
+    update: (id, data) => api.put(`/TicketPauses/${id}`, data),
+    delete: (id) => api.delete(`/TicketPauses/${id}`),
+};
+
 
 export default api; 

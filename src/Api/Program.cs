@@ -60,19 +60,52 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Redis IDistributedCache
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
+var redisInstanceName = "tickettracker:";
+
+Console.WriteLine($"Configuring Redis with connection: {redisConnectionString}");
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    try
+    {
+        var configuration = ConfigurationOptions.Parse(redisConnectionString);
+        configuration.AbortOnConnectFail = false; // Don't crash if Redis is temporarily down
+        configuration.ConnectTimeout = 5000;
+        configuration.SyncTimeout = 5000;
+        
+        var multiplexer = ConnectionMultiplexer.Connect(configuration);
+        
+        Console.WriteLine($"✓ Redis IConnectionMultiplexer connected successfully");
+        
+        return multiplexer;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠ WARNING: Could not connect to Redis: {ex.Message}");
+        Console.WriteLine("Application will continue but caching will not work.");
+        throw;
+    }
+});
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration["Redis:ConnectionString"];
-    options.InstanceName = "tickettracker:";
+    options.Configuration = redisConnectionString;
+    options.InstanceName = redisInstanceName;
 });
+
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<SummaryBuilder>();
-builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+
+// builder.Services.AddScoped<ICacheService, RedisCacheService>();
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 
 builder.Services.AddSwaggerGen(c =>
@@ -182,8 +215,33 @@ catch (Exception ex)
     // Don't exit - let the app run anyway for debugging
 }
 
-Console.WriteLine("Configuring middleware...");
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        Console.WriteLine("Testing Redis connection...");
+        var cache = scope.ServiceProvider.GetRequiredService<ICacheService>();
+        await cache.SetAsync("startup-test", "OK", TimeSpan.FromSeconds(10));
+        var testValue = await cache.GetAsync<string>("startup-test");
+        
+        if (testValue == "OK")
+        {
+            Console.WriteLine("✓ Redis cache is working correctly!");
+            await cache.RemoveAsync("startup-test");
+        }
+        else
+        {
+            Console.WriteLine("⚠ WARNING: Redis test failed - cache may not be working");
+        }
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"⚠ WARNING: Redis connection test failed: {ex.Message}");
+    Console.WriteLine("Application will continue but caching features may not work.");
+}
 
+Console.WriteLine("Configuring middleware...");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -1001,10 +1001,7 @@ const styles = {
         backgroundColor: '#ffebee',
         color: '#c62828',
     },
-    actions: {
-        display: 'flex',
-        gap: '0.5rem',
-    },
+
     iconButton: {
         padding: '0.5rem',
         background: '#e3f2fd',

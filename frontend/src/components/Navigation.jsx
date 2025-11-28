@@ -75,8 +75,20 @@ export default function Navigation({ currentPage, onNavigate }) {
                             ...(currentPage === 'dashboard' ? styles.activeMenuItem : {})
                         }}
                     >
+                        
                         <LayoutDashboard size={18} />
                         Gösterge Paneli </button>
+
+                                    <button
+                        onClick={() => onNavigate('pause-management')}
+                        style={{
+                            ...styles.menuItem,
+                            ...(currentPage === 'pause-management' ? styles.activeMenuItem : {})
+                        }}
+                    >
+                        
+                        <LayoutDashboard size={18} />
+                        Durdurmalar </button>
                     <button
                         onClick={() => onNavigate('tickets')}
                         style={{

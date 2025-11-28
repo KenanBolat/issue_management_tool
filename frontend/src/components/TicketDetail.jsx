@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
-import { ticketsAPI, userApi, configurationAPI, notificationsAPI } from "../../services/api";
+import { ticketsAPI, userApi, configurationAPI, notificationsAPI, ticketPausesAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
@@ -18,6 +18,7 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [availableCIs, setAvailableCIs] = useState([]);
     const [availableComponents, setAvailableComponents] = useState([]);
     const [pdfReportDate, setPdfReportDate] = useState([]);
+    const [pauseReason, setPauseReason] = useState('');
 
     useEffect(() => {
         loadConfiguration();
@@ -381,6 +382,22 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const handleStatusChange = async (newStatus) => {
         const statusLabel = getStatusLabel(newStatus);
+        let pauseReason = null;
+
+        if (newStatus === 'PAUSED') {
+            pauseReason = prompt('Lütfen duraklama sebebini giriniz:');
+
+
+            if (!pauseReason || pauseReason.trim() === '') {
+                alert('Duraklama sebebi zorunludur!');
+                return;
+            }
+            setPauseReason(pauseReason);
+            debugger;
+            await ticketPausesAPI.create({ticketId: ticketId, pauseReason: pauseReason});
+
+
+        }
         if (!window.confirm(`Durumu "${statusLabel}" olarak değiştirmek istediğinize emin misiniz?`)) return;
 
         try {
@@ -419,11 +436,14 @@ export default function TicketDetail({ ticketId, onClose }) {
                 activityControlCommanderId: formData.activityControlCommanderId || null,
                 activityControlDate: toISOOrNull(formData.activityControlDate),
                 activityControlResult: formData.activityControlResult || null,
+
+             
             };
 
             await ticketsAPI.update(ticketId, apiData);
             alert(`Durum "${statusLabel}" olarak değiştirildi`);
 
+            
             // Update local state after successful save
             setFormData(prev => ({ ...prev, status: newStatus }));
 
@@ -521,7 +541,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                             disabled={saving}
                         >
                             <Save size={16} />
-                            {saving ? 'Kaydediyot...' : 'Kaydet'}
+                            {saving ? 'Kaydediyor...' : 'Kaydet'}
                         </button>
                     )}
                     <button onClick={onClose} style={styles.closeButton}>
@@ -1143,6 +1163,80 @@ export default function TicketDetail({ ticketId, onClose }) {
                     </div>
                 </div>
 
+                {/* Pause Management  */}
+                {ticket && ticket.pauses && ticket.pauses.length > 0 && (
+                    <div style={styles.formSection}>
+                        <h2 style={styles.sectionTitle}>
+                            <Clock size={20} />
+                            Duraklama Geçmişi
+                        </h2>
+
+                        <div style={styles.pauseHistoryContainer}>
+                            {ticket.pauses.map((pause, index) => (
+                                <div key={pause.id} style={styles.pauseHistoryItem}>
+                                    <div style={styles.pauseHistoryHeader}>
+                                        <span style={styles.pauseHistoryNumber}>#{index + 1}</span>
+                                        {!pause.resumedAt && (
+                                            <span style={styles.pauseActiveBadge}>Aktif</span>
+                                        )}
+                                    </div>
+
+                                    <div style={styles.pauseHistoryBody}>
+                                        <div style={styles.pauseHistoryRow}>
+                                            <span style={styles.pauseHistoryLabel}>Başlangıç:</span>
+                                            <span>{new Date(pause.pausedAt).toLocaleString('tr-TR')}</span>
+                                        </div>
+
+                                        <div style={styles.pauseHistoryRow}>
+                                            <span style={styles.pauseHistoryLabel}>Bitiş:</span>
+                                            <span>
+                                                {pause.resumedAt
+                                                    ? new Date(pause.resumedAt).toLocaleString('tr-TR')
+                                                    : <em style={{ color: '#f57c00' }}>Devam Ediyor</em>
+                                                }
+                                            </span>
+                                        </div>
+
+                                        <div style={styles.pauseHistoryRow}>
+                                            <span style={styles.pauseHistoryLabel}>Süre:</span>
+                                            <span>
+                                                {pause.resumedAt
+                                                    ? Math.ceil((new Date(pause.resumedAt) - new Date(pause.pausedAt)) / (1000 * 60 * 60 * 24)) + ' gün'
+                                                    : Math.ceil((new Date() - new Date(pause.pausedAt)) / (1000 * 60 * 60 * 24)) + ' gün (devam ediyor)'
+                                                }
+                                            </span>
+                                        </div>
+
+                                        <div style={styles.pauseHistoryRow}>
+                                            <span style={styles.pauseHistoryLabel}>Sebep:</span>
+                                            <span style={styles.pauseReason}>{pause.pauseReason}</span>
+                                        </div>
+
+                                        <div style={styles.pauseHistoryRow}>
+                                            <span style={styles.pauseHistoryLabel}>Durduran:</span>
+                                            <span>{pause.pausedByUserName}</span>
+                                        </div>
+
+                                        {pause.resumedByUserName && (
+                                            <div style={styles.pauseHistoryRow}>
+                                                <span style={styles.pauseHistoryLabel}>Devam Ettiren:</span>
+                                                <span>{pause.resumedByUserName}</span>
+                                            </div>
+                                        )}
+
+                                        {pause.resumeNotes && (
+                                            <div style={styles.pauseHistoryRow}>
+                                                <span style={styles.pauseHistoryLabel}>Devam Notu:</span>
+                                                <span style={styles.pauseReason}>{pause.resumeNotes}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Right Panel - Control Panel */}
                 <div style={styles.rightPanel}>
                     {/* Status Control Panel */}
@@ -1255,7 +1349,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                 </button>
 
                             </div>
-                           
+
 
                             {/* Comments Tab */}
                             {activeTab === 'comments' && (
@@ -1336,7 +1430,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                     </div>
                                 </div>
                             )}
-                             {canEdit && ticket && (
+                            {canEdit && ticket && (
                                 <div style={styles.formSection}>
                                     <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
                                     <button
@@ -1344,7 +1438,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         style={{ ...styles.button, ...styles.progressRequestButton }}
                                     >
                                         <Clock size={16} />
-                                        Bilgi Talep Et ! 
+                                        Bilgi Talep Et !
                                     </button>
                                 </div>
                             )}
@@ -1805,5 +1899,55 @@ const styles = {
     progressRequestButton: {
         backgroundColor: '#f57c00',
         color: 'white',
+    },
+    pauseHistoryContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+    },
+    pauseHistoryItem: {
+        padding: '1rem',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '6px',
+        borderLeft: '4px solid #667eea',
+    },
+    pauseHistoryHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '0.75rem',
+    },
+    pauseHistoryNumber: {
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        color: '#667eea',
+    },
+    pauseActiveBadge: {
+        padding: '0.25rem 0.75rem',
+        borderRadius: '12px',
+        backgroundColor: '#fff3cd',
+        color: '#856404',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+    },
+    pauseHistoryBody: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+    },
+    pauseHistoryRow: {
+        display: 'flex',
+        gap: '0.5rem',
+        fontSize: '0.9rem',
+    },
+    pauseHistoryLabel: {
+        fontWeight: '600',
+        color: '#666',
+        minWidth: '120px',
+    },
+    pauseReason: {
+        flex: 1,
+        color: '#333',
+        fontStyle: 'italic',
     },
 };
