@@ -762,6 +762,10 @@ public class TicketsController : ControllerBase
         if (!Enum.TryParse<TicketStatus>(request.ToStatus, true, out var toStatus))
             return BadRequest(new { message = "Invalid status" });
 
+
+
+        
+
         ConfirmationStatus? confirmationStatus = null;
         if (request.ConfirmationStatus != null)
         {
@@ -770,10 +774,13 @@ public class TicketsController : ControllerBase
             confirmationStatus = cs;
         }
         var ticket = await _context.Tickets.FindAsync(id);
+        _logger.LogInformation($"1Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {ticket.Status} ");
+        _logger.LogInformation($"2Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {toStatus} ");
+
 
         if (ticket == null)
             return NotFound();
-
+    
 
         var oldStatus = ticket.Status;
         var userId = GetCurrentUserId();
@@ -793,17 +800,24 @@ public class TicketsController : ControllerBase
         }
 
 
-        if (oldStatus == TicketStatus.PAUSED && toStatus != TicketStatus.PAUSED)
+        if (oldStatus == TicketStatus.PAUSED)
         {
             var activePause = await _context.TicketPauses
                 .Where(tp => tp.TicketId == id && tp.ResumedAt == null)
                 .OrderByDescending(tp => tp.PausedAt)
                 .FirstOrDefaultAsync();
 
+            _logger.LogInformation($"3Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {activePause.ResumedAt.ToString()} ");
+
+
             if (activePause != null)
             {
                 activePause.ResumedAt = DateTime.UtcNow;
                 activePause.ResumedByUserId = userId;
+                activePause.ResumeNotes = $"Duraklama durum değişikliği ile sonlandırıldı  :  {oldStatus} ->  {toStatus} ";
+                _context.TicketPauses.Update(activePause);
+                _logger.LogInformation($"Ticket {id} pause ended due to status change: {oldStatus} -> {toStatus}");
+
             }
         }
 

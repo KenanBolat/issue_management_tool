@@ -1,0 +1,214 @@
+/* ==================== STARFIELD BACKGROUND ==================== */
+.stars-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle linear infinite;
+}
+
+/* Varying star sizes */
+.star.small {
+  width: 1px;
+  height: 1px;
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.star.medium {
+  width: 2px;
+  height: 2px;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.9);
+}
+
+.star.large {
+  width: 3px;
+  height: 3px;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 1);
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ==================== SATELLITE ORBIT ==================== */
+
+/* Wrapper centered over the card */
+.orbit-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+/* Bigger orbit container - creates the elliptical shape */
+.orbit-container {
+  position: relative;
+  width: 1000px;   
+  height: 1200px;
+  transform: rotate(-30deg) scaleY(0.7); /* tilt + ellipse */
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+
+.orbit-visible {
+  opacity: 1;
+}
+
+/* Dashed orbit path - visible elliptical path */
+/* .orbit-path {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed rgba(148, 163, 184, 0.4);
+  box-shadow: 
+    0 0 20px rgba(56, 189, 248, 0.2),
+    inset 0 0 20px rgba(56, 189, 248, 0.1);
+} */
+
+/* OUTER satellite wrapper: moves along the orbit */
+.satellite {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  /* Match the radius to half the container width (1000px / 2 = 500px) */
+  transform: rotate(-40deg) translateX(500px);
+}
+
+.satellite-orbiting {
+  animation: satellite-orbit 14s linear infinite;
+}
+
+/* INNER icon: counter-rotates so it keeps facing orbit center */
+.satellite-icon {
+  display: block;
+  font-size: 2rem;
+  text-shadow: 
+    0 0 12px rgba(248, 250, 252, 0.95),
+    0 0 24px rgba(56, 189, 248, 0.6);
+  transform-origin: center center;
+  /* Counter the ellipse distortion to keep satellite properly sized */
+  transform: scaleY(1.43); /* Inverse of 0.7 = 1/0.7 ≈ 1.43 */
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+}
+
+.satellite-orbiting .satellite-icon {
+  animation: satellite-face-center 14s linear infinite;
+}
+
+/* Beam when "show password" clicked */
+.satellite-beaming::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) rotate(10deg);
+  width: 0;
+  height: 0;
+  border-left: 34px solid transparent;
+  border-right: 34px solid transparent;
+  border-bottom: 170px solid rgba(239, 68, 68, 0.18);
+  filter: blur(1px);
+  opacity: 0;
+  animation: beam-pulse 0.7s ease-out forwards;
+  z-index: -1;
+}
+
+/* ==================== ANIMATIONS ==================== */
+
+/* Outer orbit: circle around center (becomes ellipse due to container scaleY) */
+@keyframes satellite-orbit {
+  from {
+    transform: rotate(0deg) translateX(500px);
+  }
+  to {
+    transform: rotate(360deg) translateX(500px);
+  }
+}
+
+/* Inner counter-rotation: keeps icon facing center AND maintains proper aspect ratio */
+@keyframes satellite-face-center {
+  from {
+    transform: rotate(0deg) scaleY(1.43);
+  }
+  to {
+    transform: rotate(-360deg) scaleY(1.43); /* opposite of orbit */
+  }
+}
+
+/* Beam pulse */
+@keyframes beam-pulse {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scaleY(0.8) rotate(10deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scaleY(1.05) rotate(10deg);
+  }
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+@media (max-width: 768px) {
+  .orbit-container {
+    width: 800px;
+    height: 1000px;
+  }
+  
+  .satellite {
+    transform: rotate(0deg) translateX(400px);
+  }
+  
+  @keyframes satellite-orbit {
+    from {
+      transform: rotate(0deg) translateX(400px);
+    }
+    to {
+      transform: rotate(360deg) translateX(400px);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .orbit-container {
+    width: 600px;
+    height: 800px;
+  }
+  
+  .satellite {
+    transform: rotate(0deg) translateX(300px);
+  }
+  
+  .satellite-icon {
+    font-size: 1.5rem;
+  }
+  
+  @keyframes satellite-orbit {
+    from {
+      transform: rotate(0deg) translateX(300px);
+    }
+    to {
+      transform: rotate(360deg) translateX(300px);
+    }
+  }
+}
