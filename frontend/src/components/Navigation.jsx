@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { LayoutDashboard, List, LogOut, User, Bell, Clock } from "lucide-react";
+import { LayoutDashboard, List, LogOut, User, Bell, Clock, PauseOctagonIcon, CogIcon} from "lucide-react";
 import NotificationsPanel from './NotificationsPanel';
 import { notificationsAPI } from '../../services/api';
 import signalRService from '../../services/signalrService';
@@ -68,43 +68,23 @@ export default function Navigation({ currentPage, onNavigate }) {
                     <span style={styles.brandText}>Satellite Ticket Tracker  </span>
                 </div>
                 <div style={styles.menu}>
-                    <button
-                        onClick={() => onNavigate('dashboard')}
-                        style={{
-                            ...styles.menuItem,
-                            ...(currentPage === 'dashboard' ? styles.activeMenuItem : {})
-                        }}
-                    >
-                        
-                        <LayoutDashboard size={18} />
-                        Gösterge Paneli </button>
+                    
+                    <button onClick={() => onNavigate('dashboard')} style={{ ...styles.menuItem, ...(currentPage === 'dashboard' ? styles.activeMenuItem : {}) }} >
+                        <LayoutDashboard size={18} /> Gösterge Paneli
+                    </button>
+  
+                    <button  onClick={() => onNavigate('tickets')} style={{ ...styles.menuItem, ...(currentPage === 'tickets' ? styles.activeMenuItem : {})  }} >
+                        <List size={18} />  Sorunlar 
+                    </button>
 
-                                    <button
-                        onClick={() => onNavigate('pause-management')}
-                        style={{
-                            ...styles.menuItem,
-                            ...(currentPage === 'pause-management' ? styles.activeMenuItem : {})
-                        }}
-                    >
-                        
-                        <LayoutDashboard size={18} />
-                        Durdurmalar </button>
-                    <button
-                        onClick={() => onNavigate('tickets')}
-                        style={{
-                            ...styles.menuItem,
-                            ...(currentPage === 'tickets' ? styles.activeMenuItem : {})
-                        }}
-                    >
-                        <List size={18} />
-                        Sorunlar </button>
+                    <button onClick={() => onNavigate('pause-management')}  style={{ ...styles.menuItem, ...(currentPage === 'pause-management' ? styles.activeMenuItem : {}) }} >
+                        <PauseOctagonIcon size={18} /> Durdurmalar 
+                    </button>
+
 
                     {userRole === 'Admin' && (
-                        <button
-                            onClick={() => onNavigate('users')}
-                            style={{ ...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem : {}) }}
-                        >
-                            Kontrol Paneli
+                        <button onClick={() => onNavigate('users')} style={{ ...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem : {}) }}  >
+                            <CogIcon size={18} /> Kontrol Paneli
                         </button>
                     )}
                     <button

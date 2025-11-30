@@ -11,7 +11,7 @@ using Api.Helpers;
 
 namespace Api.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
@@ -21,7 +21,7 @@ namespace Api.Controllers
         private readonly ILogger<TicketPausesController> _logger;
         private readonly ICacheService _cache;
 
-        public TicketPausesController(AppDbContext context, 
+        public TicketPausesController(AppDbContext context,
                                         ILogger<TicketPausesController> logger,
                                         ICacheService cache)
         {
@@ -40,20 +40,20 @@ namespace Api.Controllers
         {
             // Invalidate pause list
             await _cache.RemoveByPatternAsync(CacheKeys.TicketPauses.List());
-            
+
             // Invalidate specific pause if provided
             if (pauseId.HasValue)
             {
                 await _cache.RemoveAsync(CacheKeys.TicketPauses.Detail(pauseId.Value));
             }
-            
+
             // Invalidate pauses for this ticket
             await _cache.RemoveAsync(CacheKeys.TicketPauses.ByTicket(ticketId));
-            
+
             // Invalidate ticket cache (pause affects ticket)
             await _cache.RemoveAsync(CacheKeys.Tickets.Detail(ticketId));
             await _cache.RemoveByPatternAsync(CacheKeys.Tickets.List());
-            
+
             _logger.LogDebug($"Invalidated pause cache for ticket {ticketId}");
         }
 
@@ -88,7 +88,7 @@ namespace Api.Controllers
                 tp.PausedByUser.DisplayName,
                 tp.ResumedByUser?.DisplayName,
                 tp.ResumedAt == null,
-                CalculateDurationDays(tp.PausedAt, tp.ResumedAt)
+                (int)CalculateDurationHours(tp.PausedAt, tp.ResumedAt)
             )).ToList();
 
             return Ok(result);
@@ -163,7 +163,7 @@ namespace Api.Controllers
         public async Task<ActionResult<TicketPauseDetail>> CreatePause([FromBody] CreateTicketPauseRequest request)
         {
             var ticket = await _context.Tickets.FindAsync(request.TicketId);
-            
+
             if (ticket == null)
                 return NotFound(new { message = "Ticket bulunamadı" });
 
@@ -314,5 +314,13 @@ namespace Api.Controllers
             var endDate = end ?? DateTime.UtcNow;
             return (int)(endDate - start).TotalDays;
         }
+
+        private double CalculateDurationHours(DateTime start, DateTime? end)
+        {
+            var endDate = end ?? DateTime.UtcNow;
+            return (endDate - start).TotalHours;
+        }
+
+
     }
 }

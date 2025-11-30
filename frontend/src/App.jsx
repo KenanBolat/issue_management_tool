@@ -134,8 +134,12 @@ function App() {
                 )}
                 {currentPage === 'profile' && <ProfilePage />}
 
-                {currentPage === 'pause-management' && <PauseManagement />}
-
+                {currentPage === 'pause-management' && (
+                    <PauseManagement
+                        onViewTicket={handleViewTicket}
+                        onNavigate={handleNavigate}
+                    />
+                )}
 
                 {currentPage === 'user-form' && (
                     <UserForm

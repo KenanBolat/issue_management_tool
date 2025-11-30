@@ -11,7 +11,7 @@ namespace Api.DTOs
         string PausedByUserName,
         string? ResumedByUserName,
         bool IsActive,
-        int DurationDays
+        int DurationHours
     );
 
     public record TicketPauseDetail(
