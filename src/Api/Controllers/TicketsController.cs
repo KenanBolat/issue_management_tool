@@ -755,105 +755,114 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id}/status")]
-    [Authorize(Roles = "Editor,Admin")]
-    public async Task<ActionResult> ChangeStatus(long id, [FromBody] ChangeStatusRequest request)
-    {
-        if (!Enum.TryParse<TicketStatus>(request.ToStatus, true, out var toStatus))
-            return BadRequest(new { message = "Invalid status" });
+[HttpPost("{id}/status")]
+[Authorize(Roles = "Editor,Admin")]
+public async Task<ActionResult> ChangeStatus(long id, [FromBody] ChangeStatusRequest request)
+{
+    if (!Enum.TryParse<TicketStatus>(request.ToStatus, true, out var toStatus))
+        return BadRequest(new { message = "Invalid status" });
 
-
-
-        
-
-        ConfirmationStatus? confirmationStatus = null;
-        if (request.ConfirmationStatus != null)
-        {
-            if (!Enum.TryParse<ConfirmationStatus>(request.ConfirmationStatus, true, out var cs))
-                return BadRequest(new { message = "Invalid confirmation status" });
-            confirmationStatus = cs;
-        }
-        var ticket = await _context.Tickets.FindAsync(id);
-        _logger.LogInformation($"1Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {ticket.Status} ");
-        _logger.LogInformation($"2Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {toStatus} ");
-
-
-        if (ticket == null)
-            return NotFound();
     
 
-        var oldStatus = ticket.Status;
-        var userId = GetCurrentUserId();
+    var ticket = await _context.Tickets.FindAsync(id);
 
-        if (toStatus == TicketStatus.PAUSED && oldStatus != TicketStatus.PAUSED)
-        {
-            if (string.IsNullOrWhiteSpace(request.PauseReason))
-                return BadRequest(new { message = "Duraklama sebebi zorunludur" });
+    if (ticket == null)
+        return NotFound(new { message = "Ticket not found" });
 
-            var pause = new TicketPause
-            {
-                TicketId = id,
-                PauseReason = request.PauseReason,
-                PausedAt = DateTime.UtcNow
-            };
-            _context.TicketPauses.Add(pause);
-        }
+    var oldStatus = ticket.Status;
+    var userId = GetCurrentUserId();
 
+    // ✅ Handle pausing - create pause record
+    if (toStatus == TicketStatus.PAUSED && oldStatus != TicketStatus.PAUSED)
+    {
+        if (string.IsNullOrWhiteSpace(request.PauseReason))
+            return BadRequest(new { message = "Duraklama sebebi zorunludur" });
 
-        if (oldStatus == TicketStatus.PAUSED)
-        {
-            var activePause = await _context.TicketPauses
-                .Where(tp => tp.TicketId == id && tp.ResumedAt == null)
-                .OrderByDescending(tp => tp.PausedAt)
-                .FirstOrDefaultAsync();
-
-            _logger.LogInformation($"3Changing status for ticket ------ --------- -------------- --------- -------------- --------- -------- {activePause.ResumedAt.ToString()} ");
-
-
-            if (activePause != null)
-            {
-                activePause.ResumedAt = DateTime.UtcNow;
-                activePause.ResumedByUserId = userId;
-                activePause.ResumeNotes = $"Duraklama durum değişikliği ile sonlandırıldı  :  {oldStatus} ->  {toStatus} ";
-                _context.TicketPauses.Update(activePause);
-                _logger.LogInformation($"Ticket {id} pause ended due to status change: {oldStatus} -> {toStatus}");
-
-            }
-        }
-
-        ticket.Status = toStatus;
-        ticket.UpdatedAt = DateTime.UtcNow;
-        ticket.LastUpdatedById = userId;
-
-
-        var action = new TicketAction
+        var pause = new TicketPause
         {
             TicketId = id,
-            ActionType = ActionType.StatusChange,
-            FromStatus = oldStatus,
-            ToStatus = toStatus,
-            Notes = toStatus == TicketStatus.PAUSED ? $"Sebep: {request.PauseReason}" : null,
-            PerformedById = userId,
-            PerformedAt = DateTime.UtcNow
+            PausedByUserId = userId,
+            PauseReason = request.PauseReason,
+            PausedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
         };
+        
+        _context.TicketPauses.Add(pause);
+    }
 
-        _context.TicketActions.Add(action);
+    // ✅ Handle resuming - close active pause
+    if (oldStatus == TicketStatus.PAUSED && toStatus != TicketStatus.PAUSED)
+    {
+        var activePause = await _context.TicketPauses
+            .Where(tp => tp.TicketId == id && tp.ResumedAt == null)
+            .OrderByDescending(tp => tp.PausedAt)
+            .FirstOrDefaultAsync();
 
-        try
+        if (activePause != null)
         {
-            // var success = await _ticketService.ChangeStatusAsync(
-            //     id, toStatus, request.Notes, confirmationStatus, GetCurrentUserId());
-            await _context.SaveChangesAsync();
-            await InvalidateTicketCacheAsync(id);
-            _logger.LogInformation($"Status changed for ticket {id}: {oldStatus} -> {toStatus}");
-            return Ok(new { message = $"Durum değiştirildi: {toStatus}" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error changing status for ticket {id}");
-            return BadRequest(new { message = "Durum değiştirilemedi" });
+            activePause.ResumedAt = DateTime.UtcNow;
+            activePause.ResumedByUserId = userId;
         }
     }
+
+    // ✅ Update ticket status
+    ticket.Status = toStatus;
+
+    
+    ticket.UpdatedAt = DateTime.UtcNow;
+    ticket.LastUpdatedById = userId;
+
+    // ✅ Log the status change action
+    var action = new TicketAction
+    {
+        TicketId = id,
+        ActionType = ActionType.StatusChange,
+        FromStatus = oldStatus,
+        ToStatus = toStatus,
+        Notes = toStatus == TicketStatus.PAUSED 
+            ? $"Sebep: {request.PauseReason}" 
+            : request.Notes,
+        PerformedById = userId,
+        PerformedAt = DateTime.UtcNow
+    };
+
+    _context.TicketActions.Add(action);
+    await InvalidateTicketListCacheAsync();
+    await InvalidateTicketDetailCacheAsync(id);
+    _logger.LogInformation($"___________________Attempting to change status for ticket {id} from {oldStatus} to {toStatus} by user {userId}");
+
+    
+
+    try
+    {
+        await _context.SaveChangesAsync();
+
+        // ✅ Invalidate cache (safely handle if cache is null)
+        try
+        {
+            if (_cache != null)
+            {
+                await _cache.RemoveAsync($"ticket:detail:{id}");
+                await _cache.RemoveByPatternAsync("ticket:list:*");
+                await _cache.RemoveByPatternAsync($"pause:ticket:{id}");
+                
+            }
+        }
+        catch (Exception cacheEx)
+        {
+            _logger.LogWarning(cacheEx, $"Failed to invalidate cache for ticket {id}, but operation succeeded");
+        }
+
+        _logger.LogInformation($"Status changed for ticket {id}: {oldStatus} -> {toStatus} by user {userId}");
+
+        return Ok(new { message = $"Durum değiştirildi: {toStatus}" });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, $"Error changing status for ticket {id}");
+        return BadRequest(new { message = $"Durum değiştirilemedi: {ex.Message}" });
+    }
+}
 
     [HttpPost("{id}/comments")]
     [Authorize(Roles = "Editor,Admin")]

@@ -177,34 +177,7 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                 </div>
             </div>
 
-            {/* Charts Row */}
-            <div style={styles.chartsRow}>
-                <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Durumuna göre sorunlar</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="count" fill="#667eea" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-
-                <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Sorun Eğilimleri</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="count" stroke="#4caf50" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+            
 
             {(systemStats.length > 0 || subsystemStats.length > 0 || ciStats.length > 0) && (
                 <div style={styles.hierarchyStatsRow}>
@@ -269,14 +242,14 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                     )}
                 </div>
             )}
-
+            
             {/* Two Column Layout */}
             <div style={styles.contentGrid}>
                 {/* Ongoing Tickets */}
                 <div style={styles.card}>
                     <div style={styles.cardHeader}>
                         <h3 style={styles.cardTitle}>Devam Eden Sorunlar</h3>
-                        <span style={styles.badge}>{ongoingTickets.length} active</span>
+                        <span style={styles.badge}>{ongoingTickets.length} Aktif sorun var </span>
                     </div>
                     <div style={styles.taskList}>
                         {ongoingTickets.length === 0 ? (
@@ -285,11 +258,11 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                             ongoingTickets.map((ticket) => (
                                 <div key={ticket.id} style={styles.taskItem}>
                                     <div style={styles.taskLeft}>
-                                        <input type="checkbox" style={styles.checkbox} />
+                                        
                                         <div>
-                                            <div style={styles.taskTitle}>{ticket.title}</div>
+                                            <div style={styles.taskTitle}>{ticket.externalCode}</div>
                                             <div style={styles.taskMeta}>
-                                                {ticket.externalCode} • {ticket.createdByName}
+                                                {ticket.title}  <br/>    {new Date(ticket.createdAt).toLocaleDateString()}
                                             </div>
                                         </div>
                                     </div>
@@ -329,11 +302,12 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                                         ...styles.avatar,
                                         backgroundColor: getStatusColor(ticket.status)
                                     }}>
-                                        {ticket.createdByName.charAt(0)}
+                                        {ticket.title.charAt(0)}
                                     </div>
                                     <div>
-                                        <div style={styles.taskTitle}>{ticket.title}</div>
+                                        <div style={styles.taskTitle}>{ticket.externalCode}</div>
                                         <div style={styles.taskMeta}>
+                                            {ticket.title} <br/>
                                             {new Date(ticket.createdAt).toLocaleDateString()}
                                         </div>
                                     </div>
@@ -345,6 +319,35 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                         ))}
                     </div>
                 </div>
+            </div>
+
+            {/* Charts Row */}
+            <div style={styles.chartsRow}>
+                <div style={styles.chartCard}>
+                    <h3 style={styles.cardTitle}>Durumuna göre sorunlar</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="count" fill="#667eea" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+{/* 
+                <div style={styles.chartCard}>
+                    <h3 style={styles.cardTitle}>Sorun Eğilimleri</h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Line type="monotone" dataKey="count" stroke="#4caf50" strokeWidth={2} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div> */}
             </div>
 
 

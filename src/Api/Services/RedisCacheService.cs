@@ -101,7 +101,7 @@ namespace Api.Services
         {
             try
             {
-                var tasks = keys.Select(key => RemoveAsync(key)); 
+                var tasks = keys.Select(key => RemoveAsync(key));
                 await Task.WhenAll(tasks);
                 _logger.LogInformation($"Removed {keys.Length} keys from cache.");
             }
@@ -113,8 +113,8 @@ namespace Api.Services
 
         public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiry = null)
         {
-             var cached = await GetAsync<T>(key);
-            
+            var cached = await GetAsync<T>(key);
+
             if (cached != null)
             {
                 _logger.LogDebug($"Cache HIT: {key}");
@@ -122,10 +122,10 @@ namespace Api.Services
             }
 
             _logger.LogDebug($"Cache MISS: {key}");
-            
+
             var value = await factory();
             await SetAsync(key, value, expiry);
-            
+
             return value;
         }
     }

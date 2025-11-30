@@ -19,6 +19,7 @@ export default function TicketDetail({ ticketId, onClose }) {
     const [availableComponents, setAvailableComponents] = useState([]);
     const [pdfReportDate, setPdfReportDate] = useState([]);
     const [pauseReason, setPauseReason] = useState('');
+    const [changeStatusData, setChangeStatusData] = useState('');
 
     useEffect(() => {
         loadConfiguration();
@@ -381,6 +382,8 @@ export default function TicketDetail({ ticketId, onClose }) {
     };
 
     const handleStatusChange = async (newStatus) => {
+        const changeStatusData = '';
+
         const statusLabel = getStatusLabel(newStatus);
         let pauseReason = null;
 
@@ -393,8 +396,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                 return;
             }
             setPauseReason(pauseReason);
-            debugger;
-            await ticketPausesAPI.create({ticketId: ticketId, pauseReason: pauseReason});
+            await ticketPausesAPI.create({ ticketId: ticketId, pauseReason: pauseReason });
 
 
         }
@@ -408,42 +410,51 @@ export default function TicketDetail({ ticketId, onClose }) {
                 return new Date(dateString).toISOString();
             };
 
-            // Build apiData directly with the new status (don't rely on formData state)
-            const apiData = {
-                title: formData.title,
-                description: formData.description,
-                isBlocking: formData.isBlocking,
-                technicalReportRequired: formData.technicalReportRequired,
-                status: newStatus,
+            
+            const  statusData =    {
+                toStatus: newStatus || '',
+                Notes: `Status changed to ${newStatus} from the Ticket Detail Page`,
+                PauseReason: pauseReason || null
+            }
+            
 
-                ciId: formData.ciId || null,
-                componentId: formData.componentId || null,
-                subsystemId: formData.subsystemId || null,
-                systemId: formData.systemId || null,
+            // // Build apiData directly with the new status (don't rely on formData state)
+            // const apiData = {
+            //     title: formData.title,
+            //     description: formData.description,
+            //     isBlocking: formData.isBlocking,
+            //     technicalReportRequired: formData.technicalReportRequired,
+            //     status: newStatus,
 
-                detectedDate: toISOOrNull(formData.detectedDate),
-                detectedContractorNotifiedAt: toISOOrNull(formData.detectedContractorNotifiedAt),
-                detectedNotificationMethods: formData.detectedNotificationMethods || [],
-                detectedByUserId: formData.detectedByUserId || null,
+            //     ciId: formData.ciId || null,
+            //     componentId: formData.componentId || null,
+            //     subsystemId: formData.subsystemId || null,
+            //     systemId: formData.systemId || null,
 
-                responseDate: toISOOrNull(formData.responseDate),
-                responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
-                responsePersonnelIds: formData.responsePersonnelIds || [],
-                responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [],
-                responseActions: formData.responseActions || null,
+            //     detectedDate: toISOOrNull(formData.detectedDate),
+            //     detectedContractorNotifiedAt: toISOOrNull(formData.detectedContractorNotifiedAt),
+            //     detectedNotificationMethods: formData.detectedNotificationMethods || [],
+            //     detectedByUserId: formData.detectedByUserId || null,
 
-                activityControlPersonnelId: formData.activityControlPersonnelId || null,
-                activityControlCommanderId: formData.activityControlCommanderId || null,
-                activityControlDate: toISOOrNull(formData.activityControlDate),
-                activityControlResult: formData.activityControlResult || null,
+            //     responseDate: toISOOrNull(formData.responseDate),
+            //     responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
+            //     responsePersonnelIds: formData.responsePersonnelIds || [],
+            //     responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [],
+            //     responseActions: formData.responseActions || null,
 
-             
-            };
+            //     activityControlPersonnelId: formData.activityControlPersonnelId || null,
+            //     activityControlCommanderId: formData.activityControlCommanderId || null,
+            //     activityControlDate: toISOOrNull(formData.activityControlDate),
+            //     activityControlResult: formData.activityControlResult || null,
 
-            await ticketsAPI.update(ticketId, apiData);
+
+            // };
+
+            await ticketsAPI.changeStatus(ticketId, statusData);
+            debugger
             alert(`Durum "${statusLabel}" olarak değiştirildi`);
 
-            
+
             // Update local state after successful save
             setFormData(prev => ({ ...prev, status: newStatus }));
 

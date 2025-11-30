@@ -49,7 +49,6 @@ public record CreateTicketRequest(
 public record ChangeStatusRequest(
     string ToStatus,
     string? Notes,
-    string? ConfirmationStatus, 
     string? PauseReason
     );
 

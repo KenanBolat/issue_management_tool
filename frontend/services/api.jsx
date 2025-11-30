@@ -55,7 +55,7 @@ export const ticketsAPI = {
     restore: (id) => api.post(`/tickets/${id}/restore`),
 
     // Change ticket status with optional pause reason
-    changeStatus: (id, data, pauseReason) => api.put(`/tickets/${id}/status`, {data, pauseReason}),
+    changeStatus: (id, data) => api.post(`/tickets/${id}/status`, data),
 
      
     
