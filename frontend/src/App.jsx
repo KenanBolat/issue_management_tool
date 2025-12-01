@@ -9,6 +9,7 @@ import UserForm from "./components/UserForm.jsx";
 import ProfilePage from './components/ProfilePage';
 import ProgressRequestsTable from "./components/ProgressRequestsTable.jsx";
 import PauseManagement from "./components/PauseManagement.jsx";
+import ProgressRequestManagement from "./components/ProgressRequestManagement.jsx";
 
 
 function App() {
@@ -136,6 +137,14 @@ function App() {
 
                 {currentPage === 'pause-management' && (
                     <PauseManagement
+                        onViewTicket={handleViewTicket}
+                        onNavigate={handleNavigate}
+                    />
+                )}
+
+
+                {currentPage === 'progress-management' && (
+                    <ProgressRequestManagement
                         onViewTicket={handleViewTicket}
                         onNavigate={handleNavigate}
                     />

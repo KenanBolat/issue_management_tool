@@ -19,13 +19,14 @@ export const authAPI = {
 
 };
 
-
 export const progressRequestsAPI = {
-    getAll: (params) => api.get('/ProgressRequests', { params }),
+    getAll: (status) => api.get('/ProgressRequests', { params: { status } }),
+    getByTicket: (ticketId) => api.get(`/ProgressRequests/ticket/${ticketId}`),
     getById: (id) => api.get(`/ProgressRequests/${id}`),
+    updateProgress: (id, data) => api.post(`/ProgressRequests/${id}/update-progress`, data),
     respond: (id, data) => api.post(`/ProgressRequests/${id}/respond`, data),
     cancel: (id) => api.post(`/ProgressRequests/${id}/cancel`),
-    getStats: () => api.get('/ProgressRequests/stats'),
+    delete: (id) => api.delete(`/ProgressRequests/${id}`),
 };
 
 export const notificationsAPI = {

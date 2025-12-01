@@ -1,170 +1,145 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, Play, Trash2, Filter,Pause } from 'lucide-react';
-import { ticketPausesAPI, ticketsAPI } from '../../services/api';
-import { useNavigate } from 'react-router-dom';
+import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, CheckCircle, Trash2, Filter, MessageSquare, TrendingUp } from 'lucide-react';
+import { progressRequestsAPI } from '../../services/api';
 
-export default function PauseManagement({ onViewTicket, onNavigate }) {
-    const [pauses, setPauses] = useState([]);
+export default function ProgressRequestManagement({ onViewTicket, onNavigate }) {
+    const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'totalDuration', direction: 'desc' });
     const [expandedTickets, setExpandedTickets] = useState(new Set());
-    const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
-    const [showResumeModal, setShowResumeModal] = useState(false);
-    const [selectedPause, setSelectedPause] = useState(null);
-    const [resumeNotes, setResumeNotes] = useState('');
+    const [filter, setFilter] = useState('all');
+    const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [showRespondModal, setShowRespondModal] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [progressInfo, setProgressInfo] = useState('');
+    const [progressPercentage, setProgressPercentage] = useState(0);
+    const [estimatedCompletion, setEstimatedCompletion] = useState('');
+    const [responseNotes, setResponseNotes] = useState('');
 
     useEffect(() => {
-        loadPauses();
+        loadRequests();
     }, []);
 
-    const loadPauses = async () => {
+    const loadRequests = async () => {
         try {
             setLoading(true);
-            const response = await ticketPausesAPI.getAll();
-            setPauses(response.data);
+            const response = await progressRequestsAPI.getAll();
+            setRequests(response.data);
         } catch (error) {
-            console.error('Error loading pauses:', error);
-            alert('Duraklamalar yüklenirken hata oluştu');
+            console.error('Error loading progress requests:', error);
+            alert('İlerleme talepleri yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
     };
 
-
     const calculateDurationHours = (start, end) => {
         const startDate = new Date(start);
         const endDate = end ? new Date(end) : new Date();
-        return Math.floor((endDate - startDate) / (1000 * 60 * 60)); // hours
+        return Math.floor((endDate - startDate) / (1000 * 60 * 60));
     };
 
-
-
-    // Group pauses by ticket ID
-    // const groupedPauses = useMemo(() => {
-    //     const groups = {};
-
-    //     pauses.forEach(pause => {
-    //         if (!groups[pause.ticketId]) {
-    //             groups[pause.ticketId] = {
-    //                 ticketId: pause.ticketId,
-    //                 ticketCode: pause.ticketExternalCode,
-    //                 pauses: [],
-    //                 totalDuration: 0,
-    //                 activePauseCount: 0,
-    //                 completedPauseCount: 0,
-    //                 hasActivePause: false
-    //             };
-    //         }
-
-    //         groups[pause.ticketId].pauses.push(pause);
-    //         groups[pause.ticketId].totalDuration += pause.durationDays;
-
-    //         if (pause.isActive) {
-    //             groups[pause.ticketId].activePauseCount++;
-    //             groups[pause.ticketId].hasActivePause = true;
-    //         } else {
-    //             groups[pause.ticketId].completedPauseCount++;
-    //         }
-    //     });
-
-    //     return Object.values(groups);
-    // }, [pauses]);
-    const groupedPauses = useMemo(() => {
+    // Group requests by ticket ID
+    const groupedRequests = useMemo(() => {
         const groups = {};
         
-        pauses.forEach(pause => {
-            if (!groups[pause.ticketId]) {
-                groups[pause.ticketId] = {
-                    ticketId: pause.ticketId,
-                    ticketCode: pause.ticketExternalCode,
-                    pauses: [],
+        requests.forEach(req => {
+            if (!groups[req.ticketId]) {
+                groups[req.ticketId] = {
+                    ticketId: req.ticketId,
+                    ticketCode: req.ticketCode,
+                    requests: [],
                     totalHours: 0,
-                    activePauseCount: 0,
-                    completedPauseCount: 0,
-                    hasActivePause: false
+                    pendingCount: 0,
+                    respondedCount: 0,
+                    hasPending: false,
+                    latestProgress: null
                 };
             }
+
+            debugger;
             
-            // ✅ Use backend hours if available, otherwise calculate
-            const hours = pause.durationHours ?? calculateDurationHours(pause.pausedAt, pause.resumedAt);
+            const hours = req.durationHours ?? calculateDurationHours(req.requestedAt, req.respondedAt);
             
-            groups[pause.ticketId].pauses.push({
-                ...pause,
+            groups[req.ticketId].requests.push({
+                ...req,
                 durationHours: hours
             });
-            groups[pause.ticketId].totalHours += hours;
+            groups[req.ticketId].totalHours += hours;
             
-            if (pause.isActive) {
-                groups[pause.ticketId].activePauseCount++;
-                groups[pause.ticketId].hasActivePause = true;
+            if (!req.isResponded) {
+                groups[req.ticketId].pendingCount++;
+                groups[req.ticketId].hasPending = true;
             } else {
-                groups[pause.ticketId].completedPauseCount++;
+                groups[req.ticketId].respondedCount++;
+            }
+
+            // Track latest progress
+            if (req.progressInfo && (!groups[req.ticketId].latestProgress || 
+                new Date(req.requestedAt) > new Date(groups[req.ticketId].latestProgress.requestedAt))) {
+                groups[req.ticketId].latestProgress = req;
             }
         });
         
         return Object.values(groups);
-    }, [pauses]);
-    
+    }, [requests]);
 
-    // Filter groups
+    // Filter and sort similar to PauseManagement
     const filteredGroups = useMemo(() => {
-        let filtered = groupedPauses;
-
-        // Apply status filter
-        if (filter === 'active') {
-            filtered = filtered.filter(g => g.hasActivePause);
-        } else if (filter === 'completed') {
-            filtered = filtered.filter(g => !g.hasActivePause);
+        let filtered = groupedRequests;
+        
+        if (filter === 'pending') {
+            filtered = filtered.filter(g => g.hasPending);
+        } else if (filter === 'responded') {
+            filtered = filtered.filter(g => !g.hasPending);
         }
-
-        // Apply search
+        
         if (searchTerm) {
-            filtered = filtered.filter(group =>
+            filtered = filtered.filter(group => 
                 group.ticketCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                group.pauses.some(p =>
-                    p.pauseReason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    p.pausedByUserName.toLowerCase().includes(searchTerm.toLowerCase())
+                group.requests.some(r => 
+                    (r.requestMessage && r.requestMessage.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    r.requestedByUserName.toLowerCase().includes(searchTerm.toLowerCase())
                 )
             );
         }
-
+        
         return filtered;
-    }, [groupedPauses, searchTerm, filter]);
+    }, [groupedRequests, searchTerm, filter]);
 
-    // Sort groups
     const sortedGroups = useMemo(() => {
         const sorted = [...filteredGroups];
-
+        
         sorted.sort((a, b) => {
             let aValue, bValue;
-
+            
             switch (sortConfig.key) {
                 case 'ticketCode':
                     aValue = a.ticketCode;
                     bValue = b.ticketCode;
                     break;
                 case 'totalDuration':
-                    aValue = a.totalDuration;
-                    bValue = b.totalDuration;
+                    aValue = a.totalHours;
+                    bValue = b.totalHours;
                     break;
-                case 'pauseCount':
-                    aValue = a.pauses.length;
-                    bValue = b.pauses.length;
+                case 'requestCount':
+                    aValue = a.requests.length;
+                    bValue = b.requests.length;
                     break;
                 case 'status':
-                    aValue = a.hasActivePause ? 1 : 0;
-                    bValue = b.hasActivePause ? 1 : 0;
+                    aValue = a.hasPending ? 1 : 0;
+                    bValue = b.hasPending ? 1 : 0;
                     break;
                 default:
                     return 0;
             }
-
+            
             if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
             if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
-
+        
         return sorted;
     }, [filteredGroups, sortConfig]);
 
@@ -174,20 +149,6 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
             direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
-
-    const handleDelete = async (id) => {
-            if (!window.confirm('Bu duraklama kaydını silmek istediğinize emin misiniz?')) return;
-    
-            try {
-                await ticketPausesAPI.delete(id);
-                alert('Duraklama kaydı silindi');
-                loadPauses();
-            } catch (error) {
-                console.error('Error deleting pause:', error);
-                alert('Silme işlemi başarısız');
-            }
-        };
-    
 
     const toggleExpand = (ticketId) => {
         setExpandedTickets(prev => {
@@ -207,23 +168,77 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
         }
     };
 
-    const handleResume = async () => {
-        if (!selectedPause) return;
+    const handleUpdateProgress = async () => {
+        if (!selectedRequest) return;
+        if (!progressInfo.trim()) {
+            alert('Lütfen ilerleme bilgisi giriniz');
+            return;
+        }
 
         try {
-            await ticketPausesAPI.resume(selectedPause.id, { resumeNotes });
-            alert('Duraklama sonlandırıldı');
-            setShowResumeModal(false);
-            setResumeNotes('');
-            setSelectedPause(null);
-            loadPauses();
+            await progressRequestsAPI.updateProgress(selectedRequest.id, {
+                progressInfo,
+                progressPercentage: progressPercentage || null,
+                estimatedCompletion: estimatedCompletion || null
+            });
+            
+            alert('İlerleme bilgisi güncellendi');
+            setShowUpdateModal(false);
+            resetUpdateForm();
+            loadRequests();
         } catch (error) {
-            console.error('Error resuming pause:', error);
-            alert('Duraklama sonlandırılırken hata oluştu');
+            console.error('Error updating progress:', error);
+            alert('İlerleme güncellenirken hata oluştu');
         }
     };
 
-        // ✅ Updated: Format duration in hours with day approximation
+    const handleRespond = async () => {
+        if (!selectedRequest) return;
+        if (!responseNotes.trim()) {
+            alert('Lütfen yanıt notu giriniz');
+            return;
+        }
+
+        try {
+            await progressRequestsAPI.respond(selectedRequest.id, {
+                responseNotes
+            });
+            
+            alert('Talep yanıtlandı');
+            setShowRespondModal(false);
+            resetRespondForm();
+            loadRequests();
+        } catch (error) {
+            console.error('Error responding to request:', error);
+            alert('Yanıtlama sırasında hata oluştu');
+        }
+    };
+
+    const handleDelete = async (requestId) => {
+        if (!window.confirm('Bu ilerleme talebini silmek istediğinize emin misiniz?')) return;
+
+        try {
+            await progressRequestsAPI.delete(requestId);
+            alert('Talep silindi');
+            loadRequests();
+        } catch (error) {
+            console.error('Error deleting request:', error);
+            alert('Silme işlemi başarısız');
+        }
+    };
+
+    const resetUpdateForm = () => {
+        setProgressInfo('');
+        setProgressPercentage(0);
+        setEstimatedCompletion('');
+        setSelectedRequest(null);
+    };
+
+    const resetRespondForm = () => {
+        setResponseNotes('');
+        setSelectedRequest(null);
+    };
+
     const formatDuration = (hours) => {
         if (hours === 0) return '0 saat';
         if (hours === 1) return '1 saat';
@@ -238,7 +253,6 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
         return `${hours} saat (${days} gün ${remainingHours} saat)`;
     };
 
-    // ✅ New: Format total duration for subtotals
     const formatTotalDuration = (hours) => {
         const days = (hours / 24).toFixed(1);
         return `${hours} saat (~${days} gün)`;
@@ -254,34 +268,31 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
         });
     };
 
-
     if (loading) {
         return <div style={styles.loading}>Yükleniyor...</div>;
     }
 
-   return (
+    return (
         <div style={styles.container}>
-            {/* Header */}
+            {/* Header - Similar to PauseManagement */}
             <div style={styles.header}>
                 <h1 style={styles.title}>
-                    <Clock size={28} />
-                    Duraklama Yönetimi
+                    <TrendingUp size={28} />
+                    İlerleme Talepleri Yönetimi
                 </h1>
 
                 <div style={styles.stats}>
                     <div style={styles.statCard}>
-                        <div style={styles.statValue}>{groupedPauses.length}</div>
+                        <div style={styles.statValue}>{groupedRequests.length}</div>
                         <div style={styles.statLabel}>Toplam Ticket</div>
                     </div>
                     <div style={styles.statCard}>
-                        <div style={styles.statValue}>{pauses.filter(p => p.isActive).length}</div>
-                        <div style={styles.statLabel}>Aktif Duraklama</div>
+                        <div style={styles.statValue}>{requests.filter(r => !r.isResponded).length}</div>
+                        <div style={styles.statLabel}>Bekleyen Talepler</div>
                     </div>
                     <div style={styles.statCard}>
-                        <div style={styles.statValue}>
-                            {formatTotalDuration(groupedPauses.reduce((sum, g) => sum + g.totalHours, 0))}
-                        </div>
-                        <div style={styles.statLabel}>Toplam Süre</div>
+                        <div style={styles.statValue}>{requests.filter(r => r.progressInfo).length}</div>
+                        <div style={styles.statLabel}>İlerleme Bildirilen</div>
                     </div>
                 </div>
             </div>
@@ -292,7 +303,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                     <Search size={20} style={styles.searchIcon} />
                     <input
                         type="text"
-                        placeholder="Ticket numarası, sebep veya kullanıcı ara..."
+                        placeholder="Ticket numarası, mesaj veya kullanıcı ara..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={styles.searchInput}
@@ -308,30 +319,30 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                         }}
                     >
                         <Filter size={16} />
-                        Tümü ({groupedPauses.length})
+                        Tümü ({groupedRequests.length})
                     </button>
                     <button
-                        onClick={() => setFilter('active')}
+                        onClick={() => setFilter('pending')}
                         style={{
                             ...styles.filterButton,
-                            ...(filter === 'active' ? styles.filterButtonActive : {})
+                            ...(filter === 'pending' ? styles.filterButtonActive : {})
                         }}
                     >
-                        Aktif ({groupedPauses.filter(g => g.hasActivePause).length})
+                        Bekleyen ({groupedRequests.filter(g => g.hasPending).length})
                     </button>
                     <button
-                        onClick={() => setFilter('completed')}
+                        onClick={() => setFilter('responded')}
                         style={{
                             ...styles.filterButton,
-                            ...(filter === 'completed' ? styles.filterButtonActive : {})
+                            ...(filter === 'responded' ? styles.filterButtonActive : {})
                         }}
                     >
-                        Tamamlanan ({groupedPauses.filter(g => !g.hasActivePause).length})
+                        Yanıtlanan ({groupedRequests.filter(g => !g.hasPending).length})
                     </button>
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table - Similar structure to PauseManagement */}
             <div style={styles.tableContainer}>
                 <table style={styles.table}>
                     <thead>
@@ -348,15 +359,16 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                             </th>
                             <th 
                                 style={{...styles.th, ...styles.sortable, width: '120px'}}
-                                onClick={() => handleSort('pauseCount')}
+                                onClick={() => handleSort('requestCount')}
                             >
                                 <div style={styles.thContent}>
-                                    Duraklama Sayısı
+                                    Talep Sayısı
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
+                            <th style={{...styles.th, width: '180px'}}>Son İlerleme</th>
                             <th 
-                                style={{...styles.th, ...styles.sortable, width: '180px'}}
+                                style={{...styles.th, ...styles.sortable, width: '150px'}}
                                 onClick={() => handleSort('totalDuration')}
                             >
                                 <div style={styles.thContent}>
@@ -379,10 +391,10 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                     <tbody>
                         {sortedGroups.length === 0 ? (
                             <tr>
-                                <td colSpan="6" style={styles.emptyCell}>
+                                <td colSpan="7" style={styles.emptyCell}>
                                     {searchTerm 
                                         ? 'Arama kriterlerine uygun kayıt bulunamadı' 
-                                        : 'Duraklama kaydı bulunamadı'}
+                                        : 'İlerleme talebi bulunamadı'}
                                 </td>
                             </tr>
                         ) : (
@@ -414,14 +426,23 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                                     style={styles.linkButton}
                                                     title="Ticket detayına git"
                                                 >
-                                                    <ExternalLink size={16} />
+                                                    <ExternalLink size={16} /> 
                                                 </button>
                                             </div>
                                         </td>
                                         <td style={styles.td}>
                                             <div style={styles.countBadge}>
-                                                {group.pauses.length} duraklama
+                                                {group.requests.length} talep
                                             </div>
+                                        </td>
+                                        <td style={styles.td}>
+                                            {group.latestProgress ? (
+                                                <div style={styles.progressBadge}>
+                                                    %{group.latestProgress.progressPercentage || 0}
+                                                </div>
+                                            ) : (
+                                                <span style={styles.noProgress}>Bildirilmedi</span>
+                                            )}
                                         </td>
                                         <td style={styles.td}>
                                             <strong style={styles.totalDuration}>
@@ -430,14 +451,14 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                         </td>
                                         <td style={styles.td}>
                                             <div style={styles.statusGroup}>
-                                                {group.activePauseCount > 0 && (
-                                                    <span style={styles.statusBadgeActive}>
-                                                        {group.activePauseCount} Aktif
+                                                {group.pendingCount > 0 && (
+                                                    <span style={styles.statusBadgePending}>
+                                                        {group.pendingCount} Bekleyen
                                                     </span>
                                                 )}
-                                                {group.completedPauseCount > 0 && (
-                                                    <span style={styles.statusBadgeCompleted}>
-                                                        {group.completedPauseCount} Tamamlandı
+                                                {group.respondedCount > 0 && (
+                                                    <span style={styles.statusBadgeResponded}>
+                                                        {group.respondedCount} Yanıtlandı
                                                     </span>
                                                 )}
                                             </div>
@@ -455,88 +476,114 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                     {/* Expanded Detail Rows */}
                                     {expandedTickets.has(group.ticketId) && (
                                         <tr key={`expanded-${group.ticketId}`}>
-                                            <td colSpan="6" style={styles.expandedCell}>
+                                            <td colSpan="7" style={styles.expandedCell}>
                                                 <div style={styles.expandedContent}>
                                                     <table style={styles.detailTable}>
                                                         <thead>
                                                             <tr>
                                                                 <th style={styles.detailTh}>#</th>
-                                                                <th style={styles.detailTh}>Başlangıç</th>
-                                                                <th style={styles.detailTh}>Bitiş</th>
+                                                                <th style={styles.detailTh}>Talep Eden</th>
+                                                                <th style={styles.detailTh}>Hedef</th>
+                                                                <th style={styles.detailTh}>Talep Tarihi</th>
                                                                 <th style={styles.detailTh}>Süre</th>
-                                                                <th style={styles.detailTh}>Sebep</th>
-                                                                <th style={styles.detailTh}>Devam Notu</th>
-                                                                <th style={styles.detailTh}>Durduran</th>
-                                                                <th style={styles.detailTh}>Devam Ettiren</th>
+                                                                <th style={styles.detailTh}>İlerleme</th>
+                                                                <th style={styles.detailTh}>Mesaj</th>
                                                                 <th style={styles.detailTh}>Durum</th>
-                                                                <th style={styles.detailTh}>İşlem</th>
+                                                                <th style={styles.detailTh}>İşlemler</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {group.pauses.map((pause, idx) => (
-                                                                <tr key={pause.id} style={styles.detailTr}>
+                                                            {group.requests.map((req, idx) => (
+                                                                <tr key={req.id} style={styles.detailTr}>
                                                                     <td style={styles.detailTd}>
-                                                                        <span style={styles.pauseNumber}>
+                                                                        <span style={styles.requestNumber}>
                                                                             #{idx + 1}
                                                                         </span>
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        {formatDate(pause.pausedAt)}
+                                                                        {req.requestedByName}
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        {pause.resumedAt 
-                                                                            ? formatDate(pause.resumedAt)
-                                                                            : <em style={styles.ongoing}>Devam Ediyor</em>
-                                                                        }
+                                                                        {req.targetUserName}
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        {formatDuration(pause.durationHours)}
+                                                                        {formatDate(req.requestedAt)}
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        <div style={styles.reasonCell}>
-                                                                            {pause.pauseReason}
+                                                                        {formatDuration(req.durationHours)}
+                                                                    </td>
+                                                                    <td style={styles.detailTd}>
+                                                                        {req.progressPercentage !== null ? (
+                                                                            <div style={styles.progressCell}>
+                                                                                <div style={styles.progressBar}>
+                                                                                    <div 
+                                                                                        style={{
+                                                                                            ...styles.progressFill,
+                                                                                            width: `${req.progressPercentage}%`
+                                                                                        }}
+                                                                                    />
+                                                                                </div>
+                                                                                <span style={styles.progressText}>
+                                                                                    %{req.progressPercentage}
+                                                                                </span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span style={styles.noProgress}>-</span>
+                                                                        )}
+                                                                    </td>
+                                                                    {/* <td style={styles.detailTd}>
+                                                                        <div style={styles.messageCell}>
+                                                                            {req.progressInfo || req.requestMessage || '-'}
+                                                                        </div>
+                                                                    </td> */}
+                                                                    <td style={styles.detailTd}>
+                                                                        <div style={styles.messageCell}>
+                                                                            {req.progressInfo }
                                                                         </div>
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        <div style={styles.reasonCell}>
-                                                                            {pause.resumeNotes || '-'}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td style={styles.detailTd}>
-                                                                        {pause.pausedByUserName}
-                                                                    </td>
-                                                                    <td style={styles.detailTd}>
-                                                                        {pause.resumedByUserName || '-'}
-                                                                    </td>
-                                                                    <td style={styles.detailTd}>
-                                                                        {pause.isActive ? (
-                                                                            <span style={styles.statusActive}>
-                                                                                <Pause size={14} />
-                                                                                Aktif
+                                                                        {req.isResponded ? (
+                                                                            <span style={styles.statusResponded}>
+                                                                                <CheckCircle size={14} />
+                                                                                Yanıtlandı
                                                                             </span>
                                                                         ) : (
-                                                                            <span style={styles.statusCompleted}>
-                                                                                <Play size={14} />
-                                                                                Tamamlandı
+                                                                            <span style={styles.statusPending}>
+                                                                                <Clock size={14} />
+                                                                                Bekliyor
                                                                             </span>
                                                                         )}
                                                                     </td>
                                                                     <td style={styles.detailTd}>
                                                                         <div style={styles.actions}>
-                                                                            {pause.isActive && (
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setSelectedPause(pause);
-                                                                                        setShowResumeModal(true);
-                                                                                    }}
-                                                                                    style={styles.resumeButton}
-                                                                                    title="Devam Ettir"
-                                                                                >
-                                                                                    <Play size={16} />
-                                                                                </button>
+                                                                            {!req.isResponded && (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            setSelectedRequest(req);
+                                                                                            setProgressInfo(req.progressInfo || '');
+                                                                                            setProgressPercentage(req.progressPercentage || 0);
+                                                                                            setShowUpdateModal(true);
+                                                                                        }}
+                                                                                        style={styles.updateButton}
+                                                                                        title="İlerleme Güncelle"
+                                                                                    >
+                                                                                        <TrendingUp size={16} />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            setSelectedRequest(req);
+                                                                                            setShowRespondModal(true);
+                                                                                        }}
+                                                                                        style={styles.respondButton}
+                                                                                        title="Yanıtla"
+                                                                                    >
+                                                                                        <MessageSquare size={16} />
+                                                                                    </button>
+                                                                                </>
                                                                             )}
                                                                             <button
-                                                                                onClick={() => handleDelete(pause.id)}
+                                                                                onClick={() => handleDelete(req.id)}
                                                                                 style={styles.deleteButton}
                                                                                 title="Sil"
                                                                             >
@@ -549,13 +596,13 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                                         </tbody>
                                                         <tfoot>
                                                             <tr style={styles.subtotalRow}>
-                                                                <td colSpan="3" style={styles.subtotalLabel}>
+                                                                <td colSpan="4" style={styles.subtotalLabel}>
                                                                     <strong>Ara Toplam:</strong>
                                                                 </td>
                                                                 <td style={styles.subtotalValue}>
                                                                     <strong>{formatTotalDuration(group.totalHours)}</strong>
                                                                 </td>
-                                                                <td colSpan="6"></td>
+                                                                <td colSpan="4"></td>
                                                             </tr>
                                                         </tfoot>
                                                     </table>
@@ -570,44 +617,115 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                 </table>
             </div>
 
-            {/* Resume Modal */}
-            {showResumeModal && (
+            {/* Update Progress Modal */}
+            {showUpdateModal && (
                 <>
-                    <div style={styles.modalBackdrop} onClick={() => setShowResumeModal(false)} />
+                    <div style={styles.modalBackdrop} onClick={() => setShowUpdateModal(false)} />
                     <div style={styles.modal}>
-                        <h2 style={styles.modalTitle}>Duraklamayı Sonlandır</h2>
+                        <h2 style={styles.modalTitle}>İlerleme Güncelle</h2>
                         <p style={styles.modalSubtitle}>
-                            Ticket: <strong>{selectedPause?.ticketExternalCode}</strong>
+                            Ticket: <strong>{selectedRequest?.ticketExternalCode}</strong>
                         </p>
                         
                         <div style={styles.modalField}>
-                            <label style={styles.label}>Devam Notu (Opsiyonel)</label>
+                            <label style={styles.label}>
+                                İlerleme Bilgisi <span style={styles.required}>*</span>
+                            </label>
                             <textarea
-                                value={resumeNotes}
-                                onChange={(e) => setResumeNotes(e.target.value)}
+                                value={progressInfo}
+                                onChange={(e) => setProgressInfo(e.target.value)}
                                 style={styles.textarea}
                                 rows={4}
-                                placeholder="Duraklamanın neden sonlandırıldığını açıklayın..."
+                                placeholder="Yapılan işlemleri ve mevcut durumu açıklayın..."
+                            />
+                        </div>
+
+                        <div style={styles.modalField}>
+                            <label style={styles.label}>Tamamlanma Yüzdesi</label>
+                            <div style={styles.percentageContainer}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={progressPercentage}
+                                    onChange={(e) => setProgressPercentage(parseInt(e.target.value))}
+                                    style={styles.rangeInput}
+                                />
+                                <span style={styles.percentageValue}>%{progressPercentage}</span>
+                            </div>
+                        </div>
+
+                        <div style={styles.modalField}>
+                            <label style={styles.label}>Tahmini Tamamlanma Tarihi</label>
+                            <input
+                                type="datetime-local"
+                                value={estimatedCompletion}
+                                onChange={(e) => setEstimatedCompletion(e.target.value)}
+                                style={styles.input}
                             />
                         </div>
 
                         <div style={styles.modalActions}>
                             <button
                                 onClick={() => {
-                                    setShowResumeModal(false);
-                                    setResumeNotes('');
-                                    setSelectedPause(null);
+                                    setShowUpdateModal(false);
+                                    resetUpdateForm();
                                 }}
                                 style={styles.cancelButton}
                             >
                                 İptal
                             </button>
                             <button
-                                onClick={handleResume}
+                                onClick={handleUpdateProgress}
                                 style={styles.confirmButton}
                             >
-                                <Play size={16} />
-                                Devam Ettir
+                                <TrendingUp size={16} />
+                                Güncelle
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Respond Modal */}
+            {showRespondModal && (
+                <>
+                    <div style={styles.modalBackdrop} onClick={() => setShowRespondModal(false)} />
+                    <div style={styles.modal}>
+                        <h2 style={styles.modalTitle}>Talebe Yanıt Ver</h2>
+                        <p style={styles.modalSubtitle}>
+                            Ticket: <strong>{selectedRequest?.ticketExternalCode}</strong>
+                        </p>
+                        
+                        <div style={styles.modalField}>
+                            <label style={styles.label}>
+                                Yanıt Notu <span style={styles.required}>*</span>
+                            </label>
+                            <textarea
+                                value={responseNotes}
+                                onChange={(e) => setResponseNotes(e.target.value)}
+                                style={styles.textarea}
+                                rows={4}
+                                placeholder="Talebi nasıl tamamladığınızı açıklayın..."
+                            />
+                        </div>
+
+                        <div style={styles.modalActions}>
+                            <button
+                                onClick={() => {
+                                    setShowRespondModal(false);
+                                    resetRespondForm();
+                                }}
+                                style={styles.cancelButton}
+                            >
+                                İptal
+                            </button>
+                            <button
+                                onClick={handleRespond}
+                                style={styles.confirmButton}
+                            >
+                                <CheckCircle size={16} />
+                                Yanıtla
                             </button>
                         </div>
                     </div>
@@ -617,8 +735,142 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
     );
 }
 
-// Styles remain the same as before
+// Styles (similar to PauseManagement with additional progress-specific styles)
 const styles = {
+    // ... (copy all styles from PauseManagement and add these additional ones)
+    
+    progressBadge: {
+        display: 'inline-block',
+        padding: '0.4rem 0.8rem',
+        borderRadius: '12px',
+        backgroundColor: '#e3f2fd',
+        color: '#1976d2',
+        fontSize: '0.9rem',
+        fontWeight: 'bold',
+    },
+    noProgress: {
+        color: '#999',
+        fontStyle: 'italic',
+        fontSize: '0.85rem',
+    },
+    statusBadgePending: {
+        display: 'inline-block',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '12px',
+        backgroundColor: '#fff3cd',
+        color: '#856404',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+    },
+    statusBadgeResponded: {
+        display: 'inline-block',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '12px',
+        backgroundColor: '#d4edda',
+        color: '#155724',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+    },
+    progressCell: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
+    progressBar: {
+        flex: 1,
+        height: '8px',
+        backgroundColor: '#e0e0e0',
+        borderRadius: '4px',
+        overflow: 'hidden',
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: '#667eea',
+        transition: 'width 0.3s ease',
+    },
+    progressText: {
+        fontSize: '0.85rem',
+        fontWeight: '600',
+        color: '#667eea',
+        minWidth: '40px',
+    },
+    messageCell: {
+        maxWidth: '250px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    statusPending: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        padding: '0.3rem 0.8rem',
+        borderRadius: '12px',
+        backgroundColor: '#fff3cd',
+        color: '#856404',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+    },
+    statusResponded: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        padding: '0.3rem 0.8rem',
+        borderRadius: '12px',
+        backgroundColor: '#d4edda',
+        color: '#155724',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+    },
+    updateButton: {
+        padding: '0.5rem',
+        border: 'none',
+        borderRadius: '4px',
+        backgroundColor: '#2196f3',
+        color: 'white',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'background-color 0.2s',
+    },
+    respondButton: {
+        padding: '0.5rem',
+        border: 'none',
+        borderRadius: '4px',
+        backgroundColor: '#28a745',
+        color: 'white',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        transition: 'background-color 0.2s',
+    },
+    percentageContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+    },
+    rangeInput: {
+        flex: 1,
+        height: '6px',
+        borderRadius: '3px',
+        outline: 'none',
+        background: '#e0e0e0',
+    },
+    percentageValue: {
+        fontSize: '1.2rem',
+        fontWeight: 'bold',
+        color: '#667eea',
+        minWidth: '60px',
+        textAlign: 'right',
+    },
+    input: {
+        width: '100%',
+        padding: '0.75rem',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        fontSize: '0.9rem',
+    },
+    
     container: {
         padding: '2rem',
         maxWidth: '1600px',

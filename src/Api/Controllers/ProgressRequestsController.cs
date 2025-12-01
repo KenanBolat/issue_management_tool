@@ -85,11 +85,13 @@ namespace Api.Controllers
                 pr.RequestMessage,
                 pr.RequestedAt,
                 pr.DueDate,
+                pr.ProgressInfo,
                 pr.IsResponded,
                 pr.RespondedAt,
                 pr.RespondedBy?.DisplayName,
                 pr.Status,
-                pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded
+                pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded, 
+                pr.ProgressPercentage
             )).ToList();
 
             return Ok(result);
@@ -124,6 +126,7 @@ namespace Api.Controllers
                 progressRequest.RequestMessage,
                 progressRequest.RequestedAt,
                 progressRequest.DueDate,
+                progressRequest.ProgressInfo,
                 progressRequest.IsResponded,
                 progressRequest.RespondedAt,
                 progressRequest.RespondedByUserId,
@@ -131,136 +134,158 @@ namespace Api.Controllers
                 progressRequest.ResponseActionId,
                 progressRequest.ResponseAction?.Notes,
                 progressRequest.Status,
-                progressRequest.NotificationId
+                progressRequest.NotificationId, 
+                progressRequest.ProgressPercentage
             );
 
             return Ok(result);
         }
 
+
+        /// <summary>
+        /// Provide progress update
+        /// </summary>
+        [HttpPost("{id}/update-progress")]
+        [Authorize(Roles = "Editor,Admin")]
+        public async Task<ActionResult> UpdateProgress(long id, [FromBody] UpdateProgressRequest request)
+        {
+            var progressRequest = await _context.ProgressRequests
+                .Include(pr => pr.Ticket)
+                .Include(pr => pr.RequestedBy)
+                .FirstOrDefaultAsync(pr => pr.Id == id);
+
+            if (progressRequest == null)
+                return NotFound(new { message = "Progress request bulunamadı" });
+
+            var userId = GetCurrentUserId();
+
+            // ✅ Update progress information (no ResponseActionId needed)
+            progressRequest.ProgressInfo = request.ProgressInfo;
+            progressRequest.Status = "InProgress";
+            progressRequest.ProgressPercentage = request.ProgressPercentage;
+
+            // Optional: Also create a ticket action for audit trail
+
+
+            var Comment = new TicketComment 
+            {
+                TicketId = progressRequest.TicketId,
+                Body = $"İlerleme Güncellendi: {request.ProgressInfo} - % {request.ProgressPercentage}",
+                CreatedById = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var action = new TicketAction
+            {
+                TicketId = progressRequest.TicketId,
+                ActionType = ActionType.Comment,
+                Notes = $"İlerleme Güncellendi: {request.ProgressInfo} - % {request.ProgressPercentage}",
+                PerformedById = userId,
+                PerformedAt = DateTime.UtcNow
+            };
+
+     
+            _context.TicketActions.Add(action);
+            _context.TicketComments.Add(Comment);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Progress updated for request {id} by user {userId}");
+
+            return Ok(new { message = "İlerleme güncellendi" });
+        }
+
+
         /// <summary>
         /// Respond to a progress request
         /// </summary>
         [HttpPost("{id}/respond")]
-        public async Task<ActionResult> RespondToProgressRequest(
-            long id,
-            [FromBody] RespondToProgressRequestDto dto)
+        [Authorize(Roles = "Editor,Admin")]
+        public async Task<ActionResult> RespondToRequest(long id, [FromBody] RespondToProgressRequest request)
         {
-            var userId = GetCurrentUserId();
-
             var progressRequest = await _context.ProgressRequests
                 .Include(pr => pr.Ticket)
-                .Include(pr => pr.Notification)
+                .Include(pr => pr.RequestedBy)
                 .FirstOrDefaultAsync(pr => pr.Id == id);
 
             if (progressRequest == null)
-                return NotFound(new { message = "Progress request not found" });
+                return NotFound(new { message = "Progress request bulunamadı" });
 
-            // Check if user is the target
-            if (progressRequest.TargetUserId != userId)
-                return Forbid();
-
-            // Check if already responded
             if (progressRequest.IsResponded)
-                return BadRequest(new { message = "Already responded to this request" });
+                return BadRequest(new { message = "Bu talep zaten yanıtlanmış" });
 
-            // Create a ticket action for the response
-            var ticketAction = new TicketAction
+            var userId = GetCurrentUserId();
+
+
+            // ✅ Create ticket action FIRST
+            var action = new TicketAction
             {
                 TicketId = progressRequest.TicketId,
-                ActionType = ActionType.Edit,
+                ActionType = ActionType.Comment,
+                Notes = $"İlerleme Talebi Yanıtlandı: {request.ResponseNotes}",
                 PerformedById = userId,
-                PerformedAt = DateTime.UtcNow,
-                Notes = $"[Bilgi Raporu] {dto.ResponseText}"
+                PerformedAt = DateTime.UtcNow
             };
 
-            _context.TicketActions.Add(ticketAction);
-            await _context.SaveChangesAsync();
+            _context.TicketActions.Add(action);
 
-            // Update progress request
+            // Mark as responded
+
             progressRequest.IsResponded = true;
             progressRequest.RespondedAt = DateTime.UtcNow;
             progressRequest.RespondedByUserId = userId;
-            progressRequest.ResponseActionId = ticketAction.Id;
+            progressRequest.ProgressInfo = request.ResponseNotes;
+            // progressRequest.ResponseActionId = action.Id;  // ✅ Now this has a valid ID
+
             progressRequest.Status = "Responded";
 
-            // Resolve the notification
-            if (progressRequest.Notification != null)
-            {
-                progressRequest.Notification.IsResolved = true;
-                progressRequest.Notification.ResolvedAt = DateTime.UtcNow;
-                progressRequest.Notification.ResolvedByUserId = userId;
-            }
+
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"User {userId} responded to progress request {id}");
+            // Send notification
+            // await _notificationService.CreateProgressResponseNotification(
+            //     progressRequest.TicketId,
+            //     progressRequest.RequestedByUserId,
+            //     userId
+            // );
 
-            return Ok(new { message = "Bilgi raporu gönderildi", actionId = ticketAction.Id });
+            _logger.LogInformation($"Progress request {id} responded by user {userId}");
+
+            return Ok(new { message = "Talep yanıtlandı" });
         }
 
-        /// <summary>
-        /// Cancel a progress request
-        /// </summary>
+
+        // POST: /api/ProgressRequests/{id}/cancel
         [HttpPost("{id}/cancel")]
-        public async Task<ActionResult> CancelProgressRequest(long id)
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> CancelRequest(long id)
         {
-            var userId = GetCurrentUserId();
+            var request = await _context.ProgressRequests.FindAsync(id);
 
-            var progressRequest = await _context.ProgressRequests
-                .Include(pr => pr.Notification)
-                .FirstOrDefaultAsync(pr => pr.Id == id);
-
-            if (progressRequest == null)
+            if (request == null)
                 return NotFound();
 
-            // Only the requester can cancel
-            if (progressRequest.RequestedByUserId != userId)
-                return Forbid();
-
-            progressRequest.Status = "Cancelled";
-
-            // Resolve notification
-            if (progressRequest.Notification != null)
-            {
-                progressRequest.Notification.IsResolved = true;
-                progressRequest.Notification.ResolvedAt = DateTime.UtcNow;
-                progressRequest.Notification.ResolvedByUserId = userId;
-            }
-
+            request.Status = "Cancelled";
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Bilgi talebi iptal edildi" });
+            return Ok(new { message = "Talep iptal edildi" });
         }
 
-        /// <summary>
-        /// Get statistics
-        /// </summary>
-        [HttpGet("stats")]
-        public async Task<ActionResult<object>> GetStats()
+        // DELETE: /api/ProgressRequests/{id}
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> DeleteRequest(long id)
         {
-            var userId = GetCurrentUserId();
+            var request = await _context.ProgressRequests.FindAsync(id);
 
-            var myRequests = await _context.ProgressRequests
-                .Where(pr => pr.RequestedByUserId == userId)
-                .ToListAsync();
+            if (request == null)
+                return NotFound();
 
-            var assignedToMe = await _context.ProgressRequests
-                .Where(pr => pr.TargetUserId == userId)
-                .ToListAsync();
+            _context.ProgressRequests.Remove(request);
+            await _context.SaveChangesAsync();
 
-            var stats = new
-            {
-                MyRequestsTotal = myRequests.Count,
-                MyRequestsPending = myRequests.Count(pr => pr.Status == "Pending"),
-                MyRequestsResponded = myRequests.Count(pr => pr.Status == "Responded"),
-                
-                AssignedToMeTotal = assignedToMe.Count,
-                AssignedToMePending = assignedToMe.Count(pr => pr.Status == "Pending"),
-                AssignedToMeOverdue = assignedToMe.Count(pr => 
-                    pr.Status == "Pending" && pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow)
-            };
-
-            return Ok(stats);
+            return Ok(new { message = "Talep silindi" });
         }
     }
 }

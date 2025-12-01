@@ -12,11 +12,13 @@ namespace Api.DTOs
         string? RequestMessage,
         DateTime RequestedAt,
         DateTime? DueDate,
+        string? ProgressInfo,
         bool IsResponded,
         DateTime? RespondedAt,
         string? RespondedByName,
         string Status,
-        bool IsOverdue
+        bool IsOverdue, 
+        int? ProgressPercentage
     );
 
     public record ProgressRequestDetail(
@@ -31,6 +33,8 @@ namespace Api.DTOs
         string? RequestMessage,
         DateTime RequestedAt,
         DateTime? DueDate,
+        string? ProgressInfo,
+
         bool IsResponded,
         DateTime? RespondedAt,
         long? RespondedByUserId,
@@ -38,10 +42,25 @@ namespace Api.DTOs
         long? ResponseActionId,
         string? ResponseText,
         string Status,
-        long? NotificationId
+        long? NotificationId, 
+        int? ProgressPercentage
     );
 
-    public record RespondToProgressRequestDto(
-        string ResponseText
+    
+    public record CreateProgressRequestRequest(
+        long TicketId,
+        long TargetUserId,
+        string? RequestMessage,
+        DateTime? DueDate
+    );
+
+    public record UpdateProgressRequest(
+        string ProgressInfo,
+        int? ProgressPercentage,
+        DateTime? EstimatedCompletion
+    );
+
+    public record RespondToProgressRequest(
+        string ResponseNotes
     );
 }

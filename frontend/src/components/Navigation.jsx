@@ -81,6 +81,10 @@ export default function Navigation({ currentPage, onNavigate }) {
                         <PauseOctagonIcon size={18} /> Durdurmalar 
                     </button>
 
+                      <button onClick={() => onNavigate('progress-management')}  style={{ ...styles.menuItem, ...(currentPage === 'progress-management' ? styles.activeMenuItem : {}) }} >
+                        <PauseOctagonIcon size={18} /> Bilgi Talebi 
+                    </button>
+
 
                     {userRole === 'Admin' && (
                         <button onClick={() => onNavigate('users')} style={{ ...styles.menuItem, ...(currentPage === 'users' ? styles.activeMenuItem : {}) }}  >

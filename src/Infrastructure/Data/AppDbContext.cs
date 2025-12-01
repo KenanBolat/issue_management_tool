@@ -373,12 +373,15 @@ namespace Infrastructure.Data
             entity.HasOne(e => e.RespondedBy)
                 .WithMany()
                 .HasForeignKey(e => e.RespondedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
 
             entity.HasOne(e => e.ResponseAction)
                 .WithMany()
                 .HasForeignKey(e => e.ResponseActionId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             entity.HasOne(e => e.Notification)
                 .WithMany()
