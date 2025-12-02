@@ -31,6 +31,9 @@ namespace Domain.Entities
         [Column("progress_percentage")]
         public int? ProgressPercentage { get; set; }
 
+        [Column("estimated_completion")]
+        public DateTime? EstimatedCompletion { get; set; }
+
         // Request details
         [Column("request_message")]
         public string? RequestMessage { get; set; }

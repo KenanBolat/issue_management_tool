@@ -18,7 +18,8 @@ namespace Api.DTOs
         string? RespondedByName,
         string Status,
         bool IsOverdue, 
-        int? ProgressPercentage
+        int? ProgressPercentage, 
+        DateTime? EstimatedCompletion
     );
 
     public record ProgressRequestDetail(
@@ -43,7 +44,8 @@ namespace Api.DTOs
         string? ResponseText,
         string Status,
         long? NotificationId, 
-        int? ProgressPercentage
+        int? ProgressPercentage,
+        DateTime? EstimatedCompletion
     );
 
     

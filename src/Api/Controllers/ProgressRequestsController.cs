@@ -90,8 +90,9 @@ namespace Api.Controllers
                 pr.RespondedAt,
                 pr.RespondedBy?.DisplayName,
                 pr.Status,
-                pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded, 
-                pr.ProgressPercentage
+                pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded,
+                pr.ProgressPercentage, 
+                pr.EstimatedCompletion
             )).ToList();
 
             return Ok(result);
@@ -134,8 +135,9 @@ namespace Api.Controllers
                 progressRequest.ResponseActionId,
                 progressRequest.ResponseAction?.Notes,
                 progressRequest.Status,
-                progressRequest.NotificationId, 
-                progressRequest.ProgressPercentage
+                progressRequest.NotificationId,
+                progressRequest.ProgressPercentage, 
+                progressRequest.EstimatedCompletion
             );
 
             return Ok(result);
@@ -164,13 +166,23 @@ namespace Api.Controllers
             progressRequest.Status = "InProgress";
             progressRequest.ProgressPercentage = request.ProgressPercentage;
 
+            if (request.EstimatedCompletion.HasValue)
+            {
+                progressRequest.EstimatedCompletion = DateTime.SpecifyKind(
+                    request.EstimatedCompletion.Value,
+                    DateTimeKind.Utc
+                );
+            }
+
+
             // Optional: Also create a ticket action for audit trail
 
+            var auxiliaryContext =  $"{request.ProgressInfo} - % {request.ProgressPercentage} - Tahmini Tamamlanma: {request.EstimatedCompletion} ";
 
-            var Comment = new TicketComment 
+            var Comment = new TicketComment
             {
                 TicketId = progressRequest.TicketId,
-                Body = $"İlerleme Güncellendi: {request.ProgressInfo} - % {request.ProgressPercentage}",
+                Body = $"İlerleme Güncellendi: {auxiliaryContext}",
                 CreatedById = userId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -179,12 +191,12 @@ namespace Api.Controllers
             {
                 TicketId = progressRequest.TicketId,
                 ActionType = ActionType.Comment,
-                Notes = $"İlerleme Güncellendi: {request.ProgressInfo} - % {request.ProgressPercentage}",
+                Notes = $"İlerleme Güncellendi: {auxiliaryContext}",
                 PerformedById = userId,
                 PerformedAt = DateTime.UtcNow
             };
 
-     
+
             _context.TicketActions.Add(action);
             _context.TicketComments.Add(Comment);
 

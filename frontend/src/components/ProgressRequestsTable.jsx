@@ -277,9 +277,9 @@ export default function ProgressRequestsTable({ onNavigate }) {
                                     <td style={styles.td}>{request.targetUserName}</td>
                                     <td style={styles.td}>{formatDate(request.requestedAt)}</td>
                                     <td style={styles.td}>
-                                        {request.dueDate ? (
+                                        {request.estimatedCompletion ? (
                                             <span style={request.isOverdue ? styles.overdueDue : {}}>
-                                                {formatDate(request.dueDate)}
+                                                {formatDate(request.estimatedCompletion)}
                                             </span>
                                         ) : '-'}
                                     </td>

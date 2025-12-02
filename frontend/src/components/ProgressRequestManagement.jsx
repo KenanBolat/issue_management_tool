@@ -58,7 +58,6 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                 };
             }
 
-            debugger;
             
             const hours = req.durationHours ?? calculateDurationHours(req.requestedAt, req.respondedAt);
             
@@ -180,6 +179,8 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                 progressInfo,
                 progressPercentage: progressPercentage || null,
                 estimatedCompletion: estimatedCompletion || null
+            // detectedDate: formData.detectedDate ? new Date(formData.detectedDate).toISOString() : null,
+
             });
             
             alert('İlerleme bilgisi güncellendi');
@@ -487,6 +488,8 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                                                                 <th style={styles.detailTh}>Talep Tarihi</th>
                                                                 <th style={styles.detailTh}>Süre</th>
                                                                 <th style={styles.detailTh}>İlerleme</th>
+                                                                <th style={styles.detailTh}>Tahmini Tamamlanma Tarihi</th>
+                                                                
                                                                 <th style={styles.detailTh}>Mesaj</th>
                                                                 <th style={styles.detailTh}>Durum</th>
                                                                 <th style={styles.detailTh}>İşlemler</th>
@@ -531,11 +534,10 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                                                                             <span style={styles.noProgress}>-</span>
                                                                         )}
                                                                     </td>
-                                                                    {/* <td style={styles.detailTd}>
+                                                                    <td style={styles.detailTd}>
                                                                         <div style={styles.messageCell}>
-                                                                            {req.progressInfo || req.requestMessage || '-'}
-                                                                        </div>
-                                                                    </td> */}
+                                                                            {req.estimatedCompletion }                                                                        </div>
+                                                                    </td>
                                                                     <td style={styles.detailTd}>
                                                                         <div style={styles.messageCell}>
                                                                             {req.progressInfo }
@@ -563,6 +565,8 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                                                                                             setSelectedRequest(req);
                                                                                             setProgressInfo(req.progressInfo || '');
                                                                                             setProgressPercentage(req.progressPercentage || 0);
+                                                                                            setEstimatedCompletion(req.estimatedCompletion ? req.estimatedCompletion.slice(0,16) : '');
+                                                                                            debugger;
                                                                                             setShowUpdateModal(true);
                                                                                         }}
                                                                                         style={styles.updateButton}

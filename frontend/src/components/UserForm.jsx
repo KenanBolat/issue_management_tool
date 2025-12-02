@@ -22,7 +22,6 @@ export default function UserForm({ userId, onClose, onSave }) {
         phoneNumber: '',
         position: '',
     });
-                debugger; 
 
 
     const loadPositions = async () => {

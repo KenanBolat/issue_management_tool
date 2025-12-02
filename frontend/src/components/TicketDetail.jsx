@@ -352,7 +352,6 @@ export default function TicketDetail({ ticketId, onClose }) {
                 if (onClose) onClose();
             } else {
                 await ticketsAPI.update(ticketId, apiData);
-                debugger;
                 alert("Ticket updated successfully");
                 loadTicketDetails();
             }
