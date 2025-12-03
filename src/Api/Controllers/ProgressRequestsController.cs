@@ -182,7 +182,7 @@ namespace Api.Controllers
             var Comment = new TicketComment
             {
                 TicketId = progressRequest.TicketId,
-                Body = $"İlerleme Güncellendi: {auxiliaryContext}",
+                Body = $"Bilgi Talebi  Güncellendi: {auxiliaryContext}",
                 CreatedById = userId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -191,7 +191,7 @@ namespace Api.Controllers
             {
                 TicketId = progressRequest.TicketId,
                 ActionType = ActionType.Comment,
-                Notes = $"İlerleme Güncellendi: {auxiliaryContext}",
+                Notes = $"Bilgi Talebi  Güncellendi: {auxiliaryContext}",
                 PerformedById = userId,
                 PerformedAt = DateTime.UtcNow
             };
@@ -204,7 +204,7 @@ namespace Api.Controllers
 
             _logger.LogInformation($"Progress updated for request {id} by user {userId}");
 
-            return Ok(new { message = "İlerleme güncellendi" });
+            return Ok(new { message = "Bilgi talebi güncellendi" });
         }
 
 
@@ -234,7 +234,7 @@ namespace Api.Controllers
             {
                 TicketId = progressRequest.TicketId,
                 ActionType = ActionType.Comment,
-                Notes = $"İlerleme Talebi Yanıtlandı: {request.ResponseNotes}",
+                Notes = $"Bilgi Talebi Yanıtlandı: {request.ResponseNotes}",
                 PerformedById = userId,
                 PerformedAt = DateTime.UtcNow
             };

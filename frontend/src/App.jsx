@@ -11,120 +11,169 @@ import ProgressRequestsTable from "./components/ProgressRequestsTable.jsx";
 import PauseManagement from "./components/PauseManagement.jsx";
 import ProgressRequestManagement from "./components/ProgressRequestManagement.jsx";
 
-
 function App() {
-
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [currentPage, setCurrentPage] = useState('dashboard');
+    const [currentPage, setCurrentPage] = useState("dashboard");
     const [selectedTicketId, setSelectedTicketId] = useState(null);
-    const [selectedUserId, setSelectedUserId] = useState('new');
+    const [selectedUserId, setSelectedUserId] = useState("new");
     const [currentUserId, setCurrentUserId] = useState(null);
     const [refreshTickets, setRefreshTickets] = useState(0);
 
+    // ---------- INIT AUTH + INITIAL HISTORY STATE ----------
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
             setIsAuthenticated(true);
+
+            // initial history entry = dashboard
+            const initialPage = "dashboard";
+            window.history.replaceState(
+                { page: initialPage, state: {} },
+                "",
+                `/${initialPage}`
+            );
         }
     }, []);
 
+    // Helper that applies navigation to React state
+    const applyNavigation = (page, state = {}) => {
+        setCurrentPage(page);
+
+        if (page === "ticket-detail") {
+            setSelectedTicketId(state.ticketId ?? null);
+        } else if (page === "tickets") {
+            setSelectedTicketId(null);
+        }
+
+        if (page === "user-form") {
+            setSelectedUserId(state.userId ?? "new");
+        } else if (page === "users") {
+            setSelectedUserId(null);
+        }
+    };
+
+    // ---------- BROWSER BACK/FORWARD SUPPORT ----------
+    useEffect(() => {
+        const handlePopState = (event) => {
+            const page = event.state?.page || "dashboard";
+            const state = event.state?.state || {};
+            applyNavigation(page, state);
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
+
+    // Push to history + apply navigation
+    const navigateWithHistory = (page, state = {}) => {
+        window.history.pushState({ page, state }, "", `/${page}`);
+        applyNavigation(page, state);
+    };
+
     const handleLogin = () => {
         setIsAuthenticated(true);
+        // after login make sure we start at dashboard in history
+        const initialPage = "dashboard";
+        window.history.replaceState(
+            { page: initialPage, state: {} },
+            "",
+            `/${initialPage}`
+        );
     };
 
-    const handleNavigate = (page) => {
-        setCurrentPage(page);
+    // Used by Navigation and some children
+    const handleNavigate = (page, state = {}) => {
+        navigateWithHistory(page, state);
     };
 
+    // ---------- TICKETS ----------
     const handleViewTicket = (ticketId) => {
-        // console.log("Viewing ticket:", ticketId);
-        setSelectedTicketId(ticketId);
-        setCurrentPage('ticket-detail');
-    }
+        navigateWithHistory("ticket-detail", { ticketId });
+    };
 
     const handleEditTicket = (ticketId) => {
-        // console.log("Editing ticket:", ticketId);
-        setSelectedTicketId(ticketId);
-        setCurrentPage('ticket-detail');
-    }
-
-    const handleCreateTicket = () => {
-        console.log("Creating new ticket");
-        setSelectedTicketId('new');
-        setCurrentPage('ticket-detail');
-    }
-
-    const handleCloseTicketDetail = () => {
-        setSelectedTicketId(null);
-        setCurrentPage('tickets');
-        setRefreshTickets(prev => prev + 1); // Trigger refresh
+        navigateWithHistory("ticket-detail", { ticketId });
     };
 
+    const handleCreateTicket = () => {
+        navigateWithHistory("ticket-detail", { ticketId: "new" });
+    };
 
+    const handleCloseTicketDetail = () => {
+        // refresh data, then go back to previous history entry
+        setRefreshTickets((prev) => prev + 1);
+        window.history.back();   // popstate listener will call applyNavigation
+    };
+
+    // ---------- USERS ----------
     const handleViewUser = (userId) => {
         console.log("Viewing user:", userId);
-        setSelectedUserId(userId);
-        setCurrentPage('user-detail');
+        // if you later add a separate user-detail page, navigate here similarly
+        navigateWithHistory("user-form", { userId });
     };
 
     const handleEditUser = (userId) => {
         console.log("Editing user:", userId);
         setCurrentUserId(userId);
-        setSelectedUserId(userId);
-        setCurrentPage('user-form');
-    }
+        navigateWithHistory("user-form", { userId });
+    };
 
     const handleCreateUser = () => {
-        setSelectedUserId('new');
-        setCurrentPage('user-form');
+        navigateWithHistory("user-form", { userId: "new" });
     };
 
     const handleManagePermissions = (userId) => {
-        setSelectedUserId(userId);
-        setCurrentPage('user-permissions');
+        // keep as-is if you later implement this page
+        navigateWithHistory("user-permissions", { userId });
     };
 
     const handleCloseUserForm = () => {
-        setSelectedUserId(null);
-        setCurrentPage('users');
+        // just go back in browser history
+        window.history.back();
     };
 
     const handleDeleteUser = (userID) => {
         console.log("handleDeleteUser");
         console.log(userID);
-    }
-
-
+    };
 
     if (!isAuthenticated) {
         return <Login onLogin={handleLogin} />;
     }
 
     return (
-        <div >
+        <div>
             <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
 
-
             <main>
-                {currentPage === 'dashboard' && <Dashboard
-                    onCreateTicket={handleCreateTicket}
-                    onNavigate={handleNavigate} />}
-                {currentPage === 'tickets' && (
+                {currentPage === "dashboard" && (
+                    <Dashboard
+                        onCreateTicket={handleCreateTicket}
+                        onNavigate={handleNavigate}
+                    />
+                )}
+
+                {currentPage === "tickets" && (
                     <TicketsTable
                         onViewTicket={handleViewTicket}
                         onEditTicket={handleEditTicket}
                         onCreateTicket={handleCreateTicket}
                         refreshTrigger={refreshTickets}
-                    />)}
-                {currentPage === 'ticket-detail' && (<TicketDetail
-                    ticketId={selectedTicketId}
-                    onClose={handleCloseTicketDetail} />)}
+                    />
+                )}
 
-                {currentPage === 'progress-requests' && (
+                {currentPage === "ticket-detail" && (
+                    <TicketDetail
+                        ticketId={selectedTicketId}
+                        onClose={handleCloseTicketDetail}
+                    />
+                )}
+
+                {currentPage === "progress-requests" && (
                     <ProgressRequestsTable onNavigate={handleNavigate} />
                 )}
 
-                {currentPage === 'users' && (
+                {currentPage === "users" && (
                     <UserList
                         onViewUser={handleViewUser}
                         onEditUser={handleEditUser}
@@ -133,24 +182,24 @@ function App() {
                         onManagePermissions={handleManagePermissions}
                     />
                 )}
-                {currentPage === 'profile' && <ProfilePage />}
 
-                {currentPage === 'pause-management' && (
+                {currentPage === "profile" && <ProfilePage />}
+
+                {currentPage === "pause-management" && (
                     <PauseManagement
                         onViewTicket={handleViewTicket}
                         onNavigate={handleNavigate}
                     />
                 )}
 
-
-                {currentPage === 'progress-management' && (
+                {currentPage === "progress-management" && (
                     <ProgressRequestManagement
                         onViewTicket={handleViewTicket}
                         onNavigate={handleNavigate}
                     />
                 )}
 
-                {currentPage === 'user-form' && (
+                {currentPage === "user-form" && (
                     <UserForm
                         userId={selectedUserId}
                         onClose={handleCloseUserForm}
@@ -160,11 +209,9 @@ function App() {
                         }}
                     />
                 )}
-
             </main>
         </div>
     );
 }
 
 export default App;
-

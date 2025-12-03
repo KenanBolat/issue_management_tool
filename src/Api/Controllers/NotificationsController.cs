@@ -179,7 +179,7 @@ namespace Api.Controllers
                     dto.Message
                 );
 
-                return Ok(new { id = notification.Id, message = "İlerleme talebi oluşturuldu" });
+                return Ok(new { id = notification.Id, message = "Bilgi talebi  oluşturuldu" });
             }
             catch (Exception ex)
             {

@@ -28,7 +28,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
             setRequests(response.data);
         } catch (error) {
             console.error('Error loading progress requests:', error);
-            alert('İlerleme talepleri yüklenirken hata oluştu');
+            alert('Bilgi talepleri yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
@@ -183,13 +183,13 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
 
             });
             
-            alert('İlerleme bilgisi güncellendi');
+            alert('Bilgi talebi güncellendi');
             setShowUpdateModal(false);
             resetUpdateForm();
             loadRequests();
         } catch (error) {
             console.error('Error updating progress:', error);
-            alert('İlerleme güncellenirken hata oluştu');
+            alert('Bilgi talebi  güncellenirken hata oluştu');
         }
     };
 
@@ -279,7 +279,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
             <div style={styles.header}>
                 <h1 style={styles.title}>
                     <TrendingUp size={28} />
-                    İlerleme Talepleri Yönetimi
+                    Bilgi Talepleri Yönetimi
                 </h1>
 
                 <div style={styles.stats}>
@@ -293,7 +293,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                     </div>
                     <div style={styles.statCard}>
                         <div style={styles.statValue}>{requests.filter(r => r.progressInfo).length}</div>
-                        <div style={styles.statLabel}>İlerleme Bildirilen</div>
+                        <div style={styles.statLabel}>Bilgi Talebi Bildirilen</div>
                     </div>
                 </div>
             </div>
@@ -395,7 +395,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                                 <td colSpan="7" style={styles.emptyCell}>
                                     {searchTerm 
                                         ? 'Arama kriterlerine uygun kayıt bulunamadı' 
-                                        : 'İlerleme talebi bulunamadı'}
+                                        : 'Bilgi talebi  bulunamadı'}
                                 </td>
                             </tr>
                         ) : (
@@ -566,11 +566,10 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                                                                                             setProgressInfo(req.progressInfo || '');
                                                                                             setProgressPercentage(req.progressPercentage || 0);
                                                                                             setEstimatedCompletion(req.estimatedCompletion ? req.estimatedCompletion.slice(0,16) : '');
-                                                                                            debugger;
                                                                                             setShowUpdateModal(true);
                                                                                         }}
                                                                                         style={styles.updateButton}
-                                                                                        title="İlerleme Güncelle"
+                                                                                        title="Bilgi talebi Güncelle"
                                                                                     >
                                                                                         <TrendingUp size={16} />
                                                                                     </button>
@@ -626,14 +625,14 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                 <>
                     <div style={styles.modalBackdrop} onClick={() => setShowUpdateModal(false)} />
                     <div style={styles.modal}>
-                        <h2 style={styles.modalTitle}>İlerleme Güncelle</h2>
+                        <h2 style={styles.modalTitle}>Bilgi Talebi Güncelle</h2>
                         <p style={styles.modalSubtitle}>
                             Ticket: <strong>{selectedRequest?.ticketExternalCode}</strong>
                         </p>
                         
                         <div style={styles.modalField}>
                             <label style={styles.label}>
-                                İlerleme Bilgisi <span style={styles.required}>*</span>
+                                Bilgi Talebi  <span style={styles.required}>*</span>
                             </label>
                             <textarea
                                 value={progressInfo}

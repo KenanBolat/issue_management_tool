@@ -450,7 +450,6 @@ export default function TicketDetail({ ticketId, onClose }) {
             // };
 
             await ticketsAPI.changeStatus(ticketId, statusData);
-            debugger
             alert(`Durum "${statusLabel}" olarak değiştirildi`);
 
 
@@ -1334,7 +1333,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {ticket && (
                         <>
                             <div style={styles.tabContainer}>
-                                {canViewComments && (
+                                { (
                                     <button
                                         onClick={() => setActiveTab('comments')}
                                         style={{
