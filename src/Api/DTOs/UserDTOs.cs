@@ -66,7 +66,8 @@ public record UpdateUserRequest(
     int? MilitaryRankId,
     string? PhoneNumber,
     bool? IsActive, 
-    string? Position);
+    string? Position,
+    string? NewPassword );
 
 public record ChangePasswordRequest(
     string CurrentPassword,

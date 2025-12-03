@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { userApi } from '../../services/api';
 import { X, Save, Eye, EyeOff } from 'lucide-react';
 
-
 export default function UserForm({ userId, onClose, onSave }) {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -10,19 +9,18 @@ export default function UserForm({ userId, onClose, onSave }) {
     const [showPassword, setShowPassword] = useState(false);
     const [positions, setPositions] = useState([]);
 
-
     const [formData, setFormData] = useState({
         email: '',
-        password: '',
+        password: '',      // used only when creating a new user
+        newPassword: '',   // 🔹 used when updating an existing user
         displayName: '',
         role: 'Viewer',
-        affiliation: '', 
+        affiliation: '',
         department: '',
         militaryRankId: null,
         phoneNumber: '',
         position: '',
     });
-
 
     const loadPositions = async () => {
         try {
@@ -34,8 +32,6 @@ export default function UserForm({ userId, onClose, onSave }) {
     };
 
     const currentUserRole = localStorage.getItem('role'); // Assuming role is stored in localStorage
-
-    console.log(localStorage.getItem('role'))
     const isAdmin = currentUserRole === 'Admin';
     const isNewUser = !userId || userId === 'new';
     const isEditingSelf = userId && userId === localStorage.getItem('userId');
@@ -64,7 +60,8 @@ export default function UserForm({ userId, onClose, onSave }) {
             const user = response.data;
             setFormData({
                 email: user.email,
-                password: '',
+                password: '',       // no existing password ever shown
+                newPassword: '',    // start empty; if left empty, password won't change
                 displayName: user.displayName,
                 role: user.role,
                 affiliation: user.affiliation || '',
@@ -98,12 +95,20 @@ export default function UserForm({ userId, onClose, onSave }) {
             return;
         }
 
+        // Optional front-end check for newPassword when editing
+        if (!isNewUser && formData.newPassword && formData.newPassword.length < 6) {
+            alert('Şifre en az 6 karakter olmalıdır.');
+            return;
+        }
+
         try {
             setSaving(true);
             if (isNewUser) {
+                // CreateUserRequest expects Password (not NewPassword) :contentReference[oaicite:2]{index=2}
                 await userApi.create(formData);
                 alert('User created successfully.');
             } else {
+                // UpdateUserRequest will bind NewPassword from newPassword property
                 await userApi.update(userId, formData);
                 alert('User updated successfully.');
             }
@@ -120,7 +125,7 @@ export default function UserForm({ userId, onClose, onSave }) {
 
     const isMilitaryAffiliation = () => {
         return ['Airforce', 'Navy', 'Army', 'Marines', 'CoastGuard'].includes(formData.affiliation);
-    }
+    };
 
     if (loading) {
         return <div style={styles.loading}>Loading user data...</div>;
@@ -169,6 +174,7 @@ export default function UserForm({ userId, onClose, onSave }) {
                             />
                         </div>
 
+                        {/* Password for NEW users only */}
                         {isNewUser && (
                             <div style={styles.formRow}>
                                 <label style={styles.label}>
@@ -190,6 +196,34 @@ export default function UserForm({ userId, onClose, onSave }) {
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* 🔹 New: password change field for existing users (Admin only) */}
+                        {!isNewUser && isAdmin && (
+                            <div style={styles.formRow}>
+                                <label style={styles.label}>
+                                    Şifre Değiştir
+                                </label>
+                                <div style={styles.passwordInputGroup}>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={formData.newPassword}
+                                        onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                                        style={styles.input}
+                                        placeholder="Yeni şifre girin (boş bırakılırsa değişmez)"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={styles.passwordToggle}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                                <p style={styles.hint}>
+                                    Boş bırakılırsa mevcut şifre korunur.
+                                </p>
                             </div>
                         )}
 
@@ -264,8 +298,12 @@ export default function UserForm({ userId, onClose, onSave }) {
                                 <label style={styles.label}>Rütbe</label>
                                 <select
                                     value={formData.militaryRankId || ''}
-                                    onChange={(e) => handleInputChange('militaryRankId',
-                                        e.target.value ? parseInt(e.target.value) : null)}
+                                    onChange={(e) =>
+                                        handleInputChange(
+                                            'militaryRankId',
+                                            e.target.value ? parseInt(e.target.value) : null
+                                        )
+                                    }
                                     style={styles.select}
                                 >
                                     <option value="">Seçiniz</option>

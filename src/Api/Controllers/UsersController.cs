@@ -271,6 +271,17 @@ namespace Api.Controllers
                     user.Position = position;
             }
 
+            if (!string.IsNullOrEmpty(request.NewPassword))
+            {
+                // Validate password
+                if (request.NewPassword.Length < 6)
+                {
+                    return BadRequest(new { message = "Şifre en az 6 karakter olmalıdır" });
+                }
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+                _logger.LogInformation($"Password updated for user {id} by user {GetCurrentUserId()}");
+            }
             if (currentUserRole == "Admin")
             {
                 // Update Role
@@ -357,6 +368,18 @@ namespace Api.Controllers
             // Update metadata
             user.UpdatedAt = DateTime.UtcNow;
             user.LastUpdatedById = currentUserId;
+
+            if (!string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                // Validate password
+                if (request.NewPassword.Length < 6)
+                {
+                    return BadRequest(new { message = "Şifre en az 6 karakter olmalıdır" });
+                }
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+                _logger.LogInformation($"Password updated for user {id} by admin {GetCurrentUserId()}");
+            }
 
             await _context.SaveChangesAsync();
 
