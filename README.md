@@ -70,3 +70,6 @@ dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0
 dotnet add package Microsoft.AspNetCore.SignalR --version 8.0.0
 
 > npm install @microsoft/signalr
+
+> For docker service check: 
+dotnet add package Docker.DotNet

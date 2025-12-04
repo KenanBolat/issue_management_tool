@@ -8,6 +8,8 @@ using Domain.Enums;
 using System.Security.Claims;
 using Api.Services;
 using Api.DTOs;
+using Microsoft.AspNetCore.Authentication;
+
 
 namespace Api.Controllers
 {
@@ -20,14 +22,17 @@ namespace Api.Controllers
         private readonly ILogger<UsersController> _logger;
         private readonly PasswordHasher<User> _passwordHasher;
         private readonly ICacheService _cache;
+        private readonly ISystemServiceManager _serviceManager;
 
 
-        public UsersController(AppDbContext context, ILogger<UsersController> logger, ICacheService cache)
+
+        public UsersController(AppDbContext context, ILogger<UsersController> logger, ICacheService cache, ISystemServiceManager serviceManager)
         {
             _context = context;
             _passwordHasher = new PasswordHasher<User>();
             _logger = logger;
             _cache = cache;
+            _serviceManager = serviceManager;
 
         }
         private long GetCurrentUserId() => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -61,6 +66,141 @@ namespace Api.Controllers
         }
 
 
+        // GET: api/system/health
+        [HttpGet("health")]
+        public async Task<ActionResult<List<ServiceHealthItem>>> GetHealth()
+        {
+            var result = new List<ServiceHealthItem>();
+
+            // ---- DB ----
+            try
+            {
+                var canConnect = await _context.Database.CanConnectAsync();
+                if (canConnect)
+                {
+                    result.Add(new ServiceHealthItem(
+                        Name: "db",
+                        Status: "Running",
+                        Description: "Database connection OK",
+                        CanStart: false));
+                }
+                else
+                {
+                    result.Add(new ServiceHealthItem(
+                        Name: "db",
+                        Status: "Stopped",
+                        Description: "Database not reachable",
+                        CanStart: true));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DB health check failed");
+                result.Add(new ServiceHealthItem(
+                    Name: "db",
+                    Status: "Error",
+                    Description: "Exception while connecting to DB",
+                    CanStart: true));
+            }
+
+            try
+            {
+                var ok = await _cache.IsAvailableAsync();
+                if (ok)
+                {
+                    result.Add(new ServiceHealthItem(
+                        Name: "redis",
+                        Status: "Running",
+                        Description: "Redis cache reachable",
+                        CanStart: false));
+                }
+                else
+                {
+                    result.Add(new ServiceHealthItem(
+                        Name: "redis",
+                        Status: "Error",
+                        Description: "Redis not reachable",
+                        CanStart: true));
+                }
+            }
+            catch (Exception ex)
+            {
+                // this should be rare; IsAvailableAsync already handles most issues
+                _logger.LogError(ex, "Redis health check unexpected failure");
+                result.Add(new ServiceHealthItem(
+                    Name: "redis",
+                    Status: "Error",
+                    Description: "Redis health check crashed",
+                    CanStart: true));
+            }
+
+
+            // ---- Backup ----
+            try
+            {
+                // For now, just ask a service manager; you can implement this with Docker or HTTP.
+                var backupStatus = await _serviceManager.GetStatusAsync("backup");
+
+                result.Add(new ServiceHealthItem(
+                    "backup",
+                    backupStatus.Status,     // "Running" / "Stopped" / "Error"
+                    backupStatus.Description,
+                    backupStatus.CanStart));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Backup health check failed");
+                result.Add(new ServiceHealthItem(
+                    "backup",
+                    "Error",
+                    "Backup service unreachable",
+                    CanStart: true));
+            }
+
+            return Ok(result);
+        }
+
+         // POST: api/system/services/{name}/start
+        [HttpPost("services/{name}/start")]
+        public async Task<ActionResult<ServiceCommandResponse>> StartService(string name)
+        {
+
+            
+            _logger.LogInformation("Start request for service {Service}", name);
+
+            var res = await _serviceManager.StartAsync(name);
+            return Ok(new ServiceCommandResponse(name, res.Result, res.Message));
+        }
+
+        // POST: api/system/services/{name}/restart
+        [HttpPost("services/{name}/restart")]
+        public async Task<ActionResult<ServiceCommandResponse>> RestartService(string name)
+        {
+            _logger.LogInformation("Restart request for service {Service}", name);
+
+            var res = await _serviceManager.RestartAsync(name);
+            return Ok(new ServiceCommandResponse(name, res.Result, res.Message));
+        }
+
+
+        // POST: api/system/redis/flush
+        [HttpPost("redis/flush")]
+        public async Task<ActionResult<ServiceCommandResponse>> FlushRedis()
+        {
+            _logger.LogWarning("Redis flush requested by {User}",
+                User.Identity?.Name ?? "unknown");
+
+            // You can implement FlushAll/FlushDB inside ICacheService,
+            // or use StackExchange.Redis directly.
+            await _cache.ClearPrefixAsync(""); // or a specific namespace
+
+            return Ok(new ServiceCommandResponse(
+                "redis",
+                "Flushed",
+                "Redis cache cleared."));
+        }
+
+        
         // GET: api/Users
         [HttpGet]
         [Authorize(Roles = "Admin")]

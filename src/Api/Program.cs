@@ -170,6 +170,7 @@ builder.Services.AddScoped<ExcelExportService>();
 builder.Services.AddScoped<ConfigurationService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<ISystemServiceManager, DockerSystemServiceManager>();
 
 
 

@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, Play, Trash2, Filter,Pause } from 'lucide-react';
 import { ticketPausesAPI, ticketsAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { showConfirmToast } from './ConfirmToast';
+import { toast } from 'react-toastify';
 
 export default function PauseManagement({ onViewTicket, onNavigate }) {
     const [pauses, setPauses] = useState([]);
@@ -176,7 +178,11 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
     };
 
     const handleDelete = async (id) => {
-            if (!window.confirm('Bu duraklama kaydını silmek istediğinize emin misiniz?')) return;
+            const confirm = await showConfirmToast(`Bu duraklama kaydını silmek istediğinize emin misiniz?`);
+            if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
+
+
     
             try {
                 await ticketPausesAPI.delete(id);

@@ -216,6 +216,10 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
     };
 
     const handleDelete = async (requestId) => {
+        const confirm = await showConfirmToast(`Bu ilerleme talebini silmek istediğinize emin misiniz?`);
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+   
+
         if (!window.confirm('Bu ilerleme talebini silmek istediğinize emin misiniz?')) return;
 
         try {

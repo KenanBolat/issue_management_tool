@@ -10,5 +10,9 @@ namespace Api.Services
         Task RemoveMultipleAsync(params string[] keys);
         Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiry = null);
 
+        Task<bool> IsAvailableAsync();
+
+        Task ClearPrefixAsync(string prefix);
+
     }
 }

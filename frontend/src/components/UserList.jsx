@@ -1,6 +1,22 @@
 import { useState, useEffect } from 'react';
-import { userApi, configurationAPI, militaryRanksAPI } from '../../services/api.jsx';
-import { UserPlus, Edit2, Trash2, Save, X, Download, Shield, ShieldOff, Plus, MinusCircle, FileText, Edit } from 'lucide-react';
+import { userApi, configurationAPI, militaryRanksAPI, systemAPI } from '../../services/api.jsx';
+import {
+    UserPlus,
+    Edit2,
+    Trash2,
+    Save,
+    X,
+    FileText,
+    Edit,
+    RotateCcw,
+    Shield,
+    Server,
+    Download, ShieldOff, Plus, MinusCircle, Play, Circle, XCircle, RefreshCw
+} from 'lucide-react';
+
+import { toast } from "react-toastify";
+import {showConfirmToast} from './ConfirmToast.jsx';
+
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
     const [users, setUsers] = useState([]);
@@ -9,8 +25,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const [affiliationFilter, setAffiliationFilter] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
     const [showInactive, setShowInactive] = useState(false);
-    const [showDeleted, setShowDeleted] = useState(false);
-
 
     const [configuration, setConfiguration] = useState(null);
     const [reportDate, setReportDate] = useState('');
@@ -26,20 +40,29 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         sortOrder: ''
     });
 
+    const [serviceHealth, setServiceHealth] = useState([]);
+    const [loadingHealth, setLoadingHealth] = useState(false);
+    const [healthError, setHealthError] = useState(null);
 
+    const [activeTab, setActiveTab] = useState('users');
 
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
-
 
     useEffect(() => {
         loadUsers();
         loadConfiguration();
         loadMilitaryRanks();
-
+        loadSystemHealth();
 
     }, [showInactive]);
 
+    // Load health only when services tab is opened
+    useEffect(() => {
+        if (activeTab === 'services') {
+            loadServiceHealth();
+        }
+    }, [activeTab]);
 
     const loadMilitaryRanks = async () => {
         try {
@@ -47,6 +70,20 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             setMilitaryRanks(response.data);
         } catch (error) {
             console.error('Error loading military ranks:', error);
+        }
+    };
+
+    const loadSystemHealth = async () => {
+        try {
+            setLoadingHealth(true);
+            setHealthError(null);
+            const response = await systemAPI.getHealth();
+            setServiceHealth(response.data || []);
+        } catch (error) {
+            console.error('Error loading system health:', error);
+            setHealthError('Sistem durumu alınamadı');
+        } finally {
+            setLoadingHealth(false);
         }
     };
 
@@ -68,14 +105,28 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             const response = await configurationAPI.get();
             setConfiguration(response.data);
 
-            // Convert UTC date to local datetime-local format
             const pdfDate = new Date(response.data.pdfReportDate);
             const localDateTime = formatDateTimeLocal(pdfDate);
             setReportDate(localDateTime);
         } catch (error) {
             console.error("Failed to load configuration", error);
-            // Fallback to current date
             setReportDate(formatDateTimeLocal(new Date()));
+        }
+    };
+
+    // NEW: load system health
+    const loadServiceHealth = async () => {
+        try {
+            setLoadingHealth(true);
+            setHealthError(null);
+            // implement this in services/api.jsx to call GET /api/users/health
+            const response = await systemAPI.getHealth();
+            setServiceHealth(response.data || []);
+        } catch (error) {
+            console.error('Error loading system health:', error);
+            setHealthError('Servis durumları yüklenemedi.');
+        } finally {
+            setLoadingHealth(false);
         }
     };
 
@@ -87,7 +138,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         const minutes = String(date.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
-
 
     const handleAddRank = () => {
         setEditingRank(null);
@@ -109,6 +159,48 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             sortOrder: rank.sortOrder.toString()
         });
         setShowRankForm(true);
+    };
+
+
+    const handleStartService = async (name) => {
+        const confirm = await showConfirmToast(`${name} servisini başlatmak istiyor musunuz?`);
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+
+
+
+        try {
+            await systemAPI.startService(name);
+            await loadSystemHealth();
+        } catch (error) {
+            console.error('Error starting service:', error);
+            alert('Servis başlatılamadı: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleRestartService = async (name) => {
+        const confirm = await showConfirmToast(`${name} servisini yeniden başlatmak istiyor musunuz?`);
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+
+        try {
+            await systemAPI.restartService(name);
+            await loadSystemHealth();
+        } catch (error) {
+            console.error('Error restarting service:', error);
+            alert('Servis yeniden başlatılamadı: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleFlushRedis = async () => {
+        const confirm = await showConfirmToast("Redis önbelleğini tamamen temizlemek istediğinize emin misiniz?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        
+        try {
+            await systemAPI.flushRedis();
+             toast.success('Redis önbelleği temizlendi.');
+        } catch (error) {
+            console.error('Error flushing redis:', error);
+            alert('Redis temizlenemedi: ' + (error.response?.data?.message || error.message));
+        }
     };
 
     const handleSaveRank = async () => {
@@ -136,7 +228,9 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     };
 
     const handleDeleteRank = async (id) => {
-        if (!window.confirm('Bu rütbeyi silmek istediğinize emin misiniz?')) return;
+
+        const confirm = await showConfirmToast("Bu rütbeyi silmek istediğinize emin misiniz?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
 
         try {
             await militaryRanksAPI.delete(id);
@@ -161,16 +255,15 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         }
     };
 
-
     const handleSaveConfiguration = async () => {
-        if (!window.confirm('Rapor basım tarihini güncellemek istediğinize emin misiniz?')) {
-            return;
-        }
+
+        const confirm = await showConfirmToast("Rapor basım tarihini güncellemek istediğinize emin misiniz?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+
 
         try {
             setSavingConfig(true);
 
-            // Convert local datetime to UTC
             const pdfDate = new Date(reportDate);
 
             const response = await configurationAPI.update({
@@ -194,10 +287,9 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     };
 
     const handleRestoreUser = async (userId) => {
-        if (!window.confirm('Bu kullanıcıyı geri yüklemek istediğinize emin misiniz?')) {
-            return;
-        }
-
+        const confirm = await showConfirmToast("Bu kullanıcıyı geri yüklemek istediğinizden emin misi?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        
         try {
             await userApi.restore(userId);
             alert('Kullanıcı başarıyla geri yüklendi!');
@@ -208,9 +300,11 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         }
     };
 
+    const handleDeleteUserLocal = async (userId) => {
 
-    const handleDeleteUser = async (userId) => {
-        if (!window.confirm('Are you sure you want to delete this user?')) return;
+        const confirm = await showConfirmToast("Bu kullanıcıyı silmek istediğinizden emin misi?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        
 
         try {
             await userApi.delete(userId);
@@ -244,8 +338,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         return colors[affiliation] || '#9e9e9e';
     };
 
-
-    //Filtering  
+    // Filter users
     const filteredUsers = users.filter(user => {
         if (searchText) {
             const search = searchText.toLowerCase();
@@ -261,13 +354,25 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         return true;
     });
 
+    // Helper for service status icon
+    const renderServiceStatusIcon = (svc) => {
+        const status = svc.status;
+        const canStart = svc.canStart;
 
-    // Check Admin Access
+        if (status === 'Running') {
+            return <span style={{ ...styles.serviceStatusBadge, ...styles.statusRunning }}>●</span>;
+        }
+        if (status === 'Stopped' && canStart) {
+            return <span style={{ ...styles.serviceStatusBadge, ...styles.statusStopped }}>▲</span>;
+        }
+        return <span style={{ ...styles.serviceStatusBadge, ...styles.statusError }}>✖</span>;
+    };
+
     if (!isAdmin) {
         return (
             <div style={styles.container}>
                 <div style={styles.noAccess}>
-                    <h2>Access Denied 1</h2>
+                    <h2>Access Denied</h2>
                     <p>Only administrators can view the users list.</p>
                 </div>
             </div>
@@ -275,372 +380,515 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     }
 
     return (
-
         <div style={styles.container}>
             <div style={styles.header}>
                 <div>
                     <h1 style={styles.title}>Kullanıcı Kontrol Paneli</h1>
                     <p style={styles.subtitle}>
-                        {filteredUsers.length} / {users.length}  kullanıcı gösterilmektedir.
+                        {filteredUsers.length} / {users.length} kullanıcı gösterilmektedir.
                     </p>
                 </div>
             </div>
 
-            <div style={styles.controls}>
-                <div style={styles.filterGroup}>
-                    <input
-                        type="text"
-                        placeholder="Kullanıcı Ara..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        style={styles.searchInput}
-                    />
-
-                    <select
-                        value={roleFilter}
-                        onChange={(e) => setRoleFilter(e.target.value)}
-                        style={styles.select}
+            {/* TAB BAR */}
+            <div style={styles.tabsContainer}>
+                <div style={styles.tabList}>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('users')}
+                        style={{
+                            ...styles.tabButton,
+                            ...(activeTab === 'users' ? styles.tabButtonActive : {})
+                        }}
                     >
-                        <option value="">Erişim İzinleri</option>
-                        <option value="Admin">Yönetici</option>
-                        <option value="Editor">Editör</option>
-                        <option value="Viewer">Görüntüleyici</option>
-                    </select>
+                        <UserPlus size={18} style={styles.tabIcon} />
+                        <span style={styles.tabLabel}>Kullanıcılar</span>
+                    </button>
 
-                    <select
-                        value={affiliationFilter}
-                        onChange={(e) => setAffiliationFilter(e.target.value)}
-                        style={styles.select}
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('report')}
+                        style={{
+                            ...styles.tabButton,
+                            ...(activeTab === 'report' ? styles.tabButtonActive : {})
+                        }}
                     >
-                        <option value="">Kurumlar</option>
-                        <option value="Airforce">Hava Kuvvetleri</option>
-                        <option value="Internal">TUSAS</option>
-                        <option value="External">Yüklenici</option>
-                    </select>
+                        <FileText size={18} style={styles.tabIcon} />
+                        <span style={styles.tabLabel}>Rapor Tarihi</span>
+                    </button>
 
-                    <label style={styles.checkboxLabel}>
-                        <input
-                            type="checkbox"
-                            checked={showInactive}
-                            onChange={(e) => setShowInactive(e.target.checked)}
-                            style={styles.checkbox}
-                        />
-                        Aktif Olmayan Kullanıcılar
-                    </label>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('ranks')}
+                        style={{
+                            ...styles.tabButton,
+                            ...(activeTab === 'ranks' ? styles.tabButtonActive : {})
+                        }}
+                    >
+                        <Shield size={18} style={styles.tabIcon} />
+                        <span style={styles.tabLabel}>Rütbe Yönetimi</span>
+                    </button>
 
-                    <button onClick={loadUsers} style={styles.refreshBtn}>
-                        Yenile
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('services')}
+                        style={{
+                            ...styles.tabButton,
+                            ...(activeTab === 'services' ? styles.tabButtonActive : {})
+                        }}
+                    >
+                        <Server size={18} style={styles.tabIcon} />
+                        <span style={styles.tabLabel}>Servisler</span>
                     </button>
                 </div>
-
-                <button onClick={onCreateUser} style={styles.addBtn}>
-                    + Yeni Kullanıcı Ekle
-                </button>
             </div>
 
+            <div style={styles.tabContent}>
+                {/* TAB 1: USERS */}
+                {activeTab === 'users' && (
+                    <>
+                        <div style={styles.controls}>
+                            <div style={styles.filterGroup}>
+                                <input
+                                    type="text"
+                                    placeholder="Kullanıcı Ara..."
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                    style={styles.searchInput}
+                                />
 
+                                <select
+                                    value={roleFilter}
+                                    onChange={(e) => setRoleFilter(e.target.value)}
+                                    style={styles.select}
+                                >
+                                    <option value="">Erişim İzinleri</option>
+                                    <option value="Admin">Yönetici</option>
+                                    <option value="Editor">Editör</option>
+                                    <option value="Viewer">Görüntüleyici</option>
+                                </select>
 
-            {loading ? (
-                <div style={styles.loading}>Loading users...</div>
-            ) : filteredUsers.length === 0 ? (
-                <div style={styles.emptyState}>
-                    <p>No users found</p>
-                </div>
-            ) : (
-                <div style={styles.tableWrapper}>
-                    <table style={styles.table}>
-                        <thead>
-                            <tr>
-                                <th style={styles.th}>İsim</th>
-                                <th style={styles.th}>E-posta</th>
-                                <th style={styles.th}>Rol</th>
-                                <th style={styles.th}>Kurum</th>
-                                <th style={styles.th}>Rütbe</th>
-                                <th style={styles.th}>Birim</th>
-                                <th style={styles.th}>Telefon</th>
-                                <th style={styles.th}>Durum</th>
-                                <th style={styles.th}>Ayarlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredUsers.map((user) => (
-                                <tr key={user.id} style={styles.tr}>
-                                    <td style={styles.td}>
-                                        <strong>{user.displayName}</strong>
-                                    </td>
-                                    <td style={styles.td}>{user.email}</td>
-                                    <td style={styles.td}>
-                                        <span style={{
-                                            ...styles.roleBadge,
-                                            backgroundColor: getRoleBadgeColor(user.role),
-                                        }}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td style={styles.td}>
-                                        <span style={{
-                                            ...styles.affiliationBadge,
-                                            backgroundColor: getAffiliationBadgeColor(user.affiliation),
-                                        }}>
-                                            {user.affiliation}
-                                        </span>
-                                    </td>
-                                    <td style={styles.td}>
-                                        {user.militaryRank || '-'}
-                                    </td>
-                                    <td style={styles.td}>{user.department || '-'}</td>
-                                    <td style={styles.td}>{user.phoneNumber || '-'}</td>
-                                    <td style={styles.td}>
-                                        <span style={{
-                                            ...styles.statusBadge,
-                                            backgroundColor: user.isActive ? '#e8f5e9' : '#ffebee',
-                                            color: user.isActive ? '#388e3c' : '#d32f2f',
-                                        }}>
-                                            {user.isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </td>
-                                    <td style={styles.td}>
-                                        <div style={styles.actions}>
-                                            {/* <button
-                                                style={styles.actionBtn}
-                                                title="View Details"
-                                                onClick={() => onViewUser(user.id)}
-                                            >
-                                                <Eye size={16} />
-                                            </button> */}
-                                            <button
-                                                style={styles.actionBtn}
-                                                title="Edit User"
-                                                onClick={() => onEditUser(user.id)}
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                            {/* <button
-                                                style={{ ...styles.actionBtn, color: '#7b1fa2' }}
-                                                title="Manage Permissions"
-                                                onClick={() => onManagePermissions(user.id)}
-                                            >
-                                                <Shield size={16} />
-                                            </button> */}
+                                <select
+                                    value={affiliationFilter}
+                                    onChange={(e) => setAffiliationFilter(e.target.value)}
+                                    style={styles.select}
+                                >
+                                    <option value="">Kurumlar</option>
+                                    <option value="Airforce">Hava Kuvvetleri</option>
+                                    <option value="Internal">TUSAS</option>
+                                    <option value="External">Yüklenici</option>
+                                </select>
 
-                                            {!user.isActive ? (
-                                                <button
-                                                    onClick={() => handleRestoreUser(user.id)}
-                                                    style={{ ...styles.actionBtn, color: '#d32f2f' }}
-                                                    title="Geri Yükle"
-                                                >
-                                                    <RotateCcw size={18} />
-                                                </button>
-                                            ) : (<> </>)}
-                                            <button
-                                                style={{ ...styles.actionBtn, color: '#d32f2f' }}
-                                                title="Delete User"
-                                                onClick={() => handleDeleteUser(user.id)}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                <label style={styles.checkboxLabel}>
+                                    <input
+                                        type="checkbox"
+                                        checked={showInactive}
+                                        onChange={(e) => setShowInactive(e.target.checked)}
+                                        style={styles.checkbox}
+                                    />
+                                    Aktif Olmayan Kullanıcılar
+                                </label>
 
+                                <button onClick={loadUsers} style={styles.refreshBtn}>
+                                    Yenile
+                                </button>
+                            </div>
 
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            <button onClick={onCreateUser} style={styles.addBtn}>
+                                + Yeni Kullanıcı Ekle
+                            </button>
+                        </div>
 
+                        {loading ? (
+                            <div style={styles.loading}>Loading users...</div>
+                        ) : filteredUsers.length === 0 ? (
+                            <div style={styles.emptyState}>
+                                <p>No users found</p>
+                            </div>
+                        ) : (
+                            <div style={styles.tableWrapper}>
+                                <table style={styles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th style={styles.th}>İsim</th>
+                                            <th style={styles.th}>E-posta</th>
+                                            <th style={styles.th}>Rol</th>
+                                            <th style={styles.th}>Kurum</th>
+                                            <th style={styles.th}>Rütbe</th>
+                                            <th style={styles.th}>Birim</th>
+                                            <th style={styles.th}>Telefon</th>
+                                            <th style={styles.th}>Durum</th>
+                                            <th style={styles.th}>Ayarlar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredUsers.map((user) => (
+                                            <tr key={user.id} style={styles.tr}>
+                                                <td style={styles.td}>
+                                                    <strong>{user.displayName}</strong>
+                                                </td>
+                                                <td style={styles.td}>{user.email}</td>
+                                                <td style={styles.td}>
+                                                    <span style={{
+                                                        ...styles.roleBadge,
+                                                        backgroundColor: getRoleBadgeColor(user.role),
+                                                    }}>
+                                                        {user.role}
+                                                    </span>
+                                                </td>
+                                                <td style={styles.td}>
+                                                    <span style={{
+                                                        ...styles.affiliationBadge,
+                                                        backgroundColor: getAffiliationBadgeColor(user.affiliation),
+                                                    }}>
+                                                        {user.affiliation}
+                                                    </span>
+                                                </td>
+                                                <td style={styles.td}>
+                                                    {user.militaryRank || '-'}
+                                                </td>
+                                                <td style={styles.td}>{user.department || '-'}</td>
+                                                <td style={styles.td}>{user.phoneNumber || '-'}</td>
+                                                <td style={styles.td}>
+                                                    <span style={{
+                                                        ...styles.statusBadge,
+                                                        backgroundColor: user.isActive ? '#e8f5e9' : '#ffebee',
+                                                        color: user.isActive ? '#388e3c' : '#d32f2f',
+                                                    }}>
+                                                        {user.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td style={styles.td}>
+                                                    <div style={styles.actions}>
+                                                        <button
+                                                            style={styles.actionBtn}
+                                                            title="Edit User"
+                                                            onClick={() => onEditUser(user.id)}
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
 
-            <div style={styles.reportSection}>
-                <h3 style={styles.reportTitle}>
-                    <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                    Rapor Basım Tarihi
-                </h3>
-                <div style={styles.reportDateContainer}>
-                    <input
-                        type="datetime-local"
-                        value={reportDate}
-                        onChange={(e) => setReportDate(e.target.value)}
-                        style={styles.dateInput}
-                    />
-                    <button
-                        onClick={handleResetReportDate}
-                        style={styles.resetButton}
-                        title="Şimdiki zamana sıfırla"
-                    >
-                        Şimdi
-                    </button>
-                    <button
-                        onClick={handleSaveConfiguration}
-                        disabled={savingConfig}
-                        style={{ ...styles.button, ...styles.resetButton }}
-                        title="Kaydet"
-                    >
-                        <Save size={18} style={{ marginRight: '8px' }} />
-                        {savingConfig ? 'Kaydediliyor...' : 'Kaydet'}
-                    </button>
-                    <div style={styles.dateInfo}>
-                        <span style={styles.infoLabel}>Seçili Tarih:</span>
-                        <span style={styles.infoValue}>
-                            {new Date(reportDate).toLocaleString('tr-TR', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </span>
-                    </div>
-                </div>
+                                                        {!user.isActive && (
+                                                            <button
+                                                                onClick={() => handleRestoreUser(user.id)}
+                                                                style={{ ...styles.actionBtn, color: '#d32f2f' }}
+                                                                title="Geri Yükle"
+                                                            >
+                                                                <RotateCcw size={18} />
+                                                            </button>
+                                                        )}
 
-                {configuration && (
-                    <div style={styles.configInfo}>
-                        <p style={styles.configInfoText}>
-                            <strong>Son Güncelleme:</strong>{' '}
-                            {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
-                            {configuration.updatedByName && ` • ${configuration.updatedByName}`}
+                                                        <button
+                                                            style={{ ...styles.actionBtn, color: '#d32f2f' }}
+                                                            title="Delete User"
+                                                            onClick={() => handleDeleteUserLocal(user.id)}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* TAB 2: REPORT DATE */}
+                {activeTab === 'report' && (
+                    <div style={styles.reportSection}>
+                        <h3 style={styles.reportTitle}>
+                            <FileText size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                            Rapor Basım Tarihi
+                        </h3>
+                        <div style={styles.reportDateContainer}>
+                            <input
+                                type="datetime-local"
+                                value={reportDate}
+                                onChange={(e) => setReportDate(e.target.value)}
+                                style={styles.dateInput}
+                            />
+                            <button
+                                onClick={handleResetReportDate}
+                                style={styles.resetButton}
+                                title="Şimdiki zamana sıfırla"
+                            >
+                                Şimdi
+                            </button>
+                            <button
+                                onClick={handleSaveConfiguration}
+                                disabled={savingConfig}
+                                style={{ ...styles.button, ...styles.resetButton }}
+                                title="Kaydet"
+                            >
+                                <Save size={18} style={{ marginRight: '8px' }} />
+                                {savingConfig ? 'Kaydediliyor...' : 'Kaydet'}
+                            </button>
+                            <div style={styles.dateInfo}>
+                                <span style={styles.infoLabel}>Seçili Tarih:</span>
+                                <span style={styles.infoValue}>
+                                    {new Date(reportDate).toLocaleString('tr-TR', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+
+                        {configuration && (
+                            <div style={styles.configInfo}>
+                                <p style={styles.configInfoText}>
+                                    <strong>Son Güncelleme:</strong>{' '}
+                                    {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
+                                    {configuration.updatedByName && ` • ${configuration.updatedByName}`}
+                                </p>
+                            </div>
+                        )}
+
+                        <p style={styles.reportNote}>
+                            ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
                         </p>
                     </div>
                 )}
 
-                <p style={styles.reportNote}>
-                    ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
-                </p>
-            </div>
-
-            <div style={styles.rankSection}>
-                <div style={styles.rankHeader}>
-                    <h2 style={styles.reportTitle}>
-                        Rütbe Yönetimi
-                    </h2>
-                    <button onClick={handleAddRank} style={styles.addBtn}>
-                        + Yeni Rütbe Ekle
-                    </button>
-                </div>
-                {showRankForm && (
-                    <div style={styles.rankForm}>
-                        <div style={styles.rankFormGrid}>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Kod *</label>
-                                <input
-                                    type="text"
-                                    value={rankFormData.code}
-                                    onChange={(e) => setRankFormData({ ...rankFormData, code: e.target.value })}
-                                    placeholder="Örn: ALBAY"
-                                    style={styles.input}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Görünen İsim *</label>
-                                <input
-                                    type="text"
-                                    value={rankFormData.displayName}
-                                    onChange={(e) => setRankFormData({ ...rankFormData, displayName: e.target.value })}
-                                    placeholder="Örn: Albay"
-                                    style={styles.input}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Açıklama</label>
-                                <input
-                                    type="text"
-                                    value={rankFormData.description}
-                                    onChange={(e) => setRankFormData({ ...rankFormData, description: e.target.value })}
-                                    placeholder="Opsiyonel açıklama"
-                                    style={styles.input}
-                                />
-                            </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>Sıralama</label>
-                                <input
-                                    type="number"
-                                    value={rankFormData.sortOrder}
-                                    onChange={(e) => setRankFormData({ ...rankFormData, sortOrder: e.target.value })}
-                                    placeholder="Boş bırakılırsa otomatik"
-                                    style={styles.input}
-                                />
-                            </div>
+                {/* TAB 3: RANK MANAGEMENT */}
+                {activeTab === 'ranks' && (
+                    <div style={styles.rankSection}>
+                        <div style={styles.rankHeader}>
+                            <h2 style={styles.reportTitle}>
+                                Rütbe Yönetimi
+                            </h2>
+                            <button onClick={handleAddRank} style={styles.addBtn}>
+                                + Yeni Rütbe Ekle
+                            </button>
                         </div>
-                        <div style={styles.rankFormActions}>
-                            <button
-                                onClick={() => setShowRankForm(false)}
-                                style={styles.cancelButton}
-                            >
-                                <X size={16} />
-                                İptal
-                            </button>
-                            <button
-                                onClick={handleSaveRank}
-                                disabled={!rankFormData.code || !rankFormData.displayName}
-                                style={{
-                                    ...styles.saveButton,
-                                    ...(!rankFormData.code || !rankFormData.displayName ? styles.saveButtonDisabled : {})
-                                }}
-                            >
-                                <Save size={16} />
-                                {editingRank ? 'Güncelle' : 'Ekle'}
-                            </button>
+                        {showRankForm && (
+                            <div style={styles.rankForm}>
+                                <div style={styles.rankFormGrid}>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Kod *</label>
+                                        <input
+                                            type="text"
+                                            value={rankFormData.code}
+                                            onChange={(e) => setRankFormData({ ...rankFormData, code: e.target.value })}
+                                            placeholder="Örn: ALBAY"
+                                            style={styles.input}
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Görünen İsim *</label>
+                                        <input
+                                            type="text"
+                                            value={rankFormData.displayName}
+                                            onChange={(e) => setRankFormData({ ...rankFormData, displayName: e.target.value })}
+                                            placeholder="Örn: Albay"
+                                            style={styles.input}
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Açıklama</label>
+                                        <input
+                                            type="text"
+                                            value={rankFormData.description}
+                                            onChange={(e) => setRankFormData({ ...rankFormData, description: e.target.value })}
+                                            placeholder="Opsiyonel açıklama"
+                                            style={styles.input}
+                                        />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Sıralama</label>
+                                        <input
+                                            type="number"
+                                            value={rankFormData.sortOrder}
+                                            onChange={(e) => setRankFormData({ ...rankFormData, sortOrder: e.target.value })}
+                                            placeholder="Boş bırakılırsa otomatik"
+                                            style={styles.input}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={styles.rankFormActions}>
+                                    <button
+                                        onClick={() => setShowRankForm(false)}
+                                        style={styles.cancelButton}
+                                    >
+                                        <X size={16} />
+                                        İptal
+                                    </button>
+                                    <button
+                                        onClick={handleSaveRank}
+                                        disabled={!rankFormData.code || !rankFormData.displayName}
+                                        style={{
+                                            ...styles.saveButton,
+                                            ...(!rankFormData.code || !rankFormData.displayName ? styles.saveButtonDisabled : {})
+                                        }}
+                                    >
+                                        <Save size={16} />
+                                        {editingRank ? 'Güncelle' : 'Ekle'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={styles.rankTable}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th style={styles.th}>Kod</th>
+                                        <th style={styles.th}>Görünen İsim</th>
+                                        <th style={styles.th}>Açıklama</th>
+                                        <th style={styles.th}>Sıralama</th>
+                                        <th style={styles.th}>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {militaryRanks.map((rank) => (
+                                        <tr key={rank.id} style={{
+                                            ...styles.tr,
+                                            ...(rank.isActive ? {} : styles.inactiveRow)
+                                        }}>
+                                            <td style={styles.td}>{rank.code}</td>
+                                            <td style={styles.td}>{rank.displayName}</td>
+                                            <td style={styles.td}>{rank.description || '-'}</td>
+                                            <td style={styles.td}>{rank.sortOrder}</td>
+
+                                            <td style={styles.td}>
+                                                <div style={styles.actions}>
+                                                    <button
+                                                        onClick={() => handleEditRank(rank)}
+                                                        style={styles.iconButton}
+                                                        title="Düzenle"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => handleDeleteRank(rank.id)}
+                                                        style={styles.deleteButton}
+                                                        title="Sil"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 )}
 
-                <div style={styles.rankTable}>
-                    <table style={styles.table}>
-                        <thead>
-                            <tr>
-                                <th style={styles.th}>Kod</th>
-                                <th style={styles.th}>Görünen İsim</th>
-                                <th style={styles.th}>Açıklama</th>
-                                <th style={styles.th}>Sıralama</th>
-                                <th style={styles.th}>İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {militaryRanks.map((rank) => (
-                                <tr key={rank.id} style={{
-                                    ...styles.tr,
-                                    ...(rank.isActive ? {} : styles.inactiveRow)
-                                }}>
-                                    <td style={styles.td}>{rank.code}</td>
-                                    <td style={styles.td}>{rank.displayName}</td>
-                                    <td style={styles.td}>{rank.description || '-'}</td>
-                                    <td style={styles.td}>{rank.sortOrder}</td>
+                {/* TAB 4: SERVICE MANAGEMENT */}
+                {activeTab === 'services' && (
+                    <div style={styles.servicePanel}>
+                        <h3 style={styles.reportTitle}>
+                            <Server size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                            Servis Yönetimi
+                        </h3>
 
-                                    <td style={styles.td}>
-                                        <div style={styles.actions}>
-                                            <button
-                                                onClick={() => handleEditRank(rank)}
-                                                style={styles.iconButton}
-                                                title="Düzenle"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
+                        <p style={styles.serviceIntro}>
+                            Veritabanı, Redis ve yedekleme servislerinin durumunu izleyin.
+                        </p>
 
-                                            <button
-                                                onClick={() => handleDeleteRank(rank.id)}
-                                                style={styles.deleteButton}
-                                                title="Sil"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        <div style={styles.serviceToolbar}>
+                            <button onClick={loadServiceHealth} style={styles.refreshBtn}>
+                                Durumları Yenile
+                            </button>
+                        </div>
+
+                        {loadingHealth && (
+                            <div style={styles.loading}>Servis durumları yükleniyor...</div>
+                        )}
+
+                        {healthError && !loadingHealth && (
+                            <div style={styles.healthError}>{healthError}</div>
+                        )}
+
+                        {!loadingHealth && !healthError && (
+                            <div style={styles.tableWrapper}>
+                                <table style={styles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th style={styles.th}>Servis</th>
+                                            <th style={styles.th}>Durum</th>
+                                            <th style={styles.th}>Açıklama</th>
+                                            <th style={styles.th}>İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {serviceHealth.map((svc) => {
+                                            const isRedis = svc.name === "redis";
+                                            const isRunning = svc.status === "Running";
+
+                                            return (
+                                                <tr key={svc.name} style={styles.tr}>
+                                                    <td style={styles.td}>
+                                                        <strong>{svc.name}</strong>
+                                                    </td>
+
+                                                    <td style={styles.td}>
+                                                        {renderServiceStatusIcon(svc)}
+                                                        <span style={{ marginLeft: 8 }}>{svc.status}</span>
+                                                    </td>
+
+                                                    <td style={styles.td}>{svc.description}</td>
+
+                                                    <td style={styles.td}>
+                                                        <div style={{ display: "flex", gap: "0.5rem" }}>
+
+                                                            {/* ▶ START */}
+
+                                                            {!isRunning && svc.canStart && (
+                                                                <button
+                                                                    style={{ ...styles.systemBtn, backgroundColor: "#22c55e" }}
+                                                                    onClick={() => handleStartService(svc.name)}
+                                                                >
+                                                                    <Play size={14} style={{ marginRight: 4 }} />
+                                                                    Başlat
+                                                                </button>
+                                                            )}
+
+
+
+                                                            {/* ↻ RESTART */}
+                                                            {isRunning && (
+                                                                <button
+                                                                    style={{ ...styles.systemBtn, backgroundColor: "#3b82f6" }}
+                                                                    onClick={() => handleRestartService(svc.name)}
+                                                                >
+                                                                    <RefreshCw size={14} style={{ marginRight: 4 }} />
+                                                                    Yeniden Başlat
+                                                                </button>
+                                                            )}
+
+                                                            {/* 🧹 CLEAR / FLUSH (Redis only) */}
+                                                            {isRedis && isRunning && (
+                                                                <button
+                                                                    style={{ ...styles.systemBtn, backgroundColor: "#f97316" }}
+                                                                    onClick={handleFlushRedis}
+                                                                >
+                                                                    <Trash2 size={14} style={{ marginRight: 4 }} />
+                                                                    Redis Flush
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
-
-
         </div>
-
-
-
-
-
-
-
     );
 }
 
@@ -654,7 +902,7 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '2rem',
+        marginBottom: '1.5rem',
     },
     title: {
         fontSize: '1.5rem',
@@ -666,6 +914,51 @@ const styles = {
         fontSize: '0.9rem',
         margin: '0.5rem 0 0 0',
     },
+
+    /* TABS */
+    tabsContainer: {
+        marginBottom: '1rem',
+    },
+    tabList: {
+        display: 'flex',
+        gap: '0.25rem',
+        borderBottom: '1px solid #e0e0e0',
+        background: '#f3f4f6',
+        padding: '0.25rem 0.25rem 0 0.25rem',
+        borderRadius: '8px 8px 0 0',
+    },
+
+    tabButton: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0.65rem 1.3rem',
+        background: 'transparent',
+        border: 'none',
+        borderBottom: '3px solid transparent',
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        fontWeight: 500,
+        color: '#6b7280', // gray-500
+        borderRadius: '6px 6px 0 0',
+        transition: 'background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s',
+    },
+
+    tabButtonActive: {
+        backgroundColor: '#3b82f6',     // blue-500
+        color: '#ffffff',
+        borderBottomColor: '#3b82f6',
+        boxShadow: '0 2px 6px rgba(15, 23, 42, 0.3)',
+    },
+    tabIcon: {
+        marginRight: '0.5rem',
+    },
+    tabLabel: {
+        whiteSpace: 'nowrap',
+    },
+    tabContent: {
+        marginTop: '1rem',
+    },
+
     controls: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -738,6 +1031,7 @@ const styles = {
         background: 'white',
         borderRadius: '8px',
     },
+
     tableWrapper: {
         background: 'white',
         borderRadius: '8px',
@@ -748,7 +1042,8 @@ const styles = {
     table: {
         width: '100%',
         borderCollapse: 'collapse',
-        minWidth: '1200px',
+        minWidth: '900px',
+        backgroundColor: 'white',
     },
     th: {
         padding: '1rem',
@@ -757,14 +1052,18 @@ const styles = {
         fontWeight: '600',
         borderBottom: '2px solid #dee2e6',
         fontSize: '0.85rem',
+        color: '#333',
     },
     tr: {
         borderBottom: '1px solid #dee2e6',
+        transition: 'background-color 0.2s',
     },
     td: {
         padding: '1rem',
         fontSize: '0.9rem',
+        color: '#666',
     },
+
     roleBadge: {
         padding: '0.3rem 0.8rem',
         borderRadius: '12px',
@@ -781,11 +1080,14 @@ const styles = {
         color: 'white',
     },
     statusBadge: {
-        padding: '0.3rem 0.8rem',
+        padding: '0.35rem 0.85rem',
         borderRadius: '12px',
-        fontSize: '0.75rem',
-        fontWeight: '500',
+        fontSize: '0.8rem',
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        display: 'inline-block',
     },
+
     actions: {
         display: 'flex',
         gap: '0.5rem',
@@ -799,12 +1101,13 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
+
     reportSection: {
         backgroundColor: 'white',
         borderRadius: '8px',
         padding: '2rem',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        marginTop: '2rem',
+        marginTop: '0.5rem',
     },
     reportTitle: {
         fontSize: '1.3rem',
@@ -819,6 +1122,7 @@ const styles = {
         alignItems: 'center',
         gap: '1rem',
         marginBottom: '1rem',
+        flexWrap: 'wrap',
     },
     dateInput: {
         padding: '0.75rem',
@@ -862,8 +1166,9 @@ const styles = {
         fontSize: '0.9rem',
         borderRadius: '4px',
     },
+
     rankSection: {
-        marginTop: '2rem',
+        marginTop: '0.5rem',
         background: 'white',
         borderRadius: '8px',
         padding: '1.5rem',
@@ -874,20 +1179,6 @@ const styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '1.5rem',
-    },
-    addRankButton: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.75rem 1.5rem',
-        background: '#667eea',
-        color: 'white',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontSize: '0.95rem',
-        fontWeight: '500',
-        transition: 'all 0.2s',
     },
     rankForm: {
         background: '#f0f2ff',
@@ -960,48 +1251,10 @@ const styles = {
     rankTable: {
         overflowX: 'auto',
     },
-    table: {
-        width: '100%',
-        borderCollapse: 'collapse',
-        backgroundColor: 'white',
-    },
-    th: {
-        padding: '1rem',
-        textAlign: 'left',
-        fontWeight: '600',
-        color: '#333',
-        borderBottom: '2px solid #eee',
-        backgroundColor: '#f8f9fa',
-    },
-    tr: {
-        borderBottom: '1px solid #eee',
-        transition: 'background-color 0.2s',
-    },
-    td: {
-        padding: '1rem',
-        color: '#666',
-    },
     inactiveRow: {
         backgroundColor: '#f8f9fa',
         opacity: 0.6,
     },
-    statusBadge: {
-        padding: '0.35rem 0.85rem',
-        borderRadius: '12px',
-        fontSize: '0.8rem',
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        display: 'inline-block',
-    },
-    activeStatus: {
-        backgroundColor: '#e8f5e9',
-        color: '#2e7d32',
-    },
-    inactiveStatus: {
-        backgroundColor: '#ffebee',
-        color: '#c62828',
-    },
-
     iconButton: {
         padding: '0.5rem',
         background: '#e3f2fd',
@@ -1013,6 +1266,23 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s',
+    },
+
+    systemBtn: {
+        padding: '0.45rem 0.9rem',
+        borderRadius: '6px',
+        border: 'none',
+        backgroundColor: '#6366f1',
+        color: 'white',
+        fontSize: '0.8rem',
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        gap: '0.35rem',
+        transition: 'opacity 0.2s',
+    },
+    systemBtnHover: {
+        opacity: 0.85,
     },
     deleteButton: {
         padding: '0.5rem',
@@ -1027,4 +1297,50 @@ const styles = {
         transition: 'all 0.2s',
     },
 
+    /* SERVICE PANEL */
+    servicePanel: {
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '1.75rem',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        marginTop: '0.5rem',
+    },
+    serviceIntro: {
+        marginBottom: '1rem',
+        color: '#555',
+        fontSize: '0.9rem',
+    },
+    serviceToolbar: {
+        marginBottom: '1rem',
+        display: 'flex',
+        justifyContent: 'flex-end',
+    },
+    serviceStatusBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        fontSize: '0.7rem',
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    statusRunning: {
+        backgroundColor: '#4caf50',
+    },
+    statusStopped: {
+        backgroundColor: '#4caf50',
+        borderRadius: '4px',
+    },
+    statusError: {
+        backgroundColor: '#f44336',
+    },
+    healthError: {
+        padding: '1rem',
+        backgroundColor: '#ffebee',
+        borderRadius: '6px',
+        color: '#c62828',
+        marginTop: '0.5rem',
+    },
 };

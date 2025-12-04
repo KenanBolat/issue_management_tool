@@ -3,6 +3,9 @@ import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
 import { ticketsAPI, userApi, configurationAPI, notificationsAPI, ticketPausesAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
+import { showConfirmToast } from './ConfirmToast.jsx';
+import { toast } from "react-toastify";
+
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
 
@@ -86,7 +89,9 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
     const handleRequestProgress = async () => {
-        if (!window.confirm('Bilgi raporu talep etmek istediğinize emin misiniz?')) return;
+        const confirm = await showConfirmToast("Bilgi raporu talep etmek istediğinize emin misiniz?");
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
 
         try {
             await notificationsAPI.createProgressRequest({
@@ -399,7 +404,11 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
         }
-        if (!window.confirm(`Durumu "${statusLabel}" olarak değiştirmek istediğinize emin misiniz?`)) return;
+        const confirm = await showConfirmToast(`Durumu "${statusLabel}" olarak değiştirmek istediğinize emin misiniz?`);
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
+
+
 
         try {
             setSaving(true);
@@ -409,13 +418,13 @@ export default function TicketDetail({ ticketId, onClose }) {
                 return new Date(dateString).toISOString();
             };
 
-            
-            const  statusData =    {
+
+            const statusData = {
                 toStatus: newStatus || '',
                 Notes: `Status changed to ${newStatus} from the Ticket Detail Page`,
                 PauseReason: pauseReason || null
             }
-            
+
 
             // // Build apiData directly with the new status (don't rely on formData state)
             // const apiData = {
@@ -1333,7 +1342,7 @@ export default function TicketDetail({ ticketId, onClose }) {
                     {ticket && (
                         <>
                             <div style={styles.tabContainer}>
-                                { (
+                                {(
                                     <button
                                         onClick={() => setActiveTab('comments')}
                                         style={{

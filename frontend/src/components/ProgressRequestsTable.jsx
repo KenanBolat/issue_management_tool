@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle, XCircle, Eye, MessageSquare, ArrowLeft } from 'lucide-react';
 import { progressRequestsAPI } from '../../services/api';
+import { showConfirmToast } from './ConfirmToast';
+import { toast } from 'react-toastify';
 
 export default function ProgressRequestsTable({ onNavigate }) {
     const [progressRequests, setProgressRequests] = useState([]);
@@ -63,8 +65,9 @@ export default function ProgressRequestsTable({ onNavigate }) {
     };
 
     const handleCancel = async (requestId) => {
-        if (!window.confirm('Bu talebi iptal etmek istediğinize emin misiniz?')) return;
-
+        const confirm = await showConfirmToast(`Bu talebi iptal etmek istediğinize emin misiniz?`);
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+        
         try {
             await progressRequestsAPI.cancel(requestId);
             alert('Talep iptal edildi');

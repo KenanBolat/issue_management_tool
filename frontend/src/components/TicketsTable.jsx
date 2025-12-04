@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ticketsAPI,configurationAPI } from "../../services/api";
 import { Edit, Trash2, Eye, Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
+import { showConfirmToast } from "./ConfirmToast";
 
 
 export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
@@ -133,7 +134,10 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
     };
 
     const handleDelete = async (ticketId) => {
-        if (!window.confirm('Bu sorun kaydını silmek istediğinize emin misiniz?')) return;
+
+        const confirm = await showConfirmToast('Bu sorun kaydını silmek istediğinize emin misiniz?');
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+
 
         try {
             await ticketsAPI.delete(ticketId);
@@ -173,7 +177,10 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             message += `\n${alreadyDeleted.length} adet sorun zaten silinmiş olduğu için atlanacak.`;
         }
 
-        if (!window.confirm(message)) return;
+        const confirm = await showConfirmToast(`${name} servisini başlatmak istiyor musunuz?`);
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        
+        
 
         try {
             setBulkDeleting(true);
@@ -202,7 +209,8 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
 
     const handleRestore = async (ticketId) => {
-        if (!window.confirm('Bu sorun kaydını geri almak istediğinize emin misiniz?')) return;
+        const confirm = await showConfirmToast("Bu sorun kaydını geri almak istediğinize emin misiniz?");
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
 
         try {
             await ticketsAPI.restore(ticketId);
@@ -245,7 +253,9 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         }
         message += "\nDevam etmek istiyor musunuz?";
 
-        if (!window.confirm(message)) return;
+        const confirm = await showConfirmToast(message);
+        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        
 
         try {
             setBulkRestoring(true);

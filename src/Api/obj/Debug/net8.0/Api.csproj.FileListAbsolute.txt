@@ -272,3 +272,4 @@ C:/Users/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/ref/Api.dll
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.pdb
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/Api.genruntimeconfig.cache
 /home/knn/Desktop/issue_management_tool/src/Api/obj/Debug/net8.0/ref/Api.dll
+/home/knn/Desktop/issue_management_tool/src/Api/bin/Debug/net8.0/Docker.DotNet.dll

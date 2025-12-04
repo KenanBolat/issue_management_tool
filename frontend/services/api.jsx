@@ -446,5 +446,12 @@ export const ticketPausesAPI = {
     delete: (id) => api.delete(`/TicketPauses/${id}`),
 };
 
+export const systemAPI = {
+  getHealth: () => api.get("/Users/health"),
+  startService: (name) => api.post(`/Users/services/${name}/start`),
+  restartService: (name) => api.post(`/Users/services/${name}/restart`),
+  flushRedis: () => api.post("/Users/redis/flush"),
+};
+
 
 export default api; 

@@ -111,6 +111,49 @@ namespace Api.Services
             }
         }
 
+        public async Task<bool> IsAvailableAsync()
+        {
+            try
+            {
+                // lightweight op – could be Get or Set
+                await _cache.GetAsync("health:ping-probe");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Redis health probe failed");
+                return false;
+            }
+        }
+
+
+        public async Task ClearPrefixAsync(string prefix)
+        {
+            try
+            {
+                var db = _redis.GetDatabase();
+                var endpoints = _redis.GetEndPoints();
+                var server = _redis.GetServer(endpoints.First());
+
+                var fullPattern = $"tickettracker:{prefix}*";
+                var keys = server.Keys(pattern: fullPattern).ToArray();
+
+                if (keys.Length == 0)
+                {
+                    _logger.LogDebug($"No Keys found with prefix: {prefix}");
+                    return;
+
+                }
+                await db.KeyDeleteAsync(keys);
+                _logger.LogInformation($"Cleared {keys.Length} keys with prefix : {prefix}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error clearing keys with prefix: {prefix}");
+            }
+        }
+
+
         public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiry = null)
         {
             var cached = await GetAsync<T>(key);
