@@ -75,7 +75,7 @@ export default function TicketDetail({ ticketId, onClose }) {
     const handleGeneratePDF = async () => {
 
         if (!ticket) {
-            alert("Ticket bilgileri yükleniyor, lütfen bekleyin...");
+            toast.info("Ticket bilgileri yükleniyor, lütfen bekleyin...");
             return;
         }
 
@@ -83,7 +83,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             await generateTicketPDF(ticket, formData, pdfReportDate);
         } catch (error) {
             console.error("Error generating PDF:", error);
-            alert("PDF oluşturulurken hata oluştu");
+            toast.error("PDF oluşturulurken hata oluştu");
         }
     };
 
@@ -100,10 +100,10 @@ export default function TicketDetail({ ticketId, onClose }) {
                 message: `${ticket.externalCode} numaralı sorun için bilgi raporu bekleniyor`
             });
 
-            alert('Bilgi talebi gönderildi');
+            toast.info('Bilgi talebi gönderildi');
         } catch (error) {
             console.error('Error requesting progress:', error);
-            alert('Bilgi talebi gönderilemedi');
+            toast.error('Bilgi talebi gönderilemedi');
         }
     };
     // Form state
@@ -277,7 +277,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             setActions(ticketData.actions || []);
         } catch (error) {
             console.error("Error loading ticket:", error);
-            alert("Error loading ticket details");
+            toast.error("Error loading ticket details");
         } finally {
             setLoading(false);
         }
@@ -330,7 +330,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const handleSave = async () => {
         if (!formData.title.trim()) {
-            alert("Title is required");
+            toast.warn("Title is required");
             return;
         }
         try {
@@ -353,16 +353,16 @@ export default function TicketDetail({ ticketId, onClose }) {
 
             if (isNewTicket) {
                 const response = await ticketsAPI.create(apiData);
-                alert("Ticket created successfully");
+                toast.info("Ticket created successfully");
                 if (onClose) onClose();
             } else {
                 await ticketsAPI.update(ticketId, apiData);
-                alert("Ticket updated successfully");
+                toast.info("Ticket updated successfully");
                 loadTicketDetails();
             }
         } catch (error) {
             console.error("Error saving ticket:", error);
-            alert("Error saving ticket");
+            toast.error("Error saving ticket");
         } finally {
             setSaving(false);
         }
@@ -370,18 +370,18 @@ export default function TicketDetail({ ticketId, onClose }) {
 
     const handleAddComment = async () => {
         if (!newComment.trim()) {
-            alert("Comment cannot be empty");
+            toast.warn("Comment cannot be empty");
             return;
         }
 
         try {
             await ticketsAPI.addComment(ticketId, { body: newComment });
             setNewComment('');
-            alert("Yeni bir islem eklenmistir.");
+            toast.info("Yeni bir islem eklenmistir.");
             loadTicketDetails();
         } catch (error) {
             console.error("Error adding comment:", error);
-            alert("Error adding comment");
+            toast.error("Error adding comment");
         }
     };
 
@@ -396,7 +396,7 @@ export default function TicketDetail({ ticketId, onClose }) {
 
 
             if (!pauseReason || pauseReason.trim() === '') {
-                alert('Duraklama sebebi zorunludur!');
+                toast.warn('Duraklama sebebi zorunludur!');
                 return;
             }
             setPauseReason(pauseReason);
@@ -459,7 +459,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             // };
 
             await ticketsAPI.changeStatus(ticketId, statusData);
-            alert(`Durum "${statusLabel}" olarak değiştirildi`);
+            toast.info(`Durum "${statusLabel}" olarak değiştirildi`);
 
 
             // Update local state after successful save
@@ -469,7 +469,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             loadTicketDetails();
         } catch (error) {
             console.error("Error changing status:", error);
-            alert("Durum değiştirilemedi: " + (error.response?.data?.message || error.message));
+            toast.error("Durum değiştirilemedi: " + (error.response?.data?.message || error.message));
         } finally {
             setSaving(false);
         }

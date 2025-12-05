@@ -1,6 +1,7 @@
 import { pdf } from '@react-pdf/renderer';
 import { Document } from '@react-pdf/renderer';
 import { TicketPDFDocument, TicketPDFPage } from './TicketPDFDocument';
+import { toast } from 'react-toastify';
 
 // Single ticket PDF generation
 export const generateTicketPDF = async (ticket, formData, reportDate = null) => {
@@ -24,7 +25,7 @@ export const generateTicketPDF = async (ticket, formData, reportDate = null) => 
 
 export const generateMultipleTicketsPDF = async (ticketsData,reportDate = null) => {
     if (!ticketsData || ticketsData.length === 0) {
-        alert('Seçili sorun bulunamadı!');
+        toast.warn('Seçili sorun bulunamadı!');
         return;
     }
 

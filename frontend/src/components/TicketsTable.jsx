@@ -3,6 +3,7 @@ import { ticketsAPI,configurationAPI } from "../../services/api";
 import { Edit, Trash2, Eye, Download, FileSpreadsheet, RotateCcw } from "lucide-react";
 import { generateMultipleTicketsPDF } from "../utils/pdfGenerator";
 import { showConfirmToast } from "./ConfirmToast";
+import {toast} from "react-toastify";  
 
 
 export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicket }) {
@@ -67,7 +68,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             setTickets(ticketsData);
         } catch (error) {
             console.error("Error loading tickets:", error);
-            alert("Error loading tickets");
+            toast.error("Error loading tickets");
         } finally {
             setLoading(false);
         }
@@ -127,7 +128,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             // ticketsAPI.exportToExcel zaten dosyayı indirtiyor
         } catch (error) {
             console.error("Excel export error:", error);
-            alert("Excel dışa aktarma sırasında hata oluştu.");
+            toast.error("Excel dışa aktarma sırasında hata oluştu.");
         } finally {
             setExportingExcel(false);
         }
@@ -141,7 +142,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
         try {
             await ticketsAPI.delete(ticketId);
-            alert('Sorun kaydı silindi');
+            toast.info('Sorun kaydı silindi');
             loadTickets();
             // Remove from selection if selected
             setSelectedTickets(prev => {
@@ -151,7 +152,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             });
         } catch (error) {
             console.error('Error deleting ticket:', error);
-            alert('Sorun kaydı silinirken hata oluştu');
+            toast.error('Sorun kaydı silinirken hata oluştu');
         }
     };
 
@@ -168,7 +169,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         const alreadyDeleted = selectedTicketObjects.filter(t => t.isDeleted);
 
         if (deletable.length === 0) {
-            alert("Seçili sorunların hepsi zaten silinmiş; silinecek kayıt yok.");
+            toast.warn("Seçili sorunların hepsi zaten silinmiş; silinecek kayıt yok.");
             return;
         }
 
@@ -189,7 +190,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                 deletable.map(t => ticketsAPI.delete(t.id))
             );
 
-            alert(`${deletable.length} adet sorun kaydı silindi.`);
+            toast.info(`${deletable.length} adet sorun kaydı silindi.`);
 
             // Silinenleri seçimden çıkar
             setSelectedTickets(prev => {
@@ -201,7 +202,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             loadTickets();
         } catch (error) {
             console.error("Bulk delete error:", error);
-            alert("Toplu silme sırasında hata oluştu.");
+            toast.error("Toplu silme sırasında hata oluştu.");
         } finally {
             setBulkDeleting(false);
         }
@@ -214,7 +215,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
         try {
             await ticketsAPI.restore(ticketId);
-            alert('Sorun kaydı geri alındı!');
+            toast.info('Sorun kaydı geri alındı!');
             loadTickets();
             // ensure it’s unselected
             setSelectedTickets(prev => {
@@ -224,7 +225,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             });
         } catch (error) {
             console.error('Sorunu Geri Almada problem olmuştur :', error);
-            alert('Sorunu Geri Almada problem olmuştur');
+            toast.error('Sorunu Geri Almada problem olmuştur');
         }
     };
 
@@ -243,7 +244,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
         const notRestorable = selectedTicketObjects.filter(t => !t.isDeleted);
 
         if (restorable.length === 0) {
-            alert("Seçili sorunların hiçbiri silinmiş değil; geri alınacak kayıt yok.");
+            toast.warn("Seçili sorunların hiçbiri silinmiş değil; geri alınacak kayıt yok.");
             return;
         }
 
@@ -265,7 +266,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
                 restorable.map(t => ticketsAPI.restore(t.id))
             );
 
-            alert(`${restorable.length} adet sorun kaydı geri alındı.`);
+            toast.success(`${restorable.length} adet sorun kaydı geri alındı.`);
 
             // Restore edilenleri seçimden çıkar
             setSelectedTickets(prev => {
@@ -278,7 +279,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             loadTickets();
         } catch (error) {
             console.error("Bulk restore error:", error);
-            alert("Toplu geri alma sırasında hata oluştu.");
+            toast.error("Toplu geri alma sırasında hata oluştu.");
         } finally {
             setBulkRestoring(false);
         }
@@ -307,7 +308,7 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
 
     const handleGenerateBulkPDF = async () => {
         if (selectedTickets.size === 0) {
-            alert("Lütfen en az bir sorun seçiniz!");
+            toast.warn("Lütfen en az bir sorun seçiniz!");
             return;
         }
 
@@ -343,12 +344,12 @@ export default function TicketsTable({ onViewTicket, onEditTicket, onCreateTicke
             const ticketsData = await Promise.all(ticketDetailsPromises);
             await generateMultipleTicketsPDF(ticketsData, pdfReportDate);
 
-            alert(`${selectedTickets.size} adet sorun raporu PDF olarak oluşturuldu!`);
+            toast.info(`${selectedTickets.size} adet sorun raporu PDF olarak oluşturuldu!`);
             setSelectedTickets(new Set());
 
         } catch (error) {
             console.error("Error generating bulk PDF:", error);
-            alert("PDF oluşturulurken hata oluştu: " + error.message);
+            toast.error("PDF oluşturulurken hata oluştu: " + error.message);
         } finally {
             setGeneratingPDF(false);
         }

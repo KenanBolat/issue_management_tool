@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userApi } from '../../services/api';
 import { X, Save, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function UserForm({ userId, onClose, onSave }) {
     const [loading, setLoading] = useState(false);
@@ -86,18 +87,18 @@ export default function UserForm({ userId, onClose, onSave }) {
 
         // Basic validation
         if (!formData.email || !formData.displayName) {
-            alert('Email and Display Name are required.');
+            toast.warn('Email and Display Name are required.');
             return;
         }
 
         if (isNewUser && !formData.password) {
-            alert('Password is required for new users.');
+            toast.warn('Password is required for new users.');
             return;
         }
 
         // Optional front-end check for newPassword when editing
         if (!isNewUser && formData.newPassword && formData.newPassword.length < 6) {
-            alert('Şifre en az 6 karakter olmalıdır.');
+            toast.error('Şifre en az 6 karakter olmalıdır.');
             return;
         }
 
@@ -106,18 +107,18 @@ export default function UserForm({ userId, onClose, onSave }) {
             if (isNewUser) {
                 // CreateUserRequest expects Password (not NewPassword) :contentReference[oaicite:2]{index=2}
                 await userApi.create(formData);
-                alert('User created successfully.');
+                toast.success('User created successfully.');
             } else {
                 // UpdateUserRequest will bind NewPassword from newPassword property
                 await userApi.update(userId, formData);
-                alert('User updated successfully.');
+                toast.success('User updated successfully.');
             }
 
             if (onSave) onSave();
             if (onClose) onClose();
         } catch (error) {
             console.error('Failed to save user data', error);
-            alert(error.response?.data?.message || 'An error occurred while saving user data.');
+            toast.error(error.response?.data?.message || 'An error occurred while saving user data.');
         } finally {
             setSaving(false);
         }

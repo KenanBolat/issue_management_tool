@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, Play, Trash2, Filter,Pause } from 'lucide-react';
 import { ticketPausesAPI, ticketsAPI } from '../../services/api';
-import { useNavigate } from 'react-router-dom';
 import { showConfirmToast } from './ConfirmToast';
 import { toast } from 'react-toastify';
 
@@ -27,7 +26,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
             setPauses(response.data);
         } catch (error) {
             console.error('Error loading pauses:', error);
-            alert('Duraklamalar yüklenirken hata oluştu');
+            toast.error('Duraklamalar yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
@@ -186,11 +185,11 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
     
             try {
                 await ticketPausesAPI.delete(id);
-                alert('Duraklama kaydı silindi');
+                toast.success('Duraklama kaydı silindi');
                 loadPauses();
             } catch (error) {
                 console.error('Error deleting pause:', error);
-                alert('Silme işlemi başarısız');
+                toast.error('Silme işlemi başarısız');
             }
         };
     
@@ -218,14 +217,14 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
 
         try {
             await ticketPausesAPI.resume(selectedPause.id, { resumeNotes });
-            alert('Duraklama sonlandırıldı');
+            toast.success('Duraklama sonlandırıldı');
             setShowResumeModal(false);
             setResumeNotes('');
             setSelectedPause(null);
             loadPauses();
         } catch (error) {
             console.error('Error resuming pause:', error);
-            alert('Duraklama sonlandırılırken hata oluştu');
+            toast.error('Duraklama sonlandırılırken hata oluştu');
         }
     };
 

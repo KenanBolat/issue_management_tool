@@ -53,14 +53,14 @@ export default function ProgressRequestsTable({ onNavigate }) {
 
         try {
             await progressRequestsAPI.respond(selectedRequest.id, { responseText });
-            alert('Bilgi raporu gönderildi');
+            toast.info('Bilgi raporu gönderildi');
             setSelectedRequest(null);
             setResponseText('');
             loadProgressRequests();
             loadStats();
         } catch (error) {
             console.error('Error responding:', error);
-            alert('Bilgi raporu gönderilemedi');
+            toast.error('Bilgi raporu gönderilemedi');
         }
     };
 
@@ -70,12 +70,12 @@ export default function ProgressRequestsTable({ onNavigate }) {
         
         try {
             await progressRequestsAPI.cancel(requestId);
-            alert('Talep iptal edildi');
+            toast.info('Talep iptal edildi');
             loadProgressRequests();
             loadStats();
         } catch (error) {
             console.error('Error canceling:', error);
-            alert('Talep iptal edilemedi');
+            toast.error('Talep iptal edilemedi');
         }
     };
 

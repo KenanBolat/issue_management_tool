@@ -12,7 +12,7 @@ import PauseManagement from "./components/PauseManagement.jsx";
 import ProgressRequestManagement from "./components/ProgressRequestManagement.jsx";
 
 
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Slide} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -223,7 +223,9 @@ function App() {
                     pauseOnFocusLoss
                     draggable
                     pauseOnHover
-                    theme="light"
+                    theme="colored"
+                    transition={Slide}
+
                 />
             </main>
         </div>

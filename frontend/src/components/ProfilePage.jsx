@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { userApi } from '../../services/api';
 import { Save, Key, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 
 export default function ProfilePage() {
@@ -34,12 +35,12 @@ export default function ProfilePage() {
         if (!user) return;
 
         if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-            alert('Lütfen mevcut ve yeni şifreyi doldurunuz.');
+            toast.info('Lütfen mevcut ve yeni şifreyi doldurunuz.')
             return;
         }
 
         if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
-            alert('Yeni şifre ile şifre tekrarı uyuşmuyor.');
+            toast.info('Yeni şifre ile şifre tekrarı uyuşmuyor.')
             return;
         }
 
@@ -52,7 +53,7 @@ export default function ProfilePage() {
                 passwordForm.newPassword
             );
 
-            alert('Şifreniz başarıyla güncellendi.');
+            toast.success('Şifreniz başarıyla güncellendi.')
 
             setPasswordForm({
                 currentPassword: '',
@@ -62,7 +63,7 @@ export default function ProfilePage() {
 
         } catch (err) {
             console.error('Failed to change password', err);
-            alert(err.message || 'Şifre değiştirilirken bir hata oluştu.');
+            toast.error(err.message || 'Şifre değiştirilirken bir hata oluştu.')
         } finally {
             setSavingPassword(false);
         }
@@ -91,7 +92,7 @@ export default function ProfilePage() {
                 setMilitaryRanks(ranksRes.data || []);
             } catch (err) {
                 console.error('Failed to load profile', err);
-                alert('Profil bilgileri yüklenemedi.');
+                toast.error('Profil bilgileri yüklenemedi.')
             } finally {
                 setLoading(false);
             }
@@ -123,10 +124,10 @@ export default function ProfilePage() {
             };
 
             await userApi.update(user.id, payload);
-            alert('Profiliniz başarıyla güncellendi.');
+            toast.success('Profiliniz başarıyla güncellendi.')
         } catch (err) {
             console.error('Failed to save profile', err);
-            alert(err.response?.data?.message || 'Profil güncellenirken bir hata oluştu.');
+            toast.error(err.response?.data?.message || 'Profil güncellenirken bir hata oluştu.');
         } finally {
             setSavingProfile(false);
         }

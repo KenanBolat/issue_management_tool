@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, CheckCircle, Trash2, Filter, MessageSquare, TrendingUp } from 'lucide-react';
 import { progressRequestsAPI } from '../../services/api';
+import {toast} from "react-toastify";
 
 export default function ProgressRequestManagement({ onViewTicket, onNavigate }) {
     const [requests, setRequests] = useState([]);
@@ -28,7 +29,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
             setRequests(response.data);
         } catch (error) {
             console.error('Error loading progress requests:', error);
-            alert('Bilgi talepleri yüklenirken hata oluştu');
+            toast.error('Bilgi talepleri yüklenirken hata oluştu');
         } finally {
             setLoading(false);
         }
@@ -170,7 +171,7 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
     const handleUpdateProgress = async () => {
         if (!selectedRequest) return;
         if (!progressInfo.trim()) {
-            alert('Lütfen ilerleme bilgisi giriniz');
+            toast.warn('Lütfen ilerleme bilgisi giriniz');
             return;
         }
 
@@ -183,20 +184,20 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
 
             });
             
-            alert('Bilgi talebi güncellendi');
+            toast.info('Bilgi talebi güncellendi');
             setShowUpdateModal(false);
             resetUpdateForm();
             loadRequests();
         } catch (error) {
             console.error('Error updating progress:', error);
-            alert('Bilgi talebi  güncellenirken hata oluştu');
+            toast.error('Bilgi talebi  güncellenirken hata oluştu');
         }
     };
 
     const handleRespond = async () => {
         if (!selectedRequest) return;
         if (!responseNotes.trim()) {
-            alert('Lütfen yanıt notu giriniz');
+            toast.warn('Lütfen yanıt notu giriniz');
             return;
         }
 
@@ -205,13 +206,13 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
                 responseNotes
             });
             
-            alert('Talep yanıtlandı');
+            toast.info('Talep yanıtlandı');
             setShowRespondModal(false);
             resetRespondForm();
             loadRequests();
         } catch (error) {
             console.error('Error responding to request:', error);
-            alert('Yanıtlama sırasında hata oluştu');
+            toast.error('Yanıtlama sırasında hata oluştu');
         }
     };
 
@@ -220,15 +221,14 @@ export default function ProgressRequestManagement({ onViewTicket, onNavigate }) 
         if (!confirm) { toast.info("İşlem iptal edildi."); return; }
    
 
-        if (!window.confirm('Bu ilerleme talebini silmek istediğinize emin misiniz?')) return;
 
         try {
             await progressRequestsAPI.delete(requestId);
-            alert('Talep silindi');
+            toast.info('Talep silindi');
             loadRequests();
         } catch (error) {
             console.error('Error deleting request:', error);
-            alert('Silme işlemi başarısız');
+            toast.info('Silme işlemi başarısız');
         }
     };
 

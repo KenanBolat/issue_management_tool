@@ -94,7 +94,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             setUsers(response.data || []);
         } catch (error) {
             console.error('Error loading users:', error);
-            alert('Failed to load users. Please try again later.');
+            toast.error('Failed to load users. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -173,7 +173,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             await loadSystemHealth();
         } catch (error) {
             console.error('Error starting service:', error);
-            alert('Servis başlatılamadı: ' + (error.response?.data?.message || error.message));
+            toast.error('Servis başlatılamadı: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -186,7 +186,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             await loadSystemHealth();
         } catch (error) {
             console.error('Error restarting service:', error);
-            alert('Servis yeniden başlatılamadı: ' + (error.response?.data?.message || error.message));
+            toast.error('Servis yeniden başlatılamadı: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -196,10 +196,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         
         try {
             await systemAPI.flushRedis();
-             toast.success('Redis önbelleği temizlendi.');
+            toast.success('Redis önbelleği temizlendi.');
         } catch (error) {
             console.error('Error flushing redis:', error);
-            alert('Redis temizlenemedi: ' + (error.response?.data?.message || error.message));
+            toast.error('Redis temizlenemedi: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -220,10 +220,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
             setShowRankForm(false);
             loadMilitaryRanks();
-            alert(editingRank ? 'Rütbe güncellendi' : 'Rütbe eklendi');
+            toast.success(editingRank ? 'Rütbe güncellendi' : 'Rütbe eklendi');
         } catch (error) {
             console.error('Error saving rank:', error);
-            alert('Rütbe kaydedilemedi: ' + (error.response?.data?.message || error.message));
+            toast.error('Rütbe kaydedilemedi: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -235,10 +235,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         try {
             await militaryRanksAPI.delete(id);
             loadMilitaryRanks();
-            alert('Rütbe silindi');
+            toast.success('Rütbe silindi');
         } catch (error) {
             console.error('Error deleting rank:', error);
-            alert('Rütbe silinemedi: ' + (error.response?.data?.message || error.message));
+            toast.error('Rütbe silinemedi: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -272,10 +272,10 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
             });
 
             setConfiguration(response.data);
-            alert('Konfigürasyon başarıyla güncellendi!');
+            toast.success('Konfigürasyon başarıyla güncellendi!');
         } catch (error) {
             console.error('Error saving configuration:', error);
-            alert('Konfigürasyon güncellenirken hata oluştu: ' + error.message);
+            toast.error('Konfigürasyon güncellenirken hata oluştu: ' + error.message);
         } finally {
             setSavingConfig(false);
         }
@@ -292,11 +292,11 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         
         try {
             await userApi.restore(userId);
-            alert('Kullanıcı başarıyla geri yüklendi!');
+            toast.warning('Kullanıcı başarıyla geri yüklendi!');
             loadUsers();
         } catch (error) {
             console.error('Error restoring user:', error);
-            alert('Kullanıcı geri yüklenirken hata oluştu!');
+            toast.error('Kullanıcı geri yüklenirken hata oluştu!');
         }
     };
 
@@ -308,11 +308,11 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
         try {
             await userApi.delete(userId);
-            alert('User deleted successfully.');
+            toast.success('User deleted successfully.');
             loadUsers();
         } catch (error) {
             console.error('Error deleting user:', error);
-            alert('Failed to delete user. Please try again later.');
+            toast.error('Failed to delete user. Please try again later.');
         }
     };
 

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { authAPI } from "../../services/api.jsx";
+import { toast } from "react-toastify";
+
 import "./Login.css";
 
 export default function Login({ onLogin }) {
@@ -184,7 +186,7 @@ export default function Login({ onLogin }) {
               type="button"
               style={styles.linkButton}
               onClick={() => {
-                alert("Şifre sıfırlama henüz eklenmedi.");
+                toast.info("Şifre sıfırlama henüz eklenmedi.");
               }}
             >
               Şifremi unuttum
