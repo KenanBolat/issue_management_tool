@@ -12,6 +12,7 @@ import PauseManagement from "./components/PauseManagement.jsx";
 import ProgressRequestManagement from "./components/ProgressRequestManagement.jsx";
 
 
+
 import { ToastContainer, Slide} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -25,9 +26,27 @@ function App() {
     const [refreshTickets, setRefreshTickets] = useState(0);
 
     // ---------- INIT AUTH + INITIAL HISTORY STATE ----------
+     useEffect(() => {
+        const token = localStorage.getItem("token");
+        const refreshToken = localStorage.getItem("refreshToken");
+        
+        if (token && refreshToken) {
+            setIsAuthenticated(true);
+
+            const initialPage = "dashboard";
+            window.history.replaceState(
+                { page: initialPage, state: {} },
+                "",
+                `/${initialPage}`
+            );
+        }
+    }, []);
+
+
     useEffect(() => {
         const token = localStorage.getItem("token");
-        if (token) {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (token && refreshToken) {
             setIsAuthenticated(true);
 
             // initial history entry = dashboard
@@ -75,8 +94,14 @@ function App() {
         applyNavigation(page, state);
     };
 
-    const handleLogin = () => {
+    const handleLogin = (data) => { 
+        localStorage.setItem('token', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('displayName', data.displayName);
+        localStorage.setItem('role', data.role);
         setIsAuthenticated(true);
+
+
         // after login make sure we start at dashboard in history
         const initialPage = "dashboard";
         window.history.replaceState(
@@ -215,7 +240,7 @@ function App() {
                     />
                 )}
                 <ToastContainer
-                    position="top-center"
+                    position="top-right"
                     autoClose={4000}
                     hideProgressBar={false}
                     newestOnTop={false}

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { LayoutDashboard, List, LogOut, User, Bell, Clock, PauseOctagonIcon, CogIcon, BadgeInfo} from "lucide-react";
+import { LayoutDashboard, List, LogOut, User, Bell, Clock, PauseOctagonIcon, CogIcon, BadgeInfo } from "lucide-react";
 import NotificationsPanel from './NotificationsPanel';
 import { notificationsAPI } from '../../services/api';
 import signalRService from '../../services/signalrService';
@@ -68,21 +68,21 @@ export default function Navigation({ currentPage, onNavigate }) {
                     <span style={styles.brandText}>Satellite Ticket Tracker  </span>
                 </div>
                 <div style={styles.menu}>
-                    
+
                     <button onClick={() => onNavigate('dashboard')} style={{ ...styles.menuItem, ...(currentPage === 'dashboard' ? styles.activeMenuItem : {}) }} >
                         <LayoutDashboard size={18} /> Gösterge Paneli
                     </button>
-  
-                    <button  onClick={() => onNavigate('tickets')} style={{ ...styles.menuItem, ...(currentPage === 'tickets' ? styles.activeMenuItem : {})  }} >
-                        <List size={18} />  Sorunlar 
+
+                    <button onClick={() => onNavigate('tickets')} style={{ ...styles.menuItem, ...(currentPage === 'tickets' ? styles.activeMenuItem : {}) }} >
+                        <List size={18} />  Sorunlar
                     </button>
 
-                    <button onClick={() => onNavigate('pause-management')}  style={{ ...styles.menuItem, ...(currentPage === 'pause-management' ? styles.activeMenuItem : {}) }} >
-                        <PauseOctagonIcon size={18} /> Durdurmalar 
+                    <button onClick={() => onNavigate('pause-management')} style={{ ...styles.menuItem, ...(currentPage === 'pause-management' ? styles.activeMenuItem : {}) }} >
+                        <PauseOctagonIcon size={18} /> Durdurmalar
                     </button>
 
-                      <button onClick={() => onNavigate('progress-management')}  style={{ ...styles.menuItem, ...(currentPage === 'progress-management' ? styles.activeMenuItem : {}) }} >
-                        <BadgeInfo size={18} /> Bilgi Talebi 
+                    <button onClick={() => onNavigate('progress-management')} style={{ ...styles.menuItem, ...(currentPage === 'progress-management' ? styles.activeMenuItem : {}) }} >
+                        <BadgeInfo size={18} /> Bilgi Talebi
                     </button>
 
 
@@ -133,9 +133,15 @@ export default function Navigation({ currentPage, onNavigate }) {
                         Profilim
                     </button>
                     <button
-                        onClick={() => {
-                            localStorage.clear();
-                            window.location.reload();
+                        onClick={async () => {
+                            try {
+                                await authAPI.logout();
+                            } catch (error) {
+                                console.error('Logout error:', error);
+                            } finally {
+                                localStorage.clear();
+                                window.location.reload();
+                            }
                         }}
                         style={styles.logoutBtn}
                         title="Logout"

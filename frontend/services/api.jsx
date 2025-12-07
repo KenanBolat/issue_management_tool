@@ -1,20 +1,195 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../src/config';
+import { jwtDecode } from 'jwt-decode';
+import { toast } from 'react-toastify';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
 });
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+let isRefreshing = false;
+let failedQueue = [];
+let isBackendOffline = false;
+let offlineToastId = null;
 
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+
+    failedQueue = [];
+};
+
+
+// ✅ Show persistent offline toast
+const showOfflineToast = () => {
+    if (!isBackendOffline && !offlineToastId) {
+        isBackendOffline = true;
+        offlineToastId = toast.error(
+            '🔴 Sistem çevrimdışı! Bağlantı bekleniyor...',
+            {
+                position: 'top-center',
+                autoClose: false,
+                closeButton: false,
+                draggable: false,
+                closeOnClick: false,
+                toastId: 'offline-toast'
+            }
+        );
+    }
+};
+
+// ✅ Show online toast and dismiss offline toast
+const showOnlineToast = () => {
+    if (isBackendOffline) {
+        isBackendOffline = false;
+        
+        // Dismiss offline toast
+        if (offlineToastId) {
+            toast.dismiss(offlineToastId);
+            offlineToastId = null;
+        }
+        
+        // Show success message
+        toast.success('✅ Sistem çevrimiçi! Bağlantı kuruldu.', {
+            position: 'top-center',
+            autoClose: 3000
+        });
+    }
+};
+
+const isTokenExpiringSoon = (token) => {
+    try {
+        const decoded = jwt_decode(token);
+        const currentTime = Date.now() / 1000;
+        // Refresh if token expires in less than 5 minutes
+        return decoded.exp - currentTime < 300;
+    } catch {
+        return true;
+    }
+};
+
+
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// ✅ Response interceptor - handle errors properly
+api.interceptors.response.use(
+    (response) => {
+        // If we get a successful response and were offline, show online toast
+        if (isBackendOffline) {
+            showOnlineToast();
+        }
+        return response;
+    },
+    async (error) => {
+        const originalRequest = error.config;
+
+        // ✅ CRITICAL: Check if this is a network error (backend offline)
+        if (!error.response) {
+            // Network error - backend is offline
+            showOfflineToast();
+            
+            // Don't redirect to login, just reject the promise
+            return Promise.reject(error);
+        }
+
+        // ✅ If we get any response, backend is online
+        if (isBackendOffline) {
+            showOnlineToast();
+        }
+
+        // ✅ Handle 401 errors (authentication errors)
+        if (error.response.status === 401 && !originalRequest._retry) {
+            // Check if this is from login or refresh endpoint
+            if (originalRequest.url?.includes('/auth/login') || 
+                originalRequest.url?.includes('/auth/refresh')) {
+                // Don't try to refresh token for login/refresh failures
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                // Queue this request
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                    .then(token => {
+                        originalRequest.headers.Authorization = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch(err => Promise.reject(err));
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            const refreshToken = localStorage.getItem('refreshToken');
+
+            if (!refreshToken) {
+                // No refresh token, redirect to login
+                localStorage.clear();
+                window.location.href = '/';
+                return Promise.reject(error);
+            }
+
+            try {
+                const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                    refreshToken
+                });
+
+                const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+                localStorage.setItem('token', accessToken);
+                localStorage.setItem('refreshToken', newRefreshToken);
+
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                processQueue(null, accessToken);
+
+                return api(originalRequest);
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                
+                // Only show toast and redirect if refresh actually failed (not network error)
+                if (refreshError.response) {
+                    toast.error('Oturum süresi doldu. Lütfen tekrar giriş yapın.', {
+                        position: 'top-center',
+                        autoClose: 3000,
+                        onClose: () => {
+                            localStorage.clear();
+                            window.location.href = '/';
+                        }
+                    });
+                }
+                
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
 export const authAPI = {
+    // login: (email, password) => api.post('/auth/login', { email, password }),
+    // getCurrentUser: () => api.get('/auth/me'),
     login: (email, password) => api.post('/auth/login', { email, password }),
+    refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+    logout: () => api.post('/auth/logout'),
     getCurrentUser: () => api.get('/auth/me'),
 
 };
@@ -58,8 +233,8 @@ export const ticketsAPI = {
     // Change ticket status with optional pause reason
     changeStatus: (id, data) => api.post(`/tickets/${id}/status`, data),
 
-     
-    
+
+
     addComment: (id, body) => api.post(`/tickets/${id}/comments`, body),
     getAvailablePersonnel: () => api.get('/tickets/available-personnel'),
 
@@ -166,7 +341,7 @@ export const userApi = {
             throw error;
         }
     },
-    getPositions:  async () => {
+    getPositions: async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/Users/positions`, {
                 method: 'GET',
@@ -183,7 +358,7 @@ export const userApi = {
             console.error(`Error fetching user ${id}:`, error);
             throw error;
         }
-    }, 
+    },
 
 
 
@@ -447,10 +622,10 @@ export const ticketPausesAPI = {
 };
 
 export const systemAPI = {
-  getHealth: () => api.get("/Users/health"),
-  startService: (name) => api.post(`/Users/services/${name}/start`),
-  restartService: (name) => api.post(`/Users/services/${name}/restart`),
-  flushRedis: () => api.post("/Users/redis/flush"),
+    getHealth: () => api.get("/Users/health"),
+    startService: (name) => api.post(`/Users/services/${name}/start`),
+    restartService: (name) => api.post(`/Users/services/${name}/restart`),
+    flushRedis: () => api.post("/Users/redis/flush"),
 };
 
 

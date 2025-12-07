@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Enums;
 
 namespace Domain.Entities
-
 {
     [Table("user")]
     public class User
@@ -31,7 +30,6 @@ namespace Domain.Entities
         [Column("is_active")]
         public bool IsActive { get; set; }
 
-
         [Column("phone_number")]
         public string? PhoneNumber { get; set; }
 
@@ -56,7 +54,6 @@ namespace Domain.Entities
         [Column("position")]
         public UserPosition? Position { get; set; }
 
-
         [Column("created_by_id")]
         public long? CreatedById { get; set; }
 
@@ -69,6 +66,8 @@ namespace Domain.Entities
         [Column("last_updated_by")]
         public User? LastUpdatedBy { get; set; }
 
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
 
         //Navigation Properties
         public ICollection<Ticket> CreatedTickets { get; set; } = new List<Ticket>();
@@ -76,8 +75,8 @@ namespace Domain.Entities
         public ICollection<TicketComment> TicketComments { get; set; } = new List<TicketComment>();
         public ICollection<TicketAction> TicketActions { get; set; } = new List<TicketAction>();
 
-        //Permission Related 
-        public ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
-
+        //Permission Related
+        public ICollection<UserPermission> UserPermissions { get; set; } =
+            new List<UserPermission>();
     }
 }

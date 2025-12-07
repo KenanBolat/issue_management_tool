@@ -66,11 +66,15 @@ export default function Login({ onLogin }) {
 
     try {
       const response = await authAPI.login(email, password);
-      const { token, displayName, role } = response.data;
+      const { accessToken, refreshToken, displayName, role } = response.data;
 
-      localStorage.setItem("token", token);
+      debugger;
+
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("displayName", displayName);
       localStorage.setItem("role", role);
+
 
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
@@ -80,7 +84,14 @@ export default function Login({ onLogin }) {
 
       onLogin(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      if (!err.response) {
+            // Network error - backend is offline
+            debugger;
+            setError("Sistem çevrimdışı. Lütfen daha sonra tekrar deneyin.");
+        } else {
+            // Server responded with an error
+            setError(err.response?.data?.message || "Giriş başarısız");
+        }
     } finally {
       setLoading(false);
     }
