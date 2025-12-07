@@ -14,7 +14,7 @@ echo "=========================================="
 DAILY_BACKUP="${BACKUP_DIR}/satellite_tickets_${TIMESTAMP}.sql.gz"
 echo "Creating daily backup: $DAILY_BACKUP"
 
-PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=plain --clean --if-exists --create --blobs --encoding=UTF8 --verbose 2>&1 | gzip > "$DAILY_BACKUP"
+PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=plain --clean --if-exists --create --blobs --encoding=UTF8 2>&1 | gzip > "$DAILY_BACKUP"
 
 if [ $? -eq 0 ]; then
     BACKUP_SIZE=$(du -h "$DAILY_BACKUP" | cut -f1)
