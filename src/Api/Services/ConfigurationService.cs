@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Data;
-using Domain.Entities;
 using Api.DTOs;
+using Domain.Entities;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
@@ -21,8 +21,8 @@ public class ConfigurationService
     /// </summary>
     public async Task<ConfigurationResponse> GetCurrentConfigurationAsync()
     {
-        var config = await _context.Configurations
-            .Include(c => c.UpdatedBy)
+        var config = await _context
+            .Configurations.Include(c => c.UpdatedBy)
             .Where(c => c.IsActive)
             .OrderByDescending(c => c.UpdatedDate)
             .FirstOrDefaultAsync();
@@ -35,12 +35,14 @@ public class ConfigurationService
                 PdfReportDate = DateTime.UtcNow,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
-                UpdatedDate = DateTime.UtcNow
+                UpdatedDate = DateTime.UtcNow,
+                ExcelDateTimeFormat = "yyyy-MM-dd HH:mm:ss",
+                ExcelTimezone = "Turkey Standard Time",
             };
-            
+
             _context.Configurations.Add(config);
             await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Created default configuration");
         }
 
@@ -51,22 +53,19 @@ public class ConfigurationService
     /// Update configuration
     /// </summary>
     public async Task<ConfigurationResponse> UpdateConfigurationAsync(
-        UpdateConfigurationRequest request, 
-        long updatedById)
+        UpdateConfigurationRequest request,
+        long updatedById
+    )
     {
         // Get or create active configuration
-        var config = await _context.Configurations
-            .Where(c => c.IsActive)
+        var config = await _context
+            .Configurations.Where(c => c.IsActive)
             .OrderByDescending(c => c.UpdatedDate)
             .FirstOrDefaultAsync();
 
         if (config == null)
         {
-            config = new Configuration
-            {
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            };
+            config = new Configuration { IsActive = true, CreatedDate = DateTime.UtcNow };
             _context.Configurations.Add(config);
         }
 
@@ -75,6 +74,8 @@ public class ConfigurationService
         config.PdfReportDate = request.PdfReportDate;
         config.UpdatedDate = DateTime.UtcNow;
         config.UpdatedById = updatedById;
+        config.ExcelDateTimeFormat = request.ExcelDateTimeFormat ?? config.ExcelDateTimeFormat;
+        config.ExcelTimezone = request.ExcelTimezone ?? config.ExcelTimezone;
 
         await _context.SaveChangesAsync();
 
@@ -99,7 +100,9 @@ public class ConfigurationService
             config.IsActive,
             config.CreatedDate,
             config.UpdatedDate,
-            config.UpdatedBy?.DisplayName
+            config.UpdatedBy?.DisplayName,
+            config.ExcelDateTimeFormat,
+            config.ExcelTimezone
         );
     }
 }

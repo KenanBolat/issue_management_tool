@@ -11,7 +11,7 @@ import {
     RotateCcw,
     Shield,
     Server,
-    Download, ShieldOff, Plus, MinusCircle, Play, Circle, XCircle, RefreshCw
+    Download, ShieldOff, Plus, MinusCircle, Play, Circle, XCircle, RefreshCw, FileSpreadsheetIcon
 } from 'lucide-react';
 
 import { toast } from "react-toastify";
@@ -439,6 +439,18 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                     >
                         <Server size={18} style={styles.tabIcon} />
                         <span style={styles.tabLabel}>Servisler</span>
+                    </button>
+
+                     <button
+                        type="button"
+                        onClick={() => setActiveTab('exceldate')}
+                        style={{
+                            ...styles.tabButton,
+                            ...(activeTab === 'exceldate' ? styles.tabButtonActive : {})
+                        }}
+                    >
+                        <FileSpreadsheetIcon size={18} style={styles.tabIcon} />
+                        <span style={styles.tabLabel}>Tarih Formatı</span>
                     </button>
                 </div>
             </div>
@@ -885,6 +897,66 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                 </table>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* TAB 5: REPORT DATE */}
+                {activeTab === 'exceldate' && (
+                    <div style={styles.reportSection}>
+                        <h3 style={styles.reportTitle}>
+                            <FileSpreadsheetIcon size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                            Rapor Basım Tarihi
+                        </h3>
+                        <div style={styles.reportDateContainer}>
+                            <input
+                                type="datetime-local"
+                                value={reportDate}
+                                onChange={(e) => setReportDate(e.target.value)}
+                                style={styles.dateInput}
+                            />
+                            <button
+                                onClick={handleResetReportDate}
+                                style={styles.resetButton}
+                                title="Şimdiki zamana sıfırla"
+                            >
+                                Şimdi
+                            </button>
+                            <button
+                                onClick={handleSaveConfiguration}
+                                disabled={savingConfig}
+                                style={{ ...styles.button, ...styles.resetButton }}
+                                title="Kaydet"
+                            >
+                                <Save size={18} style={{ marginRight: '8px' }} />
+                                {savingConfig ? 'Kaydediliyor...' : 'Kaydet'}
+                            </button>
+                            <div style={styles.dateInfo}>
+                                <span style={styles.infoLabel}>Seçili Tarih:</span>
+                                <span style={styles.infoValue}>
+                                    {new Date(reportDate).toLocaleString('tr-TR', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+
+                        {configuration && (
+                            <div style={styles.configInfo}>
+                                <p style={styles.configInfoText}>
+                                    <strong>Son Güncelleme:</strong>{' '}
+                                    {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
+                                    {configuration.updatedByName && ` • ${configuration.updatedByName}`}
+                                </p>
+                            </div>
+                        )}
+
+                        <p style={styles.reportNote}>
+                            ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
+                        </p>
                     </div>
                 )}
             </div>

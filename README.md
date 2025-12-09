@@ -51,11 +51,14 @@ dotnet run --host 0.0.0.0
 ```bash 
 cd frontend 
 npm run dev -- --host 0.0.0.0
+```
 
 
 
 > For caching install additional package 
+```bash
 dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0.0
+```
 
 > REDIS checks 
   - redis-cli
@@ -66,10 +69,27 @@ dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0
 
 
 
-> For caching install additional package 
+> For caching install additional package
+```bash  
 dotnet add package Microsoft.AspNetCore.SignalR --version 8.0.0
+```
 
-> npm install @microsoft/signalr
+> npm added 
+```bash 
+npm install @microsoft/signalr
+```
 
 > For docker service check: 
+```bash 
 dotnet add package Docker.DotNet
+```
+
+### Possible problems while deploying
+ 1. Add all the packages
+    -  dotnet add package Microsoft.EntityFrameworkCore --version 8.0.0
+    -  dotnet add package Microsoft.EntityFrameworkCore.Tools --version 8.0.0
+    -  dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
+    -  dotnet add package Microsoft.AspNetCore.SignalR --version 8.0.0
+
+
+
