@@ -19,6 +19,7 @@ import {
 
 import { toast } from "react-toastify";
 import { showConfirmToast } from './ConfirmToast.jsx';
+import TimePreview from './TimePreview.jsx';
 
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
@@ -75,7 +76,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     ];
     
 
-    
 
     useEffect(() => {
         loadUsers();
@@ -1061,15 +1061,16 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                                     </div>
 
                                     {/* Preview Box */}
-                                    <div style={styles.previewBox}>
-                                        <div style={styles.previewLabel}>
-                                            <Eye size={16} style={{ marginRight: '6px' }} />
-                                            Önizleme (Şu anki tarih/saat):
-                                        </div>
-                                        <div style={styles.previewValue}>
-                                            {formatPreview}
-                                        </div>
-                                    </div>
+ <div style={styles.previewBox}>
+                        <div style={styles.previewLabel}>
+                            <Eye size={16} style={{ marginRight: '6px' }} />
+                            Canlı Önizleme:
+                        </div>
+                        <TimePreview 
+                            format={configForm.excelDateTimeFormat}
+                            timezoneId={configForm.excelTimezone}
+                        />
+                    </div>
                                 </div>
 
                                 {/* Info Box */}
