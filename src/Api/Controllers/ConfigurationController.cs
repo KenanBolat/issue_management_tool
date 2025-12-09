@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Api.DTOs;
 using Api.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
@@ -16,7 +16,8 @@ public class ConfigurationController : ControllerBase
 
     public ConfigurationController(
         ConfigurationService service,
-        ILogger<ConfigurationController> logger)
+        ILogger<ConfigurationController> logger
+    )
     {
         _service = service;
         _logger = logger;
@@ -46,7 +47,8 @@ public class ConfigurationController : ControllerBase
     [HttpPut]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ConfigurationResponse>> UpdateConfiguration(
-        [FromBody] UpdateConfigurationRequest request)
+        [FromBody] UpdateConfigurationRequest request
+    )
     {
         try
         {
@@ -63,6 +65,65 @@ public class ConfigurationController : ControllerBase
         {
             _logger.LogError(ex, "Error updating configuration");
             return StatusCode(500, new { message = "Failed to update configuration" });
+        }
+    }
+
+    [HttpGet("timezones")]
+    public ActionResult<List<TimezoneInfo>> GetTimezones()
+    {
+        var timezones = TimeZoneInfo.GetSystemTimeZones()
+            .Select(tz => new TimezoneInfo(
+                tz.Id,
+                tz.DisplayName,
+                tz.BaseUtcOffset.ToString()
+            ))
+            .OrderBy(tz => tz.DisplayName)
+            .ToList();
+
+        return Ok(timezones);
+    }
+
+    // ✅ NEW: Preview format with current date
+    [HttpPost("preview-format")]
+    public ActionResult<FormatPreviewResponse> PreviewFormat(
+        [FromBody] FormatPreviewRequest request)
+    {
+        try
+        {
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(request.Timezone);
+            var currentUtc = DateTime.UtcNow;
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtc, timeZoneInfo);
+            var formattedDate = localTime.ToString(request.Format);
+
+            return Ok(new FormatPreviewResponse(
+                true,
+                formattedDate,
+                null
+            ));
+        }
+        catch (FormatException ex)
+        {
+            return Ok(new FormatPreviewResponse(
+                false,
+                null,
+                $"Geçersiz format: {ex.Message}"
+            ));
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return Ok(new FormatPreviewResponse(
+                false,
+                null,
+                "Geçersiz saat dilimi"
+            ));
+        }
+        catch (Exception ex)
+        {
+            return Ok(new FormatPreviewResponse(
+                false,
+                null,
+                $"Hata: {ex.Message}"
+            ));
         }
     }
 }

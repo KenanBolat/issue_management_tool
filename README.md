@@ -85,11 +85,25 @@ dotnet add package Docker.DotNet
 ```
 
 ### Possible problems while deploying
- 1. Add all the packages
+ 1. Add all the packages for the dotnet:
+
     -  dotnet add package Microsoft.EntityFrameworkCore --version 8.0.0
     -  dotnet add package Microsoft.EntityFrameworkCore.Tools --version 8.0.0
     -  dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
     -  dotnet add package Microsoft.AspNetCore.SignalR --version 8.0.0
+    -  dotnet add package Docker.DotNet 
+
+  2. Update the database: 
+
+    - dotnet ef -v  database update   --project ./Infrastructure/Infrastructure.csproj   --startup-project ./Api/Api.csproj   --context AppDbContext
+
+  3. Add progress_info column if necessary:
+
+    - ALTER TABLE "ProgressRequests"   ADD COLUMN progress_info text NULL;
+    
+  4. Carriage Return Error:
+    
+    - dos2unix or manually CRF to LF from the vscode
 
 
 

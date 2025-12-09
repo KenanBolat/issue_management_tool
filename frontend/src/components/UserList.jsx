@@ -11,11 +11,14 @@ import {
     RotateCcw,
     Shield,
     Server,
+    Calendar,
+    Clock,
+    Eye,
     Download, ShieldOff, Plus, MinusCircle, Play, Circle, XCircle, RefreshCw, FileSpreadsheetIcon
 } from 'lucide-react';
 
 import { toast } from "react-toastify";
-import {showConfirmToast} from './ConfirmToast.jsx';
+import { showConfirmToast } from './ConfirmToast.jsx';
 
 
 export default function UserList({ onViewUser, onEditUser, onCreateUser, onManagePermissions, onDeleteUser }) {
@@ -49,6 +52,31 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const userRole = localStorage.getItem('role');
     const isAdmin = userRole === 'Admin';
 
+    const [configLoading, setConfigLoading] = useState(false);
+    const [formatPreview, setFormatPreview] = useState('');
+
+    const [timezones, setTimezones] = useState([]);
+
+
+    const [configForm, setConfigForm] = useState({
+        // expirationDate: '',
+        // pdfReportDate: '',
+        excelDateTimeFormat: 'yyyy-MM-dd HH:mm:ss',
+        excelTimezone: 'Turkey Standard Time'
+
+    });
+    const commonFormats = [
+        { value: 'yyyy-MM-dd HH:mm:ss', label: '2025-12-07 14:30:45' },
+        { value: 'dd/MM/yyyy HH:mm', label: '07/12/2025 14:30' },
+        { value: 'dd.MM.yyyy HH:mm:ss', label: '07.12.2025 14:30:45' },
+        { value: 'MM/dd/yyyy hh:mm tt', label: '12/07/2025 02:30 PM' },
+        { value: 'yyyy-MM-dd', label: '2025-12-07' },
+        { value: 'dd/MM/yyyy', label: '07/12/2025' },
+    ];
+    
+
+    
+
     useEffect(() => {
         loadUsers();
         loadConfiguration();
@@ -56,6 +84,14 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         loadSystemHealth();
 
     }, [showInactive]);
+
+    useEffect(() => {
+        if (activeTab === 'exceldate') {
+            loadConfiguration();
+            loadTimezones();
+        }
+    }, [activeTab]);
+
 
     // Load health only when services tab is opened
     useEffect(() => {
@@ -73,6 +109,16 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         }
     };
 
+    const loadTimezones = async () => {
+        try {
+            const response = await configurationAPI.getTimezones();
+            debugger;
+            setTimezones(response.data || []);
+        } catch (error) {
+            console.error('Error loading timezones:', error);
+        }
+    };
+
     const loadSystemHealth = async () => {
         try {
             setLoadingHealth(true);
@@ -85,6 +131,14 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         } finally {
             setLoadingHealth(false);
         }
+    };
+
+    const handleConfigChange = (e) => {
+        const { name, value } = e.target;
+        setConfigForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const loadUsers = async () => {
@@ -102,8 +156,16 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const loadConfiguration = async () => {
         try {
+            setConfigLoading(true);
             const response = await configurationAPI.get();
-            setConfiguration(response.data);
+            const data = response.data;
+            setConfiguration(data);
+            setConfigForm({
+                // expirationDate: data.expirationDate ? data.expirationDate.split('T')[0] : '',
+                // pdfReportDate: data.pdfReportDate.split('T')[0],
+                excelDateTimeFormat: data.excelDateTimeFormat,
+                excelTimezone: data.excelTimezone
+            });
 
             const pdfDate = new Date(response.data.pdfReportDate);
             const localDateTime = formatDateTimeLocal(pdfDate);
@@ -111,6 +173,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
         } catch (error) {
             console.error("Failed to load configuration", error);
             setReportDate(formatDateTimeLocal(new Date()));
+        } finally {
+            setConfigLoading(false);
         }
     };
 
@@ -164,7 +228,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const handleStartService = async (name) => {
         const confirm = await showConfirmToast(`${name} servisini başlatmak istiyor musunuz?`);
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
 
 
 
@@ -179,7 +243,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const handleRestartService = async (name) => {
         const confirm = await showConfirmToast(`${name} servisini yeniden başlatmak istiyor musunuz?`);
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
 
         try {
             await systemAPI.restartService(name);
@@ -192,8 +256,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const handleFlushRedis = async () => {
         const confirm = await showConfirmToast("Redis önbelleğini tamamen temizlemek istediğinize emin misiniz?");
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
-        
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
         try {
             await systemAPI.flushRedis();
             toast.success('Redis önbelleği temizlendi.');
@@ -230,7 +294,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const handleDeleteRank = async (id) => {
 
         const confirm = await showConfirmToast("Bu rütbeyi silmek istediğinize emin misiniz?");
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
 
         try {
             await militaryRanksAPI.delete(id);
@@ -257,8 +321,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const handleSaveConfiguration = async () => {
 
-        const confirm = await showConfirmToast("Rapor basım tarihini güncellemek istediğinize emin misiniz?");
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
+        const confirm = await showConfirmToast("Bilgileri güncellemek istediğinize emin misiniz?");
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
 
 
         try {
@@ -268,7 +332,9 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
             const response = await configurationAPI.update({
                 pdfReportDate: pdfDate.toISOString(),
-                expirationDate: configuration?.expirationDate || null
+                expirationDate: configuration?.expirationDate || null, 
+                excelDateTimeFormat: configForm.excelDateTimeFormat,
+                excelTimezone: configForm.excelTimezone
             });
 
             setConfiguration(response.data);
@@ -288,8 +354,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
     const handleRestoreUser = async (userId) => {
         const confirm = await showConfirmToast("Bu kullanıcıyı geri yüklemek istediğinizden emin misi?");
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
-        
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
         try {
             await userApi.restore(userId);
             toast.warning('Kullanıcı başarıyla geri yüklendi!');
@@ -303,8 +369,8 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const handleDeleteUserLocal = async (userId) => {
 
         const confirm = await showConfirmToast("Bu kullanıcıyı silmek istediğinizden emin misi?");
-        if (!confirm) {toast.info("İşlem iptal edildi."); return;}
-        
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+
 
         try {
             await userApi.delete(userId);
@@ -441,7 +507,7 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
                         <span style={styles.tabLabel}>Servisler</span>
                     </button>
 
-                     <button
+                    <button
                         type="button"
                         onClick={() => setActiveTab('exceldate')}
                         style={{
@@ -902,61 +968,137 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
 
                 {/* TAB 5: REPORT DATE */}
                 {activeTab === 'exceldate' && (
-                    <div style={styles.reportSection}>
+                    <div style={styles.servicePanel}>
                         <h3 style={styles.reportTitle}>
-                            <FileSpreadsheetIcon size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                            Rapor Basım Tarihi
+                            <Calendar size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                            Excel Tarih/Saat Formatı Ayarları
                         </h3>
-                        <div style={styles.reportDateContainer}>
-                            <input
-                                type="datetime-local"
-                                value={reportDate}
-                                onChange={(e) => setReportDate(e.target.value)}
-                                style={styles.dateInput}
-                            />
-                            <button
-                                onClick={handleResetReportDate}
-                                style={styles.resetButton}
-                                title="Şimdiki zamana sıfırla"
-                            >
-                                Şimdi
-                            </button>
-                            <button
-                                onClick={handleSaveConfiguration}
-                                disabled={savingConfig}
-                                style={{ ...styles.button, ...styles.resetButton }}
-                                title="Kaydet"
-                            >
-                                <Save size={18} style={{ marginRight: '8px' }} />
-                                {savingConfig ? 'Kaydediliyor...' : 'Kaydet'}
-                            </button>
-                            <div style={styles.dateInfo}>
-                                <span style={styles.infoLabel}>Seçili Tarih:</span>
-                                <span style={styles.infoValue}>
-                                    {new Date(reportDate).toLocaleString('tr-TR', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                </span>
-                            </div>
-                        </div>
 
-                        {configuration && (
-                            <div style={styles.configInfo}>
-                                <p style={styles.configInfoText}>
-                                    <strong>Son Güncelleme:</strong>{' '}
-                                    {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
-                                    {configuration.updatedByName && ` • ${configuration.updatedByName}`}
-                                </p>
-                            </div>
+                        <p style={styles.serviceIntro}>
+                            Excel dışa aktarımlarında kullanılacak tarih/saat formatını ve saat dilimini yapılandırın.
+                        </p>
+
+                        {configLoading && (
+                            <div style={styles.loading}>Yapılandırma yükleniyor...</div>
                         )}
 
-                        <p style={styles.reportNote}>
-                            ℹ️ Bu tarih, oluşturulan tüm PDF raporlarında onay tarihi olarak kullanılacaktır.
-                        </p>
+                        {!configLoading && (
+                            <div style={styles.configForm}>
+
+
+
+                                {/* Excel Format Section */}
+                                <div style={styles.configSection}>
+                                    <h4 style={styles.configSectionTitle}>
+                                        <Calendar size={18} style={{ marginRight: '8px' }} />
+                                        Excel Tarih Formatı
+                                    </h4>
+
+                                    <div style={styles.formField}>
+                                        <label style={styles.formLabel}>
+                                            Hazır Format Şablonları
+                                        </label>
+                                        <select
+                                            value={configForm.excelDateTimeFormat}
+                                            onChange={(e) => setConfigForm(prev => ({
+                                                ...prev,
+                                                excelDateTimeFormat: e.target.value
+                                            }))}
+                                            style={styles.formSelect}
+                                        >
+                                            {commonFormats.map(format => (
+                                                <option key={format.value} value={format.value}>
+                                                    {format.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div style={styles.formField}>
+                                        <label style={styles.formLabel}>
+                                            <br></br>
+                                            Özel Format <span style={styles.required}>*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="excelDateTimeFormat"
+                                            value={configForm.excelDateTimeFormat}
+                                            onChange={handleConfigChange}
+                                            placeholder="yyyy-MM-dd HH:mm:ss"
+                                            style={styles.formInput}
+                                        />
+                                        <div style={styles.formatHelp}>
+                                            <strong>Format Kılavuzu:</strong>
+                                            <div style={styles.formatGrid}>
+                                                <li> yyyy = Yıl (4 haneli)  </li>
+                                                <li>MM = Ay (2 haneli) </li>
+                                                <li>dd = Gün (2 haneli) </li>
+                                                <li>HH = Saat (24 saat) </li>
+                                                <li>mm = Dakika </li>
+                                                <li>ss = Saniye </li>
+                                                <li>hh = Saat (12 saat) </li>
+                                                <li>tt = AM/PM </li>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={styles.formField}>
+                                        <label style={styles.formLabel}>
+                                            Saat Dilimi <span style={styles.required}>*</span>
+                                        </label>
+                                        <select
+                                            name="excelTimezone"
+                                            value={configForm.excelTimezone}
+                                            onChange={handleConfigChange}
+                                            style={styles.formSelect}
+                                        >
+                                            {timezones.map(tz => (
+                                                <option key={tz.id} value={tz.id}>
+                                                    {tz.displayName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Preview Box */}
+                                    <div style={styles.previewBox}>
+                                        <div style={styles.previewLabel}>
+                                            <Eye size={16} style={{ marginRight: '6px' }} />
+                                            Önizleme (Şu anki tarih/saat):
+                                        </div>
+                                        <div style={styles.previewValue}>
+                                            {formatPreview}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Info Box */}
+                                {configuration && (
+                                    <div style={styles.infoBox}>
+                                        <div style={styles.infoRow}>
+                                            <strong>Son Güncelleme:</strong> {new Date(configuration.updatedDate).toLocaleString('tr-TR')}
+                                        </div>
+                                        {configuration.updatedByName && (
+                                            <div style={styles.infoRow}>
+                                                <strong>Güncelleyen:</strong> {configuration.updatedByName}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Save Button */}
+                                <div style={styles.configActions}>
+                                    <button
+                                        onClick={handleSaveConfiguration}
+                                        style={styles.saveConfigButton}
+                                        disabled={configLoading}
+                                    >
+                                        <Save size={18} style={{ marginRight: '6px' }} />
+                                        {configLoading ? 'Kaydediliyor...' : 'Yapılandırmayı Kaydet'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -1414,5 +1556,123 @@ const styles = {
         borderRadius: '6px',
         color: '#c62828',
         marginTop: '0.5rem',
+    },
+    configForm: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+    },
+    configSection: {
+        padding: '1.5rem',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px',
+        border: '1px solid #e0e0e0',
+    },
+    configSectionTitle: {
+        fontSize: '1.1rem',
+        fontWeight: '600',
+        color: '#444',
+        marginBottom: '1.5rem',
+        paddingBottom: '0.75rem',
+        borderBottom: '2px solid #667eea',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    formRow: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '1.5rem',
+    },
+    formField: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+    },
+    formLabel: {
+        fontSize: '0.9rem',
+        fontWeight: '500',
+        color: '#555',
+    },
+    required: {
+        color: '#dc3545',
+    },
+    formInput: {
+        padding: '0.75rem',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        fontSize: '0.95rem',
+        transition: 'border-color 0.2s',
+    },
+    formSelect: {
+        padding: '0.75rem',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        fontSize: '0.95rem',
+        backgroundColor: 'white',
+        cursor: 'pointer',
+    },
+    formatHelp: {
+        marginTop: '0.75rem',
+        padding: '1rem',
+        backgroundColor: '#fff',
+        borderRadius: '6px',
+        border: '1px solid #e0e0e0',
+        fontSize: '0.85rem',
+        color: '#666',
+    },
+    formatGrid: {
+        marginTop: '0.5rem',
+        lineHeight: '1.8',
+        fontFamily: 'monospace',
+    },
+    previewBox: {
+        marginTop: '1.5rem',
+        padding: '1.5rem',
+        backgroundColor: '#fff',
+        borderRadius: '6px',
+        border: '2px solid #667eea',
+    },
+    previewLabel: {
+        fontSize: '0.9rem',
+        color: '#666',
+        marginBottom: '0.75rem',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    previewValue: {
+        fontSize: '1.5rem',
+        fontWeight: 'bold',
+        color: '#667eea',
+        fontFamily: 'monospace',
+    },
+    infoBox: {
+        padding: '1rem',
+        backgroundColor: '#e3f2fd',
+        borderRadius: '6px',
+        border: '1px solid #90caf9',
+    },
+    infoRow: {
+        fontSize: '0.9rem',
+        color: '#1976d2',
+        marginBottom: '0.5rem',
+    },
+    configActions: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        paddingTop: '1rem',
+        borderTop: '2px solid #e0e0e0',
+    },
+    saveConfigButton: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0.75rem 2rem',
+        border: 'none',
+        borderRadius: '6px',
+        background: '#28a745',
+        color: 'white',
+        cursor: 'pointer',
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        transition: 'all 0.2s',
     },
 };

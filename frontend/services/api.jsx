@@ -578,6 +578,27 @@ export const configurationAPI = {
         }
     },
 
+    getTimezones: async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/configuration/timezones`, {
+                method: 'GET',
+                headers: createHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return { data };
+        } catch (error) {
+            console.error('Error fetching configuration:', error);
+            throw error;
+        }
+    },
+
+
     update: async (configData) => {
         try {
             const response = await fetch(`${API_BASE_URL}/configuration`, {

@@ -18,3 +18,9 @@ public record UpdateConfigurationRequest(
     string? ExcelDateTimeFormat,
     string? ExcelTimezone
 );
+
+public record TimezoneInfo(string Id, string DisplayName, string Offset);
+
+public record FormatPreviewRequest(string Format, string Timezone);
+
+public record FormatPreviewResponse(bool IsValid, string? Example, string? Error);

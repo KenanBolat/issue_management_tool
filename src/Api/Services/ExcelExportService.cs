@@ -3,21 +3,64 @@ using OfficeOpenXml.Style;
 using Domain.Entities;
 using System.Drawing;
 using Domain.Enums;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 
 namespace Api.Services
 {
     public class ExcelExportService
     {
+        private readonly AppDbContext _context;
+
+        public ExcelExportService(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        private async Task<(string format, string timezone)> GetDateTimeConfig()
+        {
+            var config = await _context.Configurations
+                .OrderByDescending(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            return (
+                config?.ExcelDateTimeFormat ?? "yyyy-MM-dd HH:mm:ss",
+                config?.ExcelTimezone ?? "Turkey Standard Time"
+            );
+        }
+
+        // ✅ Format DateTime with configured format and timezone
+        private string FormatDateTime(DateTime? dateTime, string format, string timezoneId)
+        {
+            if (!dateTime.HasValue)
+                return "-";
+
+            try
+            {
+                var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+                var localTime = TimeZoneInfo.ConvertTimeFromUtc(dateTime.Value, timeZoneInfo);
+                return localTime.ToString(format);
+            }
+            catch
+            {
+                // Fallback to default format if timezone conversion fails
+                return dateTime.Value.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+        }
+
 
         public async Task<byte[]> GenerateTicketsExcelAsync(List<Ticket> tickets)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+            var (dateFormat, timezone) = await GetDateTimeConfig();
+
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Arıza Kayıtları");
 
-            // ===== HEADER SETUP =====
+            // ===== HEADER ROW =====
 
             var pauseIntervalsByTicket = tickets.ToDictionary(t => t.Id, t => GetPauseIntervals(t));
             var maxPauseCount = pauseIntervalsByTicket.Values.Any()
@@ -39,40 +82,40 @@ namespace Api.Services
                 "Parça Tanımı",
                 "Parça No",
                 "Seri No",
-                "Tespit Tarihi (UTC)",
-                "Yükleniciye Bildirim Tarihi (UTC)",
+                "Tespit Tarihi",
+                "Yükleniciye Bildirim Tarihi",
                 "Bildirim Şekli",
                 "Tespit Eden",
-                "Müdahale Tarihi (UTC)",
-                "Giderilme Tarihi (UTC)",
+                "Müdahale Tarihi",
+                "Giderilme Tarihi",
                 "Müdahale Eden Personel",
                 "Gideren Personel",
                 "Yapılan İşlemler",
-                "Faaliyet Kontrolü Tarihi (UTC)",
+                "Faaliyet Kontrolü Tarihi",
                 "Faaliyet Kontrolü Personeli",
                 "Faaliyet Kontrolü Komutanı",
                 "Faaliyet Kontrolü Sonucu",
                 "Oluşturan Kullanici Grubu",
                 "Oluşturan",
-                "Oluşturma Tarihi (UTC)",
+                "Oluşturma Tarihi",
                 "Son Güncelleyen",
-                "Güncelleme Tarihi (UTC)",
+                "Güncelleme Tarihi",
                 "Teknik Rapor Bilgisi",
-                "Geçici Çözüm Tarihi (UTC)",
+                "Geçici Çözüm Tarihi",
                 "Yeni Parça Tanımı",
                 "Yeni Parça No",
                 "Yeni Seri No",
                 "Hp No",
                 "Kontrol Teşkilatı Durumu",
                 "Alt Yüklenici",
-                "Alt Yükleniciye Bildirildiği Tarih (UTC)",
+                "Alt Yükleniciye Bildirildiği Tarih ",
             };
 
             // add pause columns at the end (2 columns per pause)
             for (int i = 1; i <= maxPauseCount; i++)
             {
-                headers.Add($"Duraklatma {i} Başlangıç (UTC)");
-                headers.Add($"Duraklatma {i} Bitiş (UTC)");
+                headers.Add($"Duraklatma {i} Başlangıç");
+                headers.Add($"Duraklatma {i} Bitiş ");
             }
 
             // Apply headers
@@ -108,8 +151,8 @@ namespace Api.Services
                 worksheet.Cells[row, 14].Value = ticket.ItemSerialNo ?? "";
 
                 // Dates
-                worksheet.Cells[row, 15].Value = FormatDateUtc(ticket.DetectedDate);
-                worksheet.Cells[row, 16].Value = FormatDateUtc(ticket.DetectedContractorNotifiedAt);
+                worksheet.Cells[row, 15].Value = FormatDateTime(ticket.DetectedDate, dateFormat, timezone);
+                worksheet.Cells[row, 16].Value = FormatDateTime(ticket.DetectedContractorNotifiedAt, dateFormat, timezone);
 
                 // Notification methods
                 var notificationMethods = ticket.DetectedNotificationMethods != null && ticket.DetectedNotificationMethods.Length > 0
@@ -123,8 +166,8 @@ namespace Api.Services
 
                 // Personnel - formatted
                 worksheet.Cells[row, 18].Value = FormatUserName(ticket.DetectedByUser);
-                worksheet.Cells[row, 19].Value = FormatDateUtc(ticket.ResponseDate);
-                worksheet.Cells[row, 20].Value = FormatDateUtc(ticket.ResponseResolvedAt);
+                worksheet.Cells[row, 19].Value = FormatDateTime(ticket.ResponseDate, dateFormat, timezone);
+                worksheet.Cells[row, 20].Value = FormatDateTime(ticket.ResponseResolvedAt, dateFormat, timezone);
 
                 // Response personnel - multiple
                 var responsePersonnel = ticket.ResponseByUser != null && ticket.ResponseByUser.Any()
@@ -139,20 +182,20 @@ namespace Api.Services
                 worksheet.Cells[row, 22].Value = resolvedPersonnel;
 
                 worksheet.Cells[row, 23].Value = ticket.ResponseActions ?? "";
-                worksheet.Cells[row, 24].Value = FormatDateUtc(ticket.ActivityControlDate);
+                worksheet.Cells[row, 24].Value = FormatDateTime(ticket.ActivityControlDate, dateFormat, timezone);
                 worksheet.Cells[row, 25].Value = FormatUserName(ticket.ActivityControlPersonnel);
                 worksheet.Cells[row, 26].Value = FormatUserName(ticket.ActivityControlCommander);
                 worksheet.Cells[row, 27].Value = ticket.ActivityControlResult ?? "";
                 worksheet.Cells[row, 28].Value = GetUserPositionLabel(ticket.CreatedBy?.Position);
                 worksheet.Cells[row, 29].Value = FormatUserName(ticket.CreatedBy);
-                worksheet.Cells[row, 30].Value = FormatDateUtc(ticket.CreatedAt);
+                worksheet.Cells[row, 30].Value = FormatDateTime(ticket.CreatedAt, dateFormat, timezone);
 
 
 
                 worksheet.Cells[row, 31].Value = FormatUserName(ticket.LastUpdatedBy);
-                worksheet.Cells[row, 32].Value = FormatDateUtc(ticket.UpdatedAt) ?? "";
+                worksheet.Cells[row, 32].Value = FormatDateTime(ticket.UpdatedAt, dateFormat, timezone) ?? "";
                 worksheet.Cells[row, 33].Value = ticket.TechnicalReportRequired ? "EVET" : "HAYIR";
-                worksheet.Cells[row, 34].Value = FormatDateUtc(ticket.TentativeSolutionDate);
+                worksheet.Cells[row, 34].Value = FormatDateTime(ticket.TentativeSolutionDate, dateFormat, timezone);
 
                 worksheet.Cells[row, 35].Value = ticket.NewItemDescription ?? "";
                 worksheet.Cells[row, 36].Value = ticket.NewItemId ?? "";
@@ -162,7 +205,7 @@ namespace Api.Services
 
                 worksheet.Cells[row, 39].Value = GetControlStatusLabel(ticket.ActivityControlStatus);
                 worksheet.Cells[row, 40].Value = ticket.SubContractor ?? "";
-                worksheet.Cells[row, 41].Value = FormatDateUtc(ticket.SubContractorNotifiedAt);
+                worksheet.Cells[row, 41].Value = FormatDateTime(ticket.SubContractorNotifiedAt, dateFormat, timezone);
 
                 var pauses = pauseIntervalsByTicket[ticket.Id];
                 int col = 42;
@@ -174,8 +217,8 @@ namespace Api.Services
                     if (i < pauses.Count)
                     {
                         var p = pauses[i];
-                        worksheet.Cells[row, col].Value = FormatDateUtc(p.Start);
-                        worksheet.Cells[row, col + 1].Value = FormatDateUtc(p.End);
+                        worksheet.Cells[row, col].Value = FormatDateTime(p.Start, dateFormat, timezone);
+                        worksheet.Cells[row, col + 1].Value = FormatDateTime(p.End, dateFormat, timezone);
                     }
                     else
                     {
@@ -221,21 +264,7 @@ namespace Api.Services
             return await package.GetAsByteArrayAsync();
         }
 
-        private string FormatDateUtc(DateTime? dateTime)
-        {
-            if (!dateTime.HasValue)
-                return "";
-
-            // Ensure the date is in UTC
-            var utcDate = dateTime.Value.Kind == DateTimeKind.Utc
-                ? dateTime.Value
-                : dateTime.Value.ToUniversalTime();
-
-            return utcDate.ToString("dd.MM.yyyy HH:mm");
-        }
-
         private record PauseInterval(DateTime Start, DateTime? End);
-
 
         private List<PauseInterval> GetPauseIntervals(Ticket ticket)
         {
@@ -274,7 +303,7 @@ namespace Api.Services
                     }
                     else
                     {
-                         result.Add(new PauseInterval(start, null));
+                        result.Add(new PauseInterval(start, null));
                     }
                 }
             }
