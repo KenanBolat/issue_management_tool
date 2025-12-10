@@ -112,7 +112,6 @@ export default function UserList({ onViewUser, onEditUser, onCreateUser, onManag
     const loadTimezones = async () => {
         try {
             const response = await configurationAPI.getTimezones();
-            debugger;
             setTimezones(response.data || []);
         } catch (error) {
             console.error('Error loading timezones:', error);

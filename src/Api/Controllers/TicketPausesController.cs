@@ -153,6 +153,8 @@ namespace Api.Controllers
                 pause.ResumedByUser?.DisplayName,
                 pause.CreatedAt
             );
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(id);
 
             return Ok(result);
         }
@@ -208,7 +210,8 @@ namespace Api.Controllers
             await InvalidatePauseCacheAsync(request.TicketId, pause.Id);
 
 
-
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(request.TicketId);
 
             _logger.LogInformation($"Ticket {request.TicketId} paused by user {userId}");
 
@@ -262,6 +265,8 @@ namespace Api.Controllers
             await _context.SaveChangesAsync();
             await InvalidatePauseCacheAsync(pause.TicketId, id);
 
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(pause.TicketId);
 
             _logger.LogInformation($"Pause {id} resumed by user {userId}");
 
@@ -283,6 +288,8 @@ namespace Api.Controllers
 
             await _context.SaveChangesAsync();
             await InvalidatePauseCacheAsync(pause.TicketId, id);
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(pause.TicketId);
 
 
             return Ok(new { message = "Pause bilgileri güncellendi" });
@@ -321,6 +328,22 @@ namespace Api.Controllers
             return (endDate - start).TotalHours;
         }
 
+        //Helper functions for cache invalidation
+        private Task InvalidateTicketDetailCacheAsync(long id) =>
+            _cache.RemoveAsync($"tickets:detail:{id}");
 
+        private async Task InvalidateTicketListCacheAsync()
+        {
+            // all tickets, with/without deleted
+            await _cache.RemoveAsync("tickets:list:all:False");
+            await _cache.RemoveAsync("tickets:list:all:True");
+
+            // each status
+            foreach (var statusName in Enum.GetNames<TicketStatus>())
+            {
+                await _cache.RemoveAsync($"tickets:list:{statusName}:False");
+                await _cache.RemoveAsync($"tickets:list:{statusName}:True");
+            }
+        }
     }
 }

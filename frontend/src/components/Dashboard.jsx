@@ -5,8 +5,6 @@ import {
     YAxis, CartesianGrid, Tooltip,
     Legend, ResponsiveContainer, BarChart, Bar
 } from "recharts";
-import TicketCalendar from './Ticketcalendar';
-const [activeView, setActiveView] = useState('list');
 
 
 
@@ -334,12 +332,6 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                             Hepsini Gör
                         </button>
                     </div>
-                      <TicketCalendar 
-        onTicketClick={(ticketId) => {
-            // Open ticket detail
-            openTicketDetail(ticketId);
-        }}
-    />
                     <div style={styles.taskList}>
                         {recentTickets.map((ticket) => (
                             <div key={ticket.id} style={styles.taskItem}>

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { LayoutDashboard, List, LogOut, User, Bell, Clock, PauseOctagonIcon, CogIcon, BadgeInfo } from "lucide-react";
+import { LayoutDashboard, List, LogOut, User, Bell, Clock, PauseOctagonIcon, CogIcon, BadgeInfo, Calendar } from "lucide-react";
 import NotificationsPanel from './NotificationsPanel';
 import { notificationsAPI } from '../../services/api';
 import signalRService from '../../services/signalrService';
@@ -83,6 +83,9 @@ export default function Navigation({ currentPage, onNavigate }) {
 
                     <button onClick={() => onNavigate('progress-management')} style={{ ...styles.menuItem, ...(currentPage === 'progress-management' ? styles.activeMenuItem : {}) }} >
                         <BadgeInfo size={18} /> Bilgi Talebi
+                    </button>
+                    <button onClick={() => onNavigate('calendar')} style={{ ...styles.menuItem, ...(currentPage === 'calendar' ? styles.activeMenuItem : {}) }} >
+                        <Calendar size={18} /> Takvim
                     </button>
 
 

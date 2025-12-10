@@ -68,7 +68,6 @@ export default function Login({ onLogin }) {
       const response = await authAPI.login(email, password);
       const { accessToken, refreshToken, displayName, role } = response.data;
 
-      debugger;
 
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
@@ -86,7 +85,6 @@ export default function Login({ onLogin }) {
     } catch (err) {
       if (!err.response) {
             // Network error - backend is offline
-            debugger;
             setError("Sistem çevrimdışı. Lütfen daha sonra tekrar deneyin.");
         } else {
             // Server responded with an error

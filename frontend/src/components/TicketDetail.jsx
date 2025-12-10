@@ -3,7 +3,7 @@ import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
 import { ticketsAPI, userApi, configurationAPI, notificationsAPI, ticketPausesAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
-import { showConfirmToast } from './ConfirmToast.jsx';
+import { showConfirmToast, showInputToast} from './ConfirmToast.jsx';
 import { toast } from "react-toastify";
 import TicketActionTimeline from "./Ticketactiontimeline.jsx";
 import StatusDropdown from './Statusdropdown.jsx';
@@ -356,11 +356,11 @@ export default function TicketDetail({ ticketId, onClose }) {
 
             if (isNewTicket) {
                 const response = await ticketsAPI.create(apiData);
-                toast.info("Ticket created successfully");
+                toast.info("Yeni sorun basari ile eklendi");
                 if (onClose) onClose();
             } else {
                 await ticketsAPI.update(ticketId, apiData);
-                toast.info("Ticket updated successfully");
+                toast.info("Sorun basarili bir sekilde guncellendi");
                 loadTicketDetails();
             }
         } catch (error) {
@@ -395,7 +395,9 @@ export default function TicketDetail({ ticketId, onClose }) {
         let pauseReason = null;
 
         if (newStatus === 'PAUSED') {
-            pauseReason = prompt('Lütfen duraklama sebebini giriniz:');
+            // pauseReason = prompt('Lütfen duraklama sebebini giriniz:');
+            pauseReason = await showInputToast("Lütfen duraklama sebebini giriniz:");
+
 
 
             if (!pauseReason || pauseReason.trim() === '') {
@@ -424,42 +426,12 @@ export default function TicketDetail({ ticketId, onClose }) {
 
             const statusData = {
                 toStatus: newStatus || '',
-                Notes: `Status changed to ${newStatus} from the Ticket Detail Page`,
+                Notes: `Detay sayfasindan durum  ${newStatus} olarak guncellendi`,
                 PauseReason: pauseReason || null
             }
 
 
-            // // Build apiData directly with the new status (don't rely on formData state)
-            // const apiData = {
-            //     title: formData.title,
-            //     description: formData.description,
-            //     isBlocking: formData.isBlocking,
-            //     technicalReportRequired: formData.technicalReportRequired,
-            //     status: newStatus,
-
-            //     ciId: formData.ciId || null,
-            //     componentId: formData.componentId || null,
-            //     subsystemId: formData.subsystemId || null,
-            //     systemId: formData.systemId || null,
-
-            //     detectedDate: toISOOrNull(formData.detectedDate),
-            //     detectedContractorNotifiedAt: toISOOrNull(formData.detectedContractorNotifiedAt),
-            //     detectedNotificationMethods: formData.detectedNotificationMethods || [],
-            //     detectedByUserId: formData.detectedByUserId || null,
-
-            //     responseDate: toISOOrNull(formData.responseDate),
-            //     responseResolvedAt: toISOOrNull(formData.responseResolvedAt),
-            //     responsePersonnelIds: formData.responsePersonnelIds || [],
-            //     responseResolvedPersonnelIds: formData.responseResolvedPersonnelIds || [],
-            //     responseActions: formData.responseActions || null,
-
-            //     activityControlPersonnelId: formData.activityControlPersonnelId || null,
-            //     activityControlCommanderId: formData.activityControlCommanderId || null,
-            //     activityControlDate: toISOOrNull(formData.activityControlDate),
-            //     activityControlResult: formData.activityControlResult || null,
-
-
-            // };
+          
 
             await ticketsAPI.changeStatus(ticketId, statusData);
             toast.info(`Durum "${statusLabel}" olarak değiştirildi`);

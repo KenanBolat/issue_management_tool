@@ -19,7 +19,6 @@ export default function RecentActivitiesTimeline({ onTicketClick }) {
         try {
             const response = await ticketsAPI.getRecentActivities(20);
             
-            debugger;
             setActivities(response.data);
         } catch (error) {
             console.error('Error loading recent activities:', error);

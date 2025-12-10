@@ -776,7 +776,7 @@ public class TicketsController : ControllerBase
                 {
                     TicketId = id,
                     ActionType = ActionType.Edit,
-                    Notes = "Ticket updated",
+                    Notes = "Sorun guncellendi",
                     PerformedById = currentUserId,
                     PerformedAt = DateTime.UtcNow,
                 }
@@ -860,7 +860,7 @@ public class TicketsController : ControllerBase
         await InvalidateTicketListCacheAsync();
         await InvalidateTicketDetailCacheAsync(id);
         _logger.LogInformation(
-            $"___________________Attempting to change status for ticket {id} from {oldStatus} to {toStatus} by user {userId}"
+            $"Attempting to change status for ticket {id} from {oldStatus} to {toStatus} by user {userId}"
         );
 
         try
@@ -920,15 +920,17 @@ public class TicketsController : ControllerBase
             {
                 TicketId = id,
                 ActionType = ActionType.Comment,
-                Notes = "Comment added",
+                Notes = "Yeni bir islem eklendi",
                 PerformedById = GetCurrentUserId(),
                 PerformedAt = DateTime.UtcNow,
             }
         );
 
         ticket.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
-        await InvalidateTicketCacheAsync(id);
+        await InvalidateTicketListCacheAsync();
+        await InvalidateTicketDetailCacheAsync(id);
 
         return Ok(new { id = comment.Id });
     }

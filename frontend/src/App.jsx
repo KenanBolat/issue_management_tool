@@ -10,10 +10,10 @@ import ProfilePage from './components/ProfilePage';
 import ProgressRequestsTable from "./components/ProgressRequestsTable.jsx";
 import PauseManagement from "./components/PauseManagement.jsx";
 import ProgressRequestManagement from "./components/ProgressRequestManagement.jsx";
+import ActivityCalendar from "./components/ActivityCalendar.jsx";
 
 
-
-import { ToastContainer, Slide} from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -26,10 +26,10 @@ function App() {
     const [refreshTickets, setRefreshTickets] = useState(0);
 
     // ---------- INIT AUTH + INITIAL HISTORY STATE ----------
-     useEffect(() => {
+    useEffect(() => {
         const token = localStorage.getItem("token");
         const refreshToken = localStorage.getItem("refreshToken");
-        
+
         if (token && refreshToken) {
             setIsAuthenticated(true);
 
@@ -94,7 +94,7 @@ function App() {
         applyNavigation(page, state);
     };
 
-    const handleLogin = (data) => { 
+    const handleLogin = (data) => {
         localStorage.setItem('token', data.accessToken);
         localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('displayName', data.displayName);
@@ -201,6 +201,10 @@ function App() {
 
                 {currentPage === "progress-requests" && (
                     <ProgressRequestsTable onNavigate={handleNavigate} />
+                )}
+
+                {currentPage === "calendar" && (
+                    <ActivityCalendar onNavigate={handleNavigate} />
                 )}
 
                 {currentPage === "users" && (

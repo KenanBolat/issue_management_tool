@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Api.DTOs;
+using Api.Services;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
@@ -16,14 +17,17 @@ namespace Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<ProgressRequestsController> _logger;
+        private readonly ICacheService _cache;
 
         public ProgressRequestsController(
             AppDbContext context,
-            ILogger<ProgressRequestsController> logger
+            ILogger<ProgressRequestsController> logger,
+            ICacheService cache
         )
         {
             _context = context;
             _logger = logger;
+            _cache = cache;
         }
 
         private long GetCurrentUserId()
@@ -210,7 +214,8 @@ namespace Api.Controllers
             await _context.SaveChangesAsync();
 
             _logger.LogInformation($"Progress updated for request {id} by user {userId}");
-
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(id);
             return Ok(new { message = "Bilgi talebi güncellendi" });
         }
 
@@ -268,6 +273,10 @@ namespace Api.Controllers
             //     userId
             // );
 
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(id);
+
+
             _logger.LogInformation($"Progress request {id} responded by user {userId}");
 
             return Ok(new { message = "Talep yanıtlandı" });
@@ -285,6 +294,9 @@ namespace Api.Controllers
 
             request.Status = "Cancelled";
             await _context.SaveChangesAsync();
+            await InvalidateTicketListCacheAsync();
+            await InvalidateTicketDetailCacheAsync(id);
+
 
             return Ok(new { message = "Talep iptal edildi" });
         }
@@ -304,5 +316,23 @@ namespace Api.Controllers
 
             return Ok(new { message = "Talep silindi" });
         }
+        
+        private Task InvalidateTicketDetailCacheAsync(long id) =>
+        _cache.RemoveAsync($"tickets:detail:{id}");
+
+        private async Task InvalidateTicketListCacheAsync()
+        {
+            // all tickets, with/without deleted
+            await _cache.RemoveAsync("tickets:list:all:False");
+            await _cache.RemoveAsync("tickets:list:all:True");
+
+            // each status
+            foreach (var statusName in Enum.GetNames<TicketStatus>())
+            {
+                await _cache.RemoveAsync($"tickets:list:{statusName}:False");
+                await _cache.RemoveAsync($"tickets:list:{statusName}:True");
+            }
+        }
     }
+
 }
