@@ -5,9 +5,13 @@ import {
     YAxis, CartesianGrid, Tooltip,
     Legend, ResponsiveContainer, BarChart, Bar
 } from "recharts";
+import TicketCalendar from './Ticketcalendar';
+const [activeView, setActiveView] = useState('list');
+
+
 
 import { Clock, CheckCircle, AlertCircle, Box,Users, Network } from "lucide-react";
-
+import RecentActivitiesTimeline from './RecentctivitiesTimeline.jsx';
 
 export default function Dashboard({ onCreateTicket, onNavigate }) {
     const [stats, setStats] = useState({});
@@ -284,6 +288,42 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                 </div>
 
                 {/* Recent Tickets */}
+                <RecentActivitiesTimeline
+                                                        onTicketClick={(ticketId) => {
+                                                            if (ticketId !== ticket?.id) {
+                                                                // Optionally close current and open new ticket
+                                                                console.log('Navigate to ticket:', ticketId);
+                                                            }
+                                                        }}
+                                                    />
+                {/* Charts Row */}
+            <div style={styles.chartsRow}>
+                <div style={styles.chartCard}>
+                    <h3 style={styles.cardTitle}>Durumuna göre sorunlar</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="count" fill="#667eea" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                <div style={styles.chartCard}>
+                    <h3 style={styles.cardTitle}>Sorun Eğilimleri</h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Line type="monotone" dataKey="count" stroke="#4caf50" strokeWidth={2} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
                 <div style={styles.card}>
                     <div style={styles.cardHeader}>
                         <h3 style={styles.cardTitle}>Son Açılan Sorunlar</h3>
@@ -294,6 +334,12 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                             Hepsini Gör
                         </button>
                     </div>
+                      <TicketCalendar 
+        onTicketClick={(ticketId) => {
+            // Open ticket detail
+            openTicketDetail(ticketId);
+        }}
+    />
                     <div style={styles.taskList}>
                         {recentTickets.map((ticket) => (
                             <div key={ticket.id} style={styles.taskItem}>
@@ -321,34 +367,7 @@ export default function Dashboard({ onCreateTicket, onNavigate }) {
                 </div>
             </div>
 
-            {/* Charts Row */}
-            <div style={styles.chartsRow}>
-                <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Durumuna göre sorunlar</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="count" fill="#667eea" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-{/* 
-                <div style={styles.chartCard}>
-                    <h3 style={styles.cardTitle}>Sorun Eğilimleri</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="count" stroke="#4caf50" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div> */}
-            </div>
+            
 
 
         </div>

@@ -5,6 +5,9 @@ import { ticketsAPI, userApi, configurationAPI, notificationsAPI, ticketPausesAP
 import { generateTicketPDF } from "../utils/pdfGenerator";
 import { showConfirmToast } from './ConfirmToast.jsx';
 import { toast } from "react-toastify";
+import TicketActionTimeline from "./Ticketactiontimeline.jsx";
+import StatusDropdown from './Statusdropdown.jsx';
+
 
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
@@ -1273,42 +1276,11 @@ export default function TicketDetail({ ticketId, onClose }) {
 
                         {ticket && canEdit && (
                             <div style={styles.statusActions}>
-                                <button
-                                    onClick={() => handleStatusChange('CLOSED')}
-                                    style={{ ...styles.statusButton, ...styles.closeStatusButton }}
-                                    disabled={formData.status === 'CLOSED'}
-                                >
-                                    KAPANDI
-                                </button>
-                                <button
-                                    onClick={() => handleStatusChange('CONFIRMED')}
-                                    style={{ ...styles.statusButton, ...styles.confirmButton }}
-                                    disabled={formData.status === 'CONFIRMED'}
-                                >
-                                    ONAYLANDI
-                                </button>
-                                <button
-                                    onClick={() => handleStatusChange('PAUSED')}
-                                    style={{ ...styles.statusButton, ...styles.pauseButton }}
-                                    disabled={formData.status === 'PAUSED'}
-                                >
-                                    DURDURULDU
-                                </button>
-
-                                <button
-                                    onClick={() => handleStatusChange('REOPENED')}
-                                    style={{ ...styles.statusButton, ...styles.reopenButton }}
-                                    disabled={formData.status === 'REOPENED'}
-                                >
-                                    YENİDEN AÇILDI
-                                </button>
-                                <button
-                                    onClick={() => handleStatusChange('CANCELLED')}
-                                    style={{ ...styles.statusButton, ...styles.cancelButton }}
-                                    disabled={formData.status === 'CANCELLED'}
-                                >
-                                    İPTAL EDİLDİ
-                                </button>
+                                <StatusDropdown
+                                    currentStatus={formData.status}
+                                    onStatusChange={handleStatusChange}
+                                    disabled={false}
+                                />
                             </div>
                         )}
 
@@ -1458,7 +1430,21 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         <Clock size={16} />
                                         Bilgi Talep Et !
                                     </button>
+
+                                    {/* <RecentActivitiesTimeline
+                                        onTicketClick={(ticketId) => {
+                                            if (ticketId !== ticket?.id) {
+                                                // Optionally close current and open new ticket
+                                                console.log('Navigate to ticket:', ticketId);
+                                            }
+                                        }}
+                                    /> */}
+
+                                    <TicketActionTimeline actions={actions} />
                                 </div>
+
+
+
                             )}
                         </>
                     )}
@@ -1596,7 +1582,7 @@ const styles = {
     },
     content: {
         display: 'grid',
-        gridTemplateColumns: '1fr 400px',
+        gridTemplateColumns: '1fr 600px',
         gap: '1.5rem',
     },
     leftPanel: {

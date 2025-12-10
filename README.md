@@ -2,33 +2,39 @@
 ## Migration reset and apply 
  - Drop the DB
 
-dotnet ef database drop   --project ./Infrastructure/Infrastructure.csproj  --startup-project ./Api/Api.csproj --context AppDbContext --force
+- dotnet ef database drop   --project ./Infrastructure/Infrastructure.csproj  --startup-project ./Api/Api.csproj --context AppDbContext --force
 
- -  Remove old migrations (either delete the folder or remove step-by-step)
+-  Remove old migrations (either delete the folder or remove step-by-step)
 
-```bash  rm -rf ./Infrastructure/Migrations ```
+```bash
+  rm -rf ./Infrastructure/Migrations
+```
 
-> (Alternative)
-```bash while dotnet ef migrations remove --project ./Infrastructure/Infrastructure.csproj --startup-project ./Api/Api.csproj; do :; done```
+
+```bash
+# Alternative Method
+ while dotnet ef migrations remove --project ./Infrastructure/Infrastructure.csproj --startup-project ./Api/Api.csproj; do :; done
+ ```
 
 
 - Clean build artifacts
-```bash dotnet clean
-rm -rf **/bin **/obj
-dotnet build
+```bash
+  dotnet clean
+  rm -rf **/bin **/obj
+  dotnet build
 ```
 
 - Create a brand-new migration
 
-```bash dotnet ef migrations add InitialSchema  --project ./Infrastructure/Infrastructure.csproj  --startup-project ./Api/Api.csproj  --context AppDbContext ```
+```bash
+dotnet ef migrations add InitialSchema  --project ./Infrastructure/Infrastructure.csproj  --startup-project ./Api/Api.csproj  --context AppDbContext
+```
 
 - Apply it (creates a fresh database)
 
-```bash dotnet ef database update   --project ./Infrastructure/Infrastructure.csproj --startup-project ./Api/Api.csproj --context AppDbContext```
-
-
-
-
+```bash
+dotnet ef database update   --project ./Infrastructure/Infrastructure.csproj --startup-project ./Api/Api.csproj --context AppDbContext
+```
 
 >fast drop 
 ```bash
@@ -53,8 +59,6 @@ cd frontend
 npm run dev -- --host 0.0.0.0
 ```
 
-
-
 > For caching install additional package 
 ```bash
 dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0.0
@@ -66,8 +70,6 @@ dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 8.0
   - KEYS * 
   - HGETALL <KEYNAME>
   - FLUSHALL 
-
-
 
 > For caching install additional package
 ```bash  
@@ -98,7 +100,7 @@ dotnet add package Docker.DotNet
     - dotnet ef -v  database update   --project ./Infrastructure/Infrastructure.csproj   --startup-project ./Api/Api.csproj   --context AppDbContext
 
   3. Add progress_info column if necessary:
-
+  
     - ALTER TABLE "ProgressRequests"   ADD COLUMN progress_info text NULL;
     
   4. Carriage Return Error:

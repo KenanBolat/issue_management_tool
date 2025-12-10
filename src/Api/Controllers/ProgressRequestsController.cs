@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Api.DTOs;
 using Domain.Entities;
 using Domain.Enums;
@@ -5,7 +6,6 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -17,7 +17,10 @@ namespace Api.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<ProgressRequestsController> _logger;
 
-        public ProgressRequestsController(AppDbContext context, ILogger<ProgressRequestsController> logger)
+        public ProgressRequestsController(
+            AppDbContext context,
+            ILogger<ProgressRequestsController> logger
+        )
         {
             _context = context;
             _logger = logger;
@@ -38,12 +41,13 @@ namespace Api.Controllers
             [FromQuery] bool? myRequests = null,
             [FromQuery] bool? assignedToMe = null,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50)
+            [FromQuery] int pageSize = 50
+        )
         {
             var userId = GetCurrentUserId();
 
-            var query = _context.ProgressRequests
-                .Include(pr => pr.Ticket)
+            var query = _context
+                .ProgressRequests.Include(pr => pr.Ticket)
                 .Include(pr => pr.RequestedBy)
                 .Include(pr => pr.TargetUser)
                 .Include(pr => pr.RespondedBy)
@@ -73,27 +77,29 @@ namespace Api.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            var result = progressRequests.Select(pr => new ProgressRequestListItem(
-                pr.Id,
-                pr.TicketId,
-                pr.Ticket.ExternalCode,
-                pr.Ticket.Title,
-                pr.RequestedByUserId,
-                pr.RequestedBy.DisplayName,
-                pr.TargetUserId,
-                pr.TargetUser.DisplayName,
-                pr.RequestMessage,
-                pr.RequestedAt,
-                pr.DueDate,
-                pr.ProgressInfo,
-                pr.IsResponded,
-                pr.RespondedAt,
-                pr.RespondedBy?.DisplayName,
-                pr.Status,
-                pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded,
-                pr.ProgressPercentage, 
-                pr.EstimatedCompletion
-            )).ToList();
+            var result = progressRequests
+                .Select(pr => new ProgressRequestListItem(
+                    pr.Id,
+                    pr.TicketId,
+                    pr.Ticket.ExternalCode,
+                    pr.Ticket.Title,
+                    pr.RequestedByUserId,
+                    pr.RequestedBy.DisplayName,
+                    pr.TargetUserId,
+                    pr.TargetUser.DisplayName,
+                    pr.RequestMessage,
+                    pr.RequestedAt,
+                    pr.DueDate,
+                    pr.ProgressInfo,
+                    pr.IsResponded,
+                    pr.RespondedAt,
+                    pr.RespondedBy?.DisplayName,
+                    pr.Status,
+                    pr.DueDate.HasValue && pr.DueDate.Value < DateTime.UtcNow && !pr.IsResponded,
+                    pr.ProgressPercentage,
+                    pr.EstimatedCompletion
+                ))
+                .ToList();
 
             return Ok(result);
         }
@@ -104,8 +110,8 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProgressRequestDetail>> GetProgressRequest(long id)
         {
-            var progressRequest = await _context.ProgressRequests
-                .Include(pr => pr.Ticket)
+            var progressRequest = await _context
+                .ProgressRequests.Include(pr => pr.Ticket)
                 .Include(pr => pr.RequestedBy)
                 .Include(pr => pr.TargetUser)
                 .Include(pr => pr.RespondedBy)
@@ -136,23 +142,25 @@ namespace Api.Controllers
                 progressRequest.ResponseAction?.Notes,
                 progressRequest.Status,
                 progressRequest.NotificationId,
-                progressRequest.ProgressPercentage, 
+                progressRequest.ProgressPercentage,
                 progressRequest.EstimatedCompletion
             );
 
             return Ok(result);
         }
 
-
         /// <summary>
         /// Provide progress update
         /// </summary>
         [HttpPost("{id}/update-progress")]
         [Authorize(Roles = "Editor,Admin")]
-        public async Task<ActionResult> UpdateProgress(long id, [FromBody] UpdateProgressRequest request)
+        public async Task<ActionResult> UpdateProgress(
+            long id,
+            [FromBody] UpdateProgressRequest request
+        )
         {
-            var progressRequest = await _context.ProgressRequests
-                .Include(pr => pr.Ticket)
+            var progressRequest = await _context
+                .ProgressRequests.Include(pr => pr.Ticket)
                 .Include(pr => pr.RequestedBy)
                 .FirstOrDefaultAsync(pr => pr.Id == id);
 
@@ -174,17 +182,17 @@ namespace Api.Controllers
                 );
             }
 
-
             // Optional: Also create a ticket action for audit trail
 
-            var auxiliaryContext =  $"{request.ProgressInfo} - % {request.ProgressPercentage} - Tahmini Tamamlanma: {request.EstimatedCompletion} ";
+            var auxiliaryContext =
+                $"{request.ProgressInfo} - % {request.ProgressPercentage} - Tahmini Tamamlanma: {request.EstimatedCompletion} ";
 
             var Comment = new TicketComment
             {
                 TicketId = progressRequest.TicketId,
                 Body = $"Bilgi Talebi  Güncellendi: {auxiliaryContext}",
                 CreatedById = userId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             var action = new TicketAction
@@ -193,9 +201,8 @@ namespace Api.Controllers
                 ActionType = ActionType.Comment,
                 Notes = $"Bilgi Talebi  Güncellendi: {auxiliaryContext}",
                 PerformedById = userId,
-                PerformedAt = DateTime.UtcNow
+                PerformedAt = DateTime.UtcNow,
             };
-
 
             _context.TicketActions.Add(action);
             _context.TicketComments.Add(Comment);
@@ -207,16 +214,18 @@ namespace Api.Controllers
             return Ok(new { message = "Bilgi talebi güncellendi" });
         }
 
-
         /// <summary>
         /// Respond to a progress request
         /// </summary>
         [HttpPost("{id}/respond")]
         [Authorize(Roles = "Editor,Admin")]
-        public async Task<ActionResult> RespondToRequest(long id, [FromBody] RespondToProgressRequest request)
+        public async Task<ActionResult> RespondToRequest(
+            long id,
+            [FromBody] RespondToProgressRequest request
+        )
         {
-            var progressRequest = await _context.ProgressRequests
-                .Include(pr => pr.Ticket)
+            var progressRequest = await _context
+                .ProgressRequests.Include(pr => pr.Ticket)
                 .Include(pr => pr.RequestedBy)
                 .FirstOrDefaultAsync(pr => pr.Id == id);
 
@@ -228,7 +237,6 @@ namespace Api.Controllers
 
             var userId = GetCurrentUserId();
 
-
             // ✅ Create ticket action FIRST
             var action = new TicketAction
             {
@@ -236,7 +244,7 @@ namespace Api.Controllers
                 ActionType = ActionType.Comment,
                 Notes = $"Bilgi Talebi Yanıtlandı: {request.ResponseNotes}",
                 PerformedById = userId,
-                PerformedAt = DateTime.UtcNow
+                PerformedAt = DateTime.UtcNow,
             };
 
             _context.TicketActions.Add(action);
@@ -251,8 +259,6 @@ namespace Api.Controllers
 
             progressRequest.Status = "Responded";
 
-
-
             await _context.SaveChangesAsync();
 
             // Send notification
@@ -266,7 +272,6 @@ namespace Api.Controllers
 
             return Ok(new { message = "Talep yanıtlandı" });
         }
-
 
         // POST: /api/ProgressRequests/{id}/cancel
         [HttpPost("{id}/cancel")]
