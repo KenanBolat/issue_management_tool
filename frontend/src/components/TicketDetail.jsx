@@ -3,16 +3,17 @@ import Select from 'react-select';
 import PersonnelSelect from "./PersonnelSelect";
 import { ticketsAPI, userApi, configurationAPI, notificationsAPI, ticketPausesAPI } from "../../services/api";
 import { generateTicketPDF } from "../utils/pdfGenerator";
-import { showConfirmToast, showInputToast} from './ConfirmToast.jsx';
+import { showConfirmToast, showInputToast } from './ConfirmToast.jsx';
 import { toast } from "react-toastify";
 import TicketActionTimeline from "./Ticketactiontimeline.jsx";
 import StatusDropdown from './Statusdropdown.jsx';
+import ProgressRequestButton from "./ProgressRequestButton.jsx";
 
 
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
 
-export default function TicketDetail({ ticketId, onClose }) {
+export default function TicketDetail({ ticketId, onClose,onNavigate }) {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -431,7 +432,7 @@ export default function TicketDetail({ ticketId, onClose }) {
             }
 
 
-          
+
 
             await ticketsAPI.changeStatus(ticketId, statusData);
             toast.info(`Durum "${statusLabel}" olarak değiştirildi`);
@@ -1402,6 +1403,14 @@ export default function TicketDetail({ ticketId, onClose }) {
                                         <Clock size={16} />
                                         Bilgi Talep Et !
                                     </button>
+                                    <br />
+
+                                    <ProgressRequestButton
+                                        ticketId={ticket.id}
+                                        ticketExternalCode={ticket.externalCode}
+                                        ticketCreatedByUserId={ticket.createdByUserId}
+                                        onNavigate={onNavigate}
+                                    />
 
                                     {/* <RecentActivitiesTimeline
                                         onTicketClick={(ticketId) => {

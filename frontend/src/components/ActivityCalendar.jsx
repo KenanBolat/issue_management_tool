@@ -49,10 +49,16 @@ export default function ActivityCalendar({ onNavigate }) {
         return { year, month, daysInMonth, startingDayOfWeek };
     };
 
+    const getDayOfYear = (date) => {
+        const start = new Date(date.getFullYear(), 0, 1); // Jan 1, same year
+        const diff = date - start; // ms difference
+        return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1; // 1..366
+    };
+
     // Get activities for a specific date
     const getActivitiesForDate = (date) => {
         const dateStr = date.toISOString().split('T')[0];
-        
+
         return activities.filter(activity => {
             const activityDate = new Date(activity.performedAt).toISOString().split('T')[0];
             return activityDate === dateStr;
@@ -106,16 +112,20 @@ export default function ActivityCalendar({ onNavigate }) {
             const date = new Date(year, month, day);
             const dayActivities = getActivitiesForDate(date);
             const isToday = isSameDay(date, new Date());
+            const dayOfYear = getDayOfYear(date);
+
 
             currentWeek.push(
-                <div 
-                    key={day} 
+                <div
+                    key={day}
                     style={{
                         ...styles.dayCell,
                         ...(isToday ? styles.todayCell : {})
                     }}
                 >
-                    <div style={styles.dayNumber}>{day}</div>
+                    <div style={styles.dayNumber}>{day}
+                        <span style={styles.dayOfYear}> ({dayOfYear})</span>
+                    </div>
                     <div style={styles.activitiesContainer}>
                         {dayActivities.slice(0, 4).map(activity => {
                             const color = getActionColor(activity.actionType, activity.toStatus);
@@ -132,7 +142,7 @@ export default function ActivityCalendar({ onNavigate }) {
                                     <span style={styles.ticketCode}>
                                         {activity.ticketExternalCode}
                                     </span>
-                                    <span 
+                                    <span
                                         style={{
                                             ...styles.actionBadge,
                                             backgroundColor: color
@@ -184,8 +194,8 @@ export default function ActivityCalendar({ onNavigate }) {
 
     const isSameDay = (date1, date2) => {
         return date1.getDate() === date2.getDate() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getFullYear() === date2.getFullYear();
+            date1.getMonth() === date2.getMonth() &&
+            date1.getFullYear() === date2.getFullYear();
     };
 
     const monthNames = [
@@ -494,4 +504,12 @@ const styles = {
         fontSize: '1rem',
         gridColumn: '1 / -1',
     },
+
+    dayOfYear: {
+        fontSize: '0.75rem',
+        color: '#888',
+        marginLeft: '4px',
+        fontWeight: '400',
+    },
+
 };
