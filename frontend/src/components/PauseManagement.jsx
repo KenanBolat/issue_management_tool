@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, Play, Trash2, Filter,Pause } from 'lucide-react';
+import { Clock, ChevronDown, ChevronRight, Search, ArrowUpDown, ExternalLink, Play, Trash2, Filter, Pause } from 'lucide-react';
 import { ticketPausesAPI, ticketsAPI } from '../../services/api';
 import { showConfirmToast } from './ConfirmToast';
 import { toast } from 'react-toastify';
@@ -73,7 +73,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
     // }, [pauses]);
     const groupedPauses = useMemo(() => {
         const groups = {};
-        
+
         pauses.forEach(pause => {
             if (!groups[pause.ticketId]) {
                 groups[pause.ticketId] = {
@@ -86,16 +86,16 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                     hasActivePause: false
                 };
             }
-            
-            // ✅ Use backend hours if available, otherwise calculate
+
+            // Use backend hours if available, otherwise calculate
             const hours = pause.durationHours ?? calculateDurationHours(pause.pausedAt, pause.resumedAt);
-            
+
             groups[pause.ticketId].pauses.push({
                 ...pause,
                 durationHours: hours
             });
             groups[pause.ticketId].totalHours += hours;
-            
+
             if (pause.isActive) {
                 groups[pause.ticketId].activePauseCount++;
                 groups[pause.ticketId].hasActivePause = true;
@@ -103,10 +103,10 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                 groups[pause.ticketId].completedPauseCount++;
             }
         });
-        
+
         return Object.values(groups);
     }, [pauses]);
-    
+
 
     // Filter groups
     const filteredGroups = useMemo(() => {
@@ -177,22 +177,22 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
     };
 
     const handleDelete = async (id) => {
-            const confirm = await showConfirmToast(`Bu duraklama kaydını silmek istediğinize emin misiniz?`);
-            if (!confirm) { toast.info("İşlem iptal edildi."); return; }
+        const confirm = await showConfirmToast(`Bu duraklama kaydını silmek istediğinize emin misiniz?`);
+        if (!confirm) { toast.info("İşlem iptal edildi."); return; }
 
 
 
-    
-            try {
-                await ticketPausesAPI.delete(id);
-                toast.success('Duraklama kaydı silindi');
-                loadPauses();
-            } catch (error) {
-                console.error('Error deleting pause:', error);
-                toast.error('Silme işlemi başarısız');
-            }
-        };
-    
+
+        try {
+            await ticketPausesAPI.delete(id);
+            toast.success('Duraklama kaydı silindi');
+            loadPauses();
+        } catch (error) {
+            console.error('Error deleting pause:', error);
+            toast.error('Silme işlemi başarısız');
+        }
+    };
+
 
     const toggleExpand = (ticketId) => {
         setExpandedTickets(prev => {
@@ -228,22 +228,22 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
         }
     };
 
-        // ✅ Updated: Format duration in hours with day approximation
+    //Format duration in hours with day approximation
     const formatDuration = (hours) => {
         if (hours === 0) return '0 saat';
         if (hours === 1) return '1 saat';
         if (hours < 24) return `${hours} saat`;
-        
+
         const days = Math.floor(hours / 24);
         const remainingHours = hours % 24;
-        
+
         if (remainingHours === 0) {
             return `${hours} saat (${days} gün)`;
         }
         return `${hours} saat (${days} gün ${remainingHours} saat)`;
     };
 
-    // ✅ New: Format total duration for subtotals
+    //  Format total duration for subtotals
     const formatTotalDuration = (hours) => {
         const days = (hours / 24).toFixed(1);
         return `${hours} saat (~${days} gün)`;
@@ -264,7 +264,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
         return <div style={styles.loading}>Yükleniyor...</div>;
     }
 
-   return (
+    return (
         <div style={styles.container}>
             {/* Header */}
             <div style={styles.header}>
@@ -341,9 +341,9 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                 <table style={styles.table}>
                     <thead>
                         <tr>
-                            <th style={{...styles.th, width: '50px'}}></th>
-                            <th 
-                                style={{...styles.th, ...styles.sortable, width: '150px'}}
+                            <th style={{ ...styles.th, width: '50px' }}></th>
+                            <th
+                                style={{ ...styles.th, ...styles.sortable, width: '150px' }}
                                 onClick={() => handleSort('ticketCode')}
                             >
                                 <div style={styles.thContent}>
@@ -351,8 +351,8 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th 
-                                style={{...styles.th, ...styles.sortable, width: '120px'}}
+                            <th
+                                style={{ ...styles.th, ...styles.sortable, width: '120px' }}
                                 onClick={() => handleSort('pauseCount')}
                             >
                                 <div style={styles.thContent}>
@@ -360,8 +360,8 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th 
-                                style={{...styles.th, ...styles.sortable, width: '180px'}}
+                            <th
+                                style={{ ...styles.th, ...styles.sortable, width: '180px' }}
                                 onClick={() => handleSort('totalDuration')}
                             >
                                 <div style={styles.thContent}>
@@ -369,8 +369,8 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th 
-                                style={{...styles.th, ...styles.sortable, width: '120px'}}
+                            <th
+                                style={{ ...styles.th, ...styles.sortable, width: '120px' }}
                                 onClick={() => handleSort('status')}
                             >
                                 <div style={styles.thContent}>
@@ -378,15 +378,15 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th style={{...styles.th, width: '120px'}}>İşlemler</th>
+                            <th style={{ ...styles.th, width: '120px' }}>İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedGroups.length === 0 ? (
                             <tr>
                                 <td colSpan="6" style={styles.emptyCell}>
-                                    {searchTerm 
-                                        ? 'Arama kriterlerine uygun kayıt bulunamadı' 
+                                    {searchTerm
+                                        ? 'Arama kriterlerine uygun kayıt bulunamadı'
                                         : 'Duraklama kaydı bulunamadı'}
                                 </td>
                             </tr>
@@ -394,7 +394,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                             sortedGroups.map((group) => (
                                 <>
                                     {/* Group Row */}
-                                    <tr 
+                                    <tr
                                         key={`group-${group.ticketId}`}
                                         style={styles.groupRow}
                                     >
@@ -403,7 +403,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                                 onClick={() => toggleExpand(group.ticketId)}
                                                 style={styles.expandButton}
                                             >
-                                                {expandedTickets.has(group.ticketId) 
+                                                {expandedTickets.has(group.ticketId)
                                                     ? <ChevronDown size={20} />
                                                     : <ChevronRight size={20} />
                                                 }
@@ -489,7 +489,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                                                                         {formatDate(pause.pausedAt)}
                                                                     </td>
                                                                     <td style={styles.detailTd}>
-                                                                        {pause.resumedAt 
+                                                                        {pause.resumedAt
                                                                             ? formatDate(pause.resumedAt)
                                                                             : <em style={styles.ongoing}>Devam Ediyor</em>
                                                                         }
@@ -584,7 +584,7 @@ export default function PauseManagement({ onViewTicket, onNavigate }) {
                         <p style={styles.modalSubtitle}>
                             Ticket: <strong>{selectedPause?.ticketExternalCode}</strong>
                         </p>
-                        
+
                         <div style={styles.modalField}>
                             <label style={styles.label}>Devam Notu (Opsiyonel)</label>
                             <textarea

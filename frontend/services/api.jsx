@@ -25,7 +25,7 @@ const processQueue = (error, token = null) => {
 };
 
 
-// ✅ Show persistent offline toast
+//Show persistent offline toast
 const showOfflineToast = () => {
     if (!isBackendOffline && !offlineToastId) {
         isBackendOffline = true;
@@ -34,7 +34,7 @@ const showOfflineToast = () => {
             {
                 position: 'top-center',
                 autoClose: false,
-                closeButton: false,
+                closeButton: true,
                 draggable: false,
                 closeOnClick: false,
                 toastId: 'offline-toast'
@@ -43,7 +43,7 @@ const showOfflineToast = () => {
     }
 };
 
-// ✅ Show online toast and dismiss offline toast
+// Show online toast and dismiss offline toast
 const showOnlineToast = () => {
     if (isBackendOffline) {
         isBackendOffline = false;
@@ -55,7 +55,7 @@ const showOnlineToast = () => {
         }
         
         // Show success message
-        toast.success('✅ Sistem çevrimiçi! Bağlantı kuruldu.', {
+        toast.success('Sistem çevrimiçi! Bağlantı kuruldu.', {
             position: 'top-center',
             autoClose: 3000
         });
@@ -87,7 +87,7 @@ api.interceptors.request.use(
     }
 );
 
-// ✅ Response interceptor - handle errors properly
+// Response interceptor - handle errors properly
 api.interceptors.response.use(
     (response) => {
         // If we get a successful response and were offline, show online toast
@@ -99,7 +99,7 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        // ✅ CRITICAL: Check if this is a network error (backend offline)
+        // CRITICAL: Check if this is a network error (backend offline)
         if (!error.response) {
             // Network error - backend is offline
             showOfflineToast();
@@ -108,12 +108,12 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // ✅ If we get any response, backend is online
+        //If we get any response, backend is online
         if (isBackendOffline) {
             showOnlineToast();
         }
 
-        // ✅ Handle 401 errors (authentication errors)
+        // Handle 401 errors (authentication errors)
         if (error.response.status === 401 && !originalRequest._retry) {
             // Check if this is from login or refresh endpoint
             if (originalRequest.url?.includes('/auth/login') || 
@@ -196,7 +196,7 @@ export const authAPI = {
 
 export const progressRequestsAPI = {
     getAll: (status) => api.get('/ProgressRequests', { params: { status } }),
-    getByTicket: (ticketId) => api.get(`/ProgressRequests/ticket/${ticketId}`),
+    getByTicket: (ticketId) => api.get(`/ProgressRequests/${ticketId}`),
     getById: (id) => api.get(`/ProgressRequests/${id}`),
     updateProgress: (id, data) => api.post(`/ProgressRequests/${id}/update-progress`, data),
     respond: (id, data) => api.post(`/ProgressRequests/${id}/respond`, data),

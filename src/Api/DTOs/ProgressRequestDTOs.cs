@@ -18,7 +18,7 @@ namespace Api.DTOs
         string? RespondedByName,
         string Status,
         bool IsOverdue, 
-        int? ProgressPercentage, 
+        int? ProgressPercentage,
         DateTime? EstimatedCompletion
     );
 

@@ -196,6 +196,8 @@ function App() {
                     <TicketDetail
                         ticketId={selectedTicketId}
                         onClose={handleCloseTicketDetail}
+                        onNavigate={handleNavigate}
+
                     />
                 )}
 

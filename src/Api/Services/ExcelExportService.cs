@@ -31,7 +31,7 @@ namespace Api.Services
             );
         }
 
-        // ✅ Format DateTime with configured format and timezone
+        // Format DateTime with configured format and timezone
         private string FormatDateTime(DateTime? dateTime, string format, string timezoneId)
         {
             if (!dateTime.HasValue)

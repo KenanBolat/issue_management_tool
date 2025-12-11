@@ -7,13 +7,13 @@ import { showConfirmToast, showInputToast } from './ConfirmToast.jsx';
 import { toast } from "react-toastify";
 import TicketActionTimeline from "./Ticketactiontimeline.jsx";
 import StatusDropdown from './Statusdropdown.jsx';
-import ProgressRequestButton from "./ProgressRequestButton.jsx";
+import ProgressRequestButton from './ProgressRequestButton';
 
 
 
 import { X, Save, Send, FileText, MessageSquare, History, AlertCircle, Download, Clock } from "lucide-react";
 
-export default function TicketDetail({ ticketId, onClose,onNavigate }) {
+export default function TicketDetail({ ticketId, onClose, onNavigate }) {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -1393,36 +1393,23 @@ export default function TicketDetail({ ticketId, onClose,onNavigate }) {
                                     </div>
                                 </div>
                             )}
-                            {canEdit && ticket && (
+                            {ticket && (
                                 <div style={styles.formSection}>
-                                    <h3 style={styles.panelTitle}>Bilgi Talebi</h3>
-                                    <button
-                                        onClick={() => handleRequestProgress()}
-                                        style={{ ...styles.button, ...styles.progressRequestButton }}
-                                    >
-                                        <Clock size={16} />
-                                        Bilgi Talep Et !
-                                    </button>
-                                    <br />
-
+                    
                                     <ProgressRequestButton
                                         ticketId={ticket.id}
                                         ticketExternalCode={ticket.externalCode}
                                         ticketCreatedByUserId={ticket.createdByUserId}
                                         onNavigate={onNavigate}
                                     />
-
-                                    {/* <RecentActivitiesTimeline
-                                        onTicketClick={(ticketId) => {
-                                            if (ticketId !== ticket?.id) {
-                                                // Optionally close current and open new ticket
-                                                console.log('Navigate to ticket:', ticketId);
-                                            }
-                                        }}
-                                    /> */}
-
+                                </div>
+                            )}
+                             {ticket && (
+                                <div style={styles.formSection}>
                                     <TicketActionTimeline actions={actions} />
                                 </div>
+
+                                
 
 
 

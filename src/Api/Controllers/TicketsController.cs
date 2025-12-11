@@ -804,7 +804,7 @@ public class TicketsController : ControllerBase
         var oldStatus = ticket.Status;
         var userId = GetCurrentUserId();
 
-        // ✅ Handle pausing - create pause record
+        // Handle pausing - create pause record
         if (toStatus == TicketStatus.PAUSED && oldStatus != TicketStatus.PAUSED)
         {
             if (string.IsNullOrWhiteSpace(request.PauseReason))
@@ -822,7 +822,7 @@ public class TicketsController : ControllerBase
             _context.TicketPauses.Add(pause);
         }
 
-        // ✅ Handle resuming - close active pause
+        // Handle resuming - close active pause
         if (oldStatus == TicketStatus.PAUSED && toStatus != TicketStatus.PAUSED)
         {
             var activePause = await _context
@@ -837,13 +837,13 @@ public class TicketsController : ControllerBase
             }
         }
 
-        // ✅ Update ticket status
+        // Update ticket status
         ticket.Status = toStatus;
 
         ticket.UpdatedAt = DateTime.UtcNow;
         ticket.LastUpdatedById = userId;
 
-        // ✅ Log the status change action
+        // Log the status change action
         var action = new TicketAction
         {
             TicketId = id,
@@ -867,7 +867,7 @@ public class TicketsController : ControllerBase
         {
             await _context.SaveChangesAsync();
 
-            // ✅ Invalidate cache (safely handle if cache is null)
+            // Invalidate cache (safely handle if cache is null)
             try
             {
                 if (_cache != null)

@@ -39,7 +39,9 @@ namespace Api.Controllers
         /// <summary>
         /// Get all progress requests (paginated)
         /// </summary>
+        // GET: /api/ProgressRequests/{id}/cancel
         [HttpGet]
+        [Authorize(Roles = "Editor,Admin")]
         public async Task<ActionResult<List<ProgressRequestListItem>>> GetProgressRequests(
             [FromQuery] string? status = null,
             [FromQuery] bool? myRequests = null,
@@ -112,7 +114,9 @@ namespace Api.Controllers
         /// Get progress request by ID
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProgressRequestDetail>> GetProgressRequest(long id)
+        public async Task<ActionResult<List<ProgressRequestDetail>>> GetTicketProgressRequests(
+            long id
+        )
         {
             var progressRequest = await _context
                 .ProgressRequests.Include(pr => pr.Ticket)
@@ -120,35 +124,38 @@ namespace Api.Controllers
                 .Include(pr => pr.TargetUser)
                 .Include(pr => pr.RespondedBy)
                 .Include(pr => pr.ResponseAction)
-                .FirstOrDefaultAsync(pr => pr.Id == id);
-
+                .Where(pr => pr.TicketId == id)
+                .OrderByDescending(pr => pr.RequestedAt)
+                .ToListAsync();
             if (progressRequest == null)
                 return NotFound();
 
-            var result = new ProgressRequestDetail(
-                progressRequest.Id,
-                progressRequest.TicketId,
-                progressRequest.Ticket.ExternalCode,
-                progressRequest.Ticket.Title,
-                progressRequest.RequestedByUserId,
-                progressRequest.RequestedBy.DisplayName,
-                progressRequest.TargetUserId,
-                progressRequest.TargetUser.DisplayName,
-                progressRequest.RequestMessage,
-                progressRequest.RequestedAt,
-                progressRequest.DueDate,
-                progressRequest.ProgressInfo,
-                progressRequest.IsResponded,
-                progressRequest.RespondedAt,
-                progressRequest.RespondedByUserId,
-                progressRequest.RespondedBy?.DisplayName,
-                progressRequest.ResponseActionId,
-                progressRequest.ResponseAction?.Notes,
-                progressRequest.Status,
-                progressRequest.NotificationId,
-                progressRequest.ProgressPercentage,
-                progressRequest.EstimatedCompletion
-            );
+            var result = progressRequest
+                .Select(pr => new ProgressRequestDetail(
+                    pr.Id,
+                    pr.TicketId,
+                    pr.Ticket.ExternalCode,
+                    pr.Ticket.Title,
+                    pr.RequestedByUserId,
+                    pr.RequestedBy.DisplayName,
+                    pr.TargetUserId,
+                    pr.TargetUser.DisplayName,
+                    pr.RequestMessage,
+                    pr.RequestedAt,
+                    pr.DueDate,
+                    pr.ProgressInfo,
+                    pr.IsResponded,
+                    pr.RespondedAt,
+                    pr.RespondedByUserId,
+                    pr.RespondedBy?.DisplayName,
+                    pr.ResponseActionId,
+                    pr.ResponseAction?.Notes,
+                    pr.Status,
+                    pr.NotificationId,
+                    pr.ProgressPercentage,
+                    pr.EstimatedCompletion
+                ))
+                .ToList();
 
             return Ok(result);
         }
@@ -173,7 +180,7 @@ namespace Api.Controllers
 
             var userId = GetCurrentUserId();
 
-            // ✅ Update progress information (no ResponseActionId needed)
+            // Update progress information (no ResponseActionId needed)
             progressRequest.ProgressInfo = request.ProgressInfo;
             progressRequest.Status = "InProgress";
             progressRequest.ProgressPercentage = request.ProgressPercentage;
@@ -242,7 +249,7 @@ namespace Api.Controllers
 
             var userId = GetCurrentUserId();
 
-            // ✅ Create ticket action FIRST
+            // Create ticket action FIRST
             var action = new TicketAction
             {
                 TicketId = progressRequest.TicketId,
@@ -260,7 +267,7 @@ namespace Api.Controllers
             progressRequest.RespondedAt = DateTime.UtcNow;
             progressRequest.RespondedByUserId = userId;
             progressRequest.ProgressInfo = request.ResponseNotes;
-            // progressRequest.ResponseActionId = action.Id;  // ✅ Now this has a valid ID
+            // progressRequest.ResponseActionId = action.Id;
 
             progressRequest.Status = "Responded";
 
@@ -275,7 +282,6 @@ namespace Api.Controllers
 
             await InvalidateTicketListCacheAsync();
             await InvalidateTicketDetailCacheAsync(id);
-
 
             _logger.LogInformation($"Progress request {id} responded by user {userId}");
 
@@ -297,7 +303,6 @@ namespace Api.Controllers
             await InvalidateTicketListCacheAsync();
             await InvalidateTicketDetailCacheAsync(id);
 
-
             return Ok(new { message = "Talep iptal edildi" });
         }
 
@@ -316,9 +321,9 @@ namespace Api.Controllers
 
             return Ok(new { message = "Talep silindi" });
         }
-        
+
         private Task InvalidateTicketDetailCacheAsync(long id) =>
-        _cache.RemoveAsync($"tickets:detail:{id}");
+            _cache.RemoveAsync($"tickets:detail:{id}");
 
         private async Task InvalidateTicketListCacheAsync()
         {
@@ -334,5 +339,4 @@ namespace Api.Controllers
             }
         }
     }
-
 }

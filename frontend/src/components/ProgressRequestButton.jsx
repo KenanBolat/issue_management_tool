@@ -8,6 +8,7 @@ export default function ProgressRequestButton({ ticketId, ticketExternalCode, ti
     const [progressRequests, setProgressRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showHistory, setShowHistory] = useState(false);
+    debugger;
 
     useEffect(() => {
         if (ticketId) {
@@ -19,6 +20,7 @@ export default function ProgressRequestButton({ ticketId, ticketExternalCode, ti
         try {
             setLoading(true);
             const response = await progressRequestsAPI.getByTicket(ticketId);
+            debugger;
             setProgressRequests(response.data || []);
         } catch (error) {
             console.error('Error loading progress requests:', error);
@@ -50,7 +52,7 @@ export default function ProgressRequestButton({ ticketId, ticketExternalCode, ti
     };
 
     const handleNavigateToRequests = () => {
-        onNavigate('progress-requests');
+        onNavigate('progress-management');
     };
 
     // Get pending (non-finalized) requests

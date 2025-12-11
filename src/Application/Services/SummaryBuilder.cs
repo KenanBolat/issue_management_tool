@@ -34,7 +34,7 @@ namespace Application.Services
                             sb.AppendLine($"  - {action.Notes}");
                         break;
                     case Domain.Enums.ActionType.Create:
-                        sb.AppendLine($"- **{timestamp}** [{user}] Ticket created");
+                        sb.AppendLine($"- **{timestamp}** [{user}] Yeni bir ariza olusturuldu.");
                         break;
                 }
             }

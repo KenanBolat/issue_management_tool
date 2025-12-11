@@ -63,19 +63,9 @@ namespace Api.DTOs
         DateTime PerformedAt
     );
 
-    public record CreateProgressRequestDto(
-        long TicketId,
-        long? TargetUserId,
-        string? Message
-    );
+    public record CreateProgressRequestDto(long TicketId, long? TargetUserId, string? Message);
 
-    public record MarkAsReadDto(
-        List<long> NotificationIds,
-        string? ReadFrom
-    );
+    public record MarkAsReadDto(List<long> NotificationIds, string? ReadFrom);
 
-    public record ResolveNotificationDto(
-        string? ActionType,
-        string? Notes
-    );
+    public record ResolveNotificationDto(string? ActionType, string? Notes);
 }

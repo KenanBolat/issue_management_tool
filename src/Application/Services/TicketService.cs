@@ -32,7 +32,7 @@ namespace Application.Services
                 ToStatus = ticket.Status,
                 PerformedById = userID,
                 PerformedAt = DateTime.UtcNow,
-                Notes = "Ticket created"
+                Notes = "Yeni bir ariza olusturuldu."
             };
             _context.TicketActions.Add(action);
             await _context.SaveChangesAsync();

@@ -32,7 +32,7 @@ echo -e "${YELLOW}⏳ Waiting for services to be healthy...${NC}"
 sleep 10
 
 # Check service status
-echo -e "${GREEN}✅ Service Status:${NC}"
+echo -e "${GREEN} Service Status:${NC}"
 docker-compose ps
 
 echo -e "\n${GREEN}🎉 Deployment Complete!${NC}"

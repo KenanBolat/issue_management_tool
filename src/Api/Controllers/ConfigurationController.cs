@@ -71,22 +71,20 @@ public class ConfigurationController : ControllerBase
     [HttpGet("timezones")]
     public ActionResult<List<TimezoneInfo>> GetTimezones()
     {
-        var timezones = TimeZoneInfo.GetSystemTimeZones()
-            .Select(tz => new TimezoneInfo(
-                tz.Id,
-                tz.DisplayName,
-                tz.BaseUtcOffset.ToString()
-            ))
+        var timezones = TimeZoneInfo
+            .GetSystemTimeZones()
+            .Select(tz => new TimezoneInfo(tz.Id, tz.DisplayName, tz.BaseUtcOffset.ToString()))
             .OrderBy(tz => tz.DisplayName)
             .ToList();
 
         return Ok(timezones);
     }
 
-    // ✅ NEW: Preview format with current date
+    //NEW: Preview format with current date
     [HttpPost("preview-format")]
     public ActionResult<FormatPreviewResponse> PreviewFormat(
-        [FromBody] FormatPreviewRequest request)
+        [FromBody] FormatPreviewRequest request
+    )
     {
         try
         {
@@ -95,35 +93,19 @@ public class ConfigurationController : ControllerBase
             var localTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtc, timeZoneInfo);
             var formattedDate = localTime.ToString(request.Format);
 
-            return Ok(new FormatPreviewResponse(
-                true,
-                formattedDate,
-                null
-            ));
+            return Ok(new FormatPreviewResponse(true, formattedDate, null));
         }
         catch (FormatException ex)
         {
-            return Ok(new FormatPreviewResponse(
-                false,
-                null,
-                $"Geçersiz format: {ex.Message}"
-            ));
+            return Ok(new FormatPreviewResponse(false, null, $"Geçersiz format: {ex.Message}"));
         }
         catch (TimeZoneNotFoundException)
         {
-            return Ok(new FormatPreviewResponse(
-                false,
-                null,
-                "Geçersiz saat dilimi"
-            ));
+            return Ok(new FormatPreviewResponse(false, null, "Geçersiz saat dilimi"));
         }
         catch (Exception ex)
         {
-            return Ok(new FormatPreviewResponse(
-                false,
-                null,
-                $"Hata: {ex.Message}"
-            ));
+            return Ok(new FormatPreviewResponse(false, null, $"Hata: {ex.Message}"));
         }
     }
 }
