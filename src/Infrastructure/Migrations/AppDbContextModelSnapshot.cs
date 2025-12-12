@@ -480,33 +480,39 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime?>("EstimatedCompletion")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("estimated_completion");
 
                     b.Property<long?>("NotificationId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("notification_id");
 
                     b.Property<string>("ProgressInfo")
-                        .HasColumnType("text");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("progress_info");
 
                     b.Property<int?>("ProgressPercentage")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("progress_percentage");
 
                     b.Property<long>("ProgressRequestId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("progress_request_id");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("UpdatedById")
-                        .HasColumnType("bigint");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<long>("UpdatedByUserId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("updated_by_user_id");
 
                     b.HasKey("Id");
 
@@ -514,9 +520,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ProgressRequestId");
 
-                    b.HasIndex("UpdatedById");
+                    b.HasIndex("UpdatedByUserId");
 
-                    b.ToTable("progressRequestUpdates");
+                    b.ToTable("progress_request_update", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Subsystem", b =>
@@ -1262,8 +1268,8 @@ namespace Infrastructure.Migrations
 
                     b.HasOne("Domain.Entities.User", "UpdatedBy")
                         .WithMany()
-                        .HasForeignKey("UpdatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Notification");

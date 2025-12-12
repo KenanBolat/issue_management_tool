@@ -262,6 +262,9 @@ namespace Api.Controllers
                 return NotFound(new { message = "Progress request bulunamadı" });
 
             var userId = GetCurrentUserId();
+            _logger.LogInformation($"_______________________{userId}");
+            _logger.LogInformation($"_______________________{progressRequest.Id}");
+            _logger.LogInformation($"_______________________{progressRequest.Id}");
 
              var progressUpdate = new ProgressRequestUpdate
             {
@@ -275,7 +278,7 @@ namespace Api.Controllers
                 UpdatedAt = DateTime.UtcNow,
             };
 
-            _context.progressRequestUpdates.Add(progressUpdate);
+            _context.ProgressRequestUpdates.Add(progressUpdate);
 
             // Update progress information (no ResponseActionId needed)
             progressRequest.ProgressInfo = request.ProgressInfo;

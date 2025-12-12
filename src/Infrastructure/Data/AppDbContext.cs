@@ -29,7 +29,7 @@ namespace Infrastructure.Data
         public DbSet<NotificationRead> NotificationReads { get; set; }
         public DbSet<NotificationAction> NotificationActions { get; set; }
         public DbSet<ProgressRequest> ProgressRequests { get; set; }
-        public DbSet<ProgressRequestUpdate> progressRequestUpdates { set; get; }
+        public DbSet<ProgressRequestUpdate> ProgressRequestUpdates { set; get; }
         public DbSet<TicketPause> TicketPauses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -418,6 +418,37 @@ namespace Infrastructure.Data
                 entity.HasIndex(e => e.TicketId);
                 entity.HasIndex(e => e.TargetUserId);
                 entity.HasIndex(e => e.Status);
+            });
+
+            modelBuilder.Entity<ProgressRequestUpdate>(entity =>
+            {
+                entity.ToTable("progress_request_update");
+                entity.HasKey(e => e.Id);
+
+                // Explicitly map properties to columns (CRITICAL!)
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.ProgressRequestId).HasColumnName("progress_request_id");
+                entity.Property(e => e.UpdatedByUserId).HasColumnName("updated_by_user_id");
+                entity.Property(e => e.ProgressInfo).HasColumnName("progress_info");
+                entity.Property(e => e.ProgressPercentage).HasColumnName("progress_percentage");
+                entity.Property(e => e.EstimatedCompletion).HasColumnName("estimated_completion");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.Property(e => e.NotificationId).HasColumnName("notification_id");
+
+                // Relationship with ProgressRequest (1:N)
+                entity
+                    .HasOne(e => e.ProgressRequest)
+                    .WithMany(pr => pr.Updates)
+                    .HasForeignKey(e => e.ProgressRequestId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity
+                    .HasOne(e => e.UpdatedBy)
+                    .WithMany()
+                    .HasForeignKey(e => e.UpdatedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(e => e.ProgressInfo).HasMaxLength(2000);
             });
 
             modelBuilder.Entity<TicketPause>(entity =>

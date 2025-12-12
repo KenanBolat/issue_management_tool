@@ -109,3 +109,44 @@ dotnet add package Docker.DotNet
 
 
 
+--IF ERROR 
+-- Step 1: Drop the incorrectly named constraint
+ALTER TABLE progress_request_update 
+DROP CONSTRAINT IF EXISTS "FK_progress_request_update_user_UpdatedById";
+
+-- Step 2: Create the correct foreign key constraint
+ALTER TABLE progress_request_update
+ADD CONSTRAINT fk_progress_request_update_updated_by
+    FOREIGN KEY (updated_by_user_id) 
+    REFERENCES users(id) 
+    ON DELETE RESTRICT;
+
+-- Verify the constraint was created correctly
+```sql
+SELECT
+    tc.constraint_name,
+    tc.table_name,
+    kcu.column_name,
+    ccu.table_name AS foreign_table_name,
+    ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+    ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+    ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY' 
+    AND tc.table_name = 'progress_request_update'
+    AND kcu.column_name = 'updated_by_user_id';
+```
+
+```sql
+alter table progress_request_update rename column "UpdatedById" to updated_by_id; 
+```
+
+```
+otnet ef migrations list   --project ./Infrastructure/Infrastructure.csproj   --startup-project ./Api/Api.csproj   --context AppDbContext
+```
+
+```
+dotnet ef migrations remove   --project ./Infrastructure/Infrastructure.csproj   --startup-project ./Api/Api.csproj   --context AppDbContext
+```
