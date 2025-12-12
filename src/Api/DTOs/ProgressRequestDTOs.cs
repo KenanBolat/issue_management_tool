@@ -17,9 +17,10 @@ namespace Api.DTOs
         DateTime? RespondedAt,
         string? RespondedByName,
         string Status,
-        bool IsOverdue, 
+        bool IsOverdue,
         int? ProgressPercentage,
-        DateTime? EstimatedCompletion
+        DateTime? EstimatedCompletion,
+        int UpdateCount
     );
 
     public record ProgressRequestDetail(
@@ -35,7 +36,6 @@ namespace Api.DTOs
         DateTime RequestedAt,
         DateTime? DueDate,
         string? ProgressInfo,
-
         bool IsResponded,
         DateTime? RespondedAt,
         long? RespondedByUserId,
@@ -43,12 +43,12 @@ namespace Api.DTOs
         long? ResponseActionId,
         string? ResponseText,
         string Status,
-        long? NotificationId, 
+        long? NotificationId,
         int? ProgressPercentage,
-        DateTime? EstimatedCompletion
+        DateTime? EstimatedCompletion,
+        List<ProgressRequestUpdateItem> Updates
     );
 
-    
     public record CreateProgressRequestRequest(
         long TicketId,
         long TargetUserId,
@@ -62,7 +62,16 @@ namespace Api.DTOs
         DateTime? EstimatedCompletion
     );
 
-    public record RespondToProgressRequest(
-        string ResponseNotes
+    public record RespondToProgressRequest(string ResponseNotes);
+
+    public record ProgressRequestUpdateItem(
+        long Id,
+        long ProgressRequestId,
+        long UpdatedByUserId,
+        string UpdatedByName,
+        string? ProgressInfo,
+        int? ProgressPercentage,
+        DateTime? EstimatedCompletion,
+        DateTime UpdatedAt
     );
 }
