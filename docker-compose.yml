@@ -1,0 +1,128 @@
+services:
+  satellite-pass:
+    container_name: issue-satellite-pass
+    build:
+      context: ./satellite_pass
+      dockerfile: Dockerfile
+    environment:
+      - TLE_URL=https://celestrak.org/NORAD/elements/gp.php?CATNR=41875&FORMAT=TLE
+      - NORAD_ID=41875
+      - TLE_UPDATE_HOUR=3
+    ports:
+      - "5001:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks: [issue-net]
+
+  db:
+    image: postgres:16-alpine
+    container_name: issue-db
+    environment:
+      POSTGRES_DB: satellite_tickets
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"   
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [issue-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: issue-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks: [issue-net]
+
+  backend:
+    build:
+      context: .               
+      dockerfile: ./Dockerfile
+    container_name: issue-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:5221
+
+      # IMPORTANT: use docker service names, not localhost
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=satellite_tickets;Username=postgres;Password=postgres
+      Redis__ConnectionString: redis:6379
+
+      # Optional: simpler CORS control via env your Program.cs already reads
+      ALLOWED_ORIGINS: http://localhost:8080,http://localhost:5173,http://localhost:3000
+
+      # For real use: replace this with a long secret and don’t commit it
+      Jwt__SecretKey: ChangeMe_AtLeast_32_Characters_Long_SecretKey!!!
+      Jwt__Issuer: SatelliteTicketTracker
+      Jwt__Audience: SatelliteTicketTrackerClient
+    ports:
+      - "5221:5221"
+    networks: [issue-net]
+
+  backup:
+    image: postgres:16-alpine
+    container_name: issue-db-backup
+    restart: always
+    depends_on:
+      - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: satellite_tickets
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: Europe/Istanbul
+    volumes:
+      - ./db/backups:/backups
+      - ./db/backup-scripts:/scripts
+    entrypoint: /scripts/backup-entrypoint.sh
+    networks: [issue-net]
+
+  frontend-dev:
+    image: node:20-alpine
+    container_name: issue-frontend
+    working_dir: /app
+    command: sh -lc "npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      # your frontend source
+      - ./frontend:/app
+
+      # IMPORTANT: use host node_modules (must exist on host)
+      - ./frontend/node_modules:/app/node_modules
+
+    depends_on:
+      - backend
+    networks: [issue-net]
+
+volumes:
+  redis-data:
+  postgres_data:
+  skyfield_data:
+  tle_data:
+
+networks:
+  issue-net:
+    driver: bridge
